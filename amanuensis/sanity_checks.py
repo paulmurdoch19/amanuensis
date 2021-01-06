@@ -9,14 +9,11 @@ example:
     amanuensis.sanity_checks.validate()
 """
 
-from amanuensis import dictionary, models, validators
 
 #: The data dictionary must implement these attributes.
-DICTIONARY_REQUIRED_ATTRS = ["resolvers", "schema"]
+# DICTIONARY_REQUIRED_ATTRS = ["resolvers", "schema"]
 
-MODELS_REQUIRED_ATTRS = ["Program", "Project", "submission", "VersionedNode"]
 
-VALIDATORS_REQUIRED_ATTRS = ["GDCGraphValidator", "GDCJSONValidator"]
 
 
 def validate():
@@ -24,9 +21,8 @@ def validate():
     Check that both loaded dictionary and models have
     required attributes for amanuensis
     """
-    check_attributes(dictionary, DICTIONARY_REQUIRED_ATTRS)
-    check_attributes(models, MODELS_REQUIRED_ATTRS)
-    check_attributes(validators, VALIDATORS_REQUIRED_ATTRS)
+    # check_attributes(dictionary, DICTIONARY_REQUIRED_ATTRS)
+    print("ciao TODO")
 
 
 def check_attributes(module, required_attrs):

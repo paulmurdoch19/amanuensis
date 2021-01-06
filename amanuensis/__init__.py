@@ -9,6 +9,4 @@ Notes on frequently disabled pylint warnings/errors:
   ``amanuensis.dictionary``.
 """
 
-from dictionaryutils import dictionary
-from datamodelutils import models, validators
 from .blueprint import create_blueprint

@@ -104,7 +104,6 @@ def dictionary_commit():
     except (AttributeError, KeyError, TypeError):
         return "Unknown"
 
-
 def submitted_state():
     """
     Return the initial file state. NOTE that the dictionary must be initialized
@@ -127,12 +126,7 @@ def submitted_state():
         The except/return None behavior is to, for example, allow Sphinx to
         still import/run individual modules without raising errors.
     """
-    from amanuensis import dictionary
-
-    try:
-        return dictionary.resolvers["_definitions.yaml"].source["file_state"]["default"]
-    except (AttributeError, KeyError, TypeError):
-        return None
+    return None
 
 
 #: State file enters when user begins upload.

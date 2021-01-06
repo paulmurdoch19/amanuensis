@@ -19,8 +19,6 @@ import flask
 from fuzzywuzzy.process import extract
 import psqlgraph
 
-from amanuensis import dictionary
-from amanuensis import models
 from amanuensis.errors import InternalError, NotFoundError, UnsupportedError, UserError
 from amanuensis.globals import (
     submitted_state,
@@ -30,13 +28,6 @@ from amanuensis.globals import (
     SUCCESS_STATE,
     ERROR_STATE,
     UPLOADING_PARTS,
-)
-from amanuensis.utils.transforms.graph_to_doc import (
-    entity_to_template,
-    entity_to_template_delimited,
-    entity_to_template_json,
-    entity_to_template_str,
-    get_node_category,
 )
 from . import parse
 from . import s3
@@ -68,44 +59,7 @@ def _get_links(file_format, schema, exclude_id):
     return links
 
 
-def _get_links_json(link, exclude_id):
-    """
-    Return parsed link template from link schema in json form.
-    """
-    target_schema = dictionary.schema[link["target_type"]]
-    link_template = dict(
-        {k: None for subkeys in target_schema.get("uniqueKeys", []) for k in subkeys}
-    )
-    if "project_id" in link_template:
-        del link_template["project_id"]
-    if exclude_id:
-        del link_template["id"]
-    return link_template
 
-
-def _get_links_delimited(link, exclude_id):
-    """
-    Return parsed link template from link schema in delimited form.
-    """
-    link_template = []
-    target_schema = dictionary.schema[link["target_type"]]
-    # default key for link is the GDC ID
-    if not exclude_id:
-        link_template.append("id")
-
-    unique_keys = [key for key in target_schema["uniqueKeys"] if key != ["id"]]
-
-    for unique_key in unique_keys:
-        keys = copy.copy(unique_key)
-        if "project_id" in keys:
-            keys.remove("project_id")
-        link_template += [prop for prop in keys]
-
-        # right now we only have one alias for each entity,
-        # so we pick the first one for now
-        break
-
-    return link_template
 
 
 def assert_program_exists(func):
@@ -115,48 +69,48 @@ def assert_program_exists(func):
 
     @functools.wraps(func)
     def check(program, *args, **kwargs):
-        with flask.current_app.db.session_scope():
-            programs = flask.current_app.db.nodes(models.Program).props(name=program)
-            if not programs.count():
-                raise NotFoundError("program {} not found".format(program))
+        # with flask.current_app.db.session_scope():
+        #     programs = flask.current_app.db.nodes(models.Program).props(name=program)
+        #     if not programs.count():
+        #         raise NotFoundError("program {} not found".format(program))
         return func(program, *args, **kwargs)
 
     return check
 
 
-def assert_project_exists(func):
-    """
-    Wrap a function to check that a Project node with a matching name exists.
+# def assert_project_exists(func):
+#     """
+#     Wrap a function to check that a Project node with a matching name exists.
 
-    TODO
-    """
+#     TODO
+#     """
 
-    @functools.wraps(func)
-    def check_and_call(program, project, *args, **kwargs):
-        with flask.current_app.db.session_scope():
-            # Check that the program exists
-            program_node = (
-                flask.current_app.db.nodes(models.Program).props(name=program).first()
-            )
-            if not program_node:
-                raise NotFoundError("Program {} not found".format(program))
-            # Check that the project exists
-            project_node = (
-                flask.current_app.db.nodes(models.Project)
-                .props(code=project)
-                .path("programs")
-                .ids(program_node.node_id)
-                .first()
-            )
-            if not project_node:
-                raise NotFoundError("Project {} not found".format(project))
-            phsids = [
-                program_node.dbgap_accession_number,
-                project_node.dbgap_accession_number,
-            ]
-        return func(program, project, *args, **kwargs)
+#     @functools.wraps(func)
+#     def check_and_call(program, project, *args, **kwargs):
+#         with flask.current_app.db.session_scope():
+#             # Check that the program exists
+#             program_node = (
+#                 flask.current_app.db.nodes(models.Program).props(name=program).first()
+#             )
+#             if not program_node:
+#                 raise NotFoundError("Program {} not found".format(program))
+#             # Check that the project exists
+#             project_node = (
+#                 flask.current_app.db.nodes(models.Project)
+#                 .props(code=project)
+#                 .path("programs")
+#                 .ids(program_node.node_id)
+#                 .first()
+#             )
+#             if not project_node:
+#                 raise NotFoundError("Project {} not found".format(project))
+#             phsids = [
+#                 program_node.dbgap_accession_number,
+#                 project_node.dbgap_accession_number,
+#             ]
+#         return func(program, project, *args, **kwargs)
 
-    return check_and_call
+#     return check_and_call
 
 
 def check_action_allowed_in_state(action, file_state):
@@ -193,51 +147,6 @@ def create_entity_list(nodes):
     return docs
 
 
-def get_all_template(file_format, categories=None, exclude=None, **kwargs):
-    """
-    Return template in format `file_format` for given categories.
-
-    ..note: kwargs absorbs `project`, `program` intended for future use
-    """
-    categories = categories.split(",") if categories else []
-    exclude = exclude.split(",") if exclude else []
-    entity_types = [
-        entity_type
-        for entity_type, schema in dictionary.schema.items()
-        if "project_id" in schema.get("properties", {})
-        and (not categories or schema["category"] in categories)
-        and (not exclude or entity_type not in exclude)
-    ]
-    if file_format == "json":
-        return get_json_template(entity_types)
-    else:
-        return get_delimited_template(entity_types, file_format)
-
-
-def get_delimited_template(entity_types, file_format, filename=TEMPLATE_NAME):
-    """
-    TODO
-
-    Args:
-        entity_types: TODO
-        file_format: TODO
-        filename: TODO
-
-    Return:
-        ``file_format`` (TSV or CSV) template for entity types.
-    """
-    tar_obj = io.StringIO()
-    tar = tarfile.open(filename, mode="w|gz", fileobj=tar_obj)
-
-    for entity_type in entity_types:
-        content = entity_to_template_str(entity_type, file_format=file_format)
-        partname = "{}.{}".format(entity_type, file_format)
-        tarinfo = tarfile.TarInfo(name=partname)
-        tarinfo.size = len(content)
-        tar.addfile(tarinfo, io.StringIO(content))
-
-    tar.close()
-    return tar_obj.getvalue()
 
 
 def get_external_proxies():
@@ -264,15 +173,6 @@ def get_external_proxies():
     """
     return flask.current_app.config.get("EXTERNAL_PROXIES", {})
 
-
-def get_json_template(entity_types):
-    """Return json template for entity types."""
-    return json_dumps_formatted(
-        [
-            entity_to_template(entity_type, file_format="json")
-            for entity_type in entity_types
-        ]
-    )
 
 
 def get_node(project_id, uuid, db=None):
@@ -386,31 +286,29 @@ def log_duration(name="Unnamed action"):
     flask.current_app.logger.info(msg)
 
 
-def lookup_project(db_driver, program_name, project_code):
-    """
-    Lookup project node in database.
+# def lookup_project(db_driver, program_name, project_code):
+#     """
+#     Lookup project node in database.
 
-    Args:
-        program_name: Project.programs[0].code
-        project_code: Project.name
+#     Args:
+#         program_name: Project.programs[0].code
+#         project_code: Project.name
 
-    Return:
-        models.Project: None if no project found, else the matching
-        :class:`models.Project`.
-    """
-    with db_driver.session_scope():
-        return (
-            db_driver.nodes(models.Project)
-            .props(code=project_code)
-            .path("programs")
-            .props(name=program_name)
-            .scalar()
-        )
+#     Return:
+#         models.Project: None if no project found, else the matching
+#         :class:`models.Project`.
+#     """
+#     with db_driver.session_scope():
+#         return (
+#             db_driver.nodes(models.Project)
+#             .props(code=project_code)
+#             .path("programs")
+#             .props(name=program_name)
+#             .scalar()
+#         )
 
 
-def lookup_program(psql_driver, program):
-    """Return a program by Program.name"""
-    return psql_driver.nodes(models.Program).props(name=program).scalar()
+
 
 
 def proxy_request(project_id, uuid, data, args, headers, method, action, dry_run=False):
@@ -504,10 +402,10 @@ def is_node_file(node):
     return node._dictionary["category"].endswith("_file")
 
 
-def is_project_public(project):
-    if not hasattr(models.Project, "availability_type"):
-        return False
-    return project.availability_type == "Open"
+# def is_project_public(project):
+#     if not hasattr(models.Project, "availability_type"):
+#         return False
+#     return project.availability_type == "Open"
 
 
 def should_send_email(config):

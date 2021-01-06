@@ -4,19 +4,16 @@ import importlib
 import logging
 
 from flask import Flask, jsonify
-from psqlgraph import PsqlGraphDriver
 from sqlalchemy import MetaData, Table
 
-from authutils.oauth2 import client as oauth2_client
-from authutils.oauth2.client import blueprint as oauth2_blueprint
 from authutils import AuthError
 from cdispyutils.log import get_handler
 from cdispyutils.uwsgi import setup_user_harakiri
-from dictionaryutils import DataDictionary, dictionary
-from datamodelutils import models, validators, postgres_admin
+from dictionaryutils import DataDictionary
+from datamodelutils import postgres_admin
 from indexclient.client import IndexClient
 from gen3authz.client.arborist.client import ArboristClient
-
+from userportaldatamodel.driver import SQLAlchemyDriver
 
 import amanuensis
 from amanuensis.errors import (
@@ -27,7 +24,6 @@ from amanuensis.errors import (
     InternalError,
 )
 from amanuensis.version_data import VERSION, COMMIT
-from amanuensis.globals import dictionary_version, dictionary_commit
 
 # recursion depth is increased for complex graph traversals
 sys.setrecursionlimit(10000)
@@ -41,51 +37,20 @@ def app_register_blueprints(app):
 
     app.url_map.strict_slashes = False
 
-    if "DICTIONARY_URL" in app.config:
-        url = app.config["DICTIONARY_URL"]
-        datadictionary = DataDictionary(url=url)
-    elif "PATH_TO_SCHEMA_DIR" in app.config:
-        datadictionary = DataDictionary(root_dir=app.config["PATH_TO_SCHEMA_DIR"])
-    else:
-        import gdcdictionary
+    amanuensis_blueprint = amanuensis.create_blueprint("request")
+    app.register_blueprint(amanuensis_blueprint, url_prefix="/request")
 
-        datadictionary = gdcdictionary.gdcdictionary
-
-    dictionary.init(datadictionary)
-    from gdcdatamodel import models as md
-    from gdcdatamodel import validators as vd
-
-    models.init(md)
-    validators.init(vd)
-    amanuensis_blueprint = sheepamanuensisdog.create_blueprint("submission")
-
-    v0 = "/v0"
-    app.register_blueprint(amanuensis_blueprint, url_prefix=v0 + "/submission")
-    app.register_blueprint(amanuensis_blueprint, url_prefix="/submission")
-    app.register_blueprint(oauth2_blueprint.blueprint, url_prefix=v0 + "/oauth2")
-    app.register_blueprint(oauth2_blueprint.blueprint, url_prefix="/oauth2")
 
 
 def db_init(app):
-    app.logger.info("Initializing PsqlGraph driver")
-    app.db = PsqlGraphDriver(
-        host=app.config["PSQLGRAPH"]["host"],
-        user=app.config["PSQLGRAPH"]["user"],
-        password=app.config["PSQLGRAPH"]["password"],
-        database=app.config["PSQLGRAPH"]["database"],
-        set_flush_timestamps=True,
-    )
-    if app.config.get("AUTO_MIGRATE_DATABASE"):
-        migrate_database(app)
-
-    app.oauth_client = oauth2_client.OAuthClient(**app.config["OAUTH2"])
-
-    app.logger.info("Initializing index client")
-    app.index_client = IndexClient(
-        app.config["INDEX_CLIENT"]["host"],
-        version=app.config["INDEX_CLIENT"]["version"],
-        auth=app.config["INDEX_CLIENT"]["auth"],
-    )
+    app.logger.info("Initializing DB driver")
+    app.logger.info('postgresql://' + app.config["PSQLGRAPH"]["user"] + ':' + app.config["PSQLGRAPH"]["password"] + '@' + app.config["PSQLGRAPH"]["host"] + ':5432/' + app.config["PSQLGRAPH"]["database"])
+    app.db = SQLAlchemyDriver('postgresql://' + app.config["PSQLGRAPH"]["user"] + ':' + app.config["PSQLGRAPH"]["password"] + '@' + app.config["PSQLGRAPH"]["host"] + ':5432/' + app.config["PSQLGRAPH"]["database"])
+   
+    app.logger.info("DB connected")
+    #TODO
+    # if app.config.get("AUTO_MIGRATE_DATABASE"):
+    #     migrate_database(app)
 
 
 def migrate_database(app):
@@ -125,11 +90,6 @@ def app_init(app):
     # Register duplicates only at runtime
     app.logger.info("Initializing app")
 
-    # explicit options set for compatibility with gdc's api
-    app.config["AUTH_SUBMISSION_LIST"] = True
-    app.config["USE_DBGAP"] = False
-    app.config["IS_GDC"] = False
-
     # default settings
     app.config["AUTO_MIGRATE_DATABASE"] = app.config.get("AUTO_MIGRATE_DATABASE", True)
     app.config["REQUIRE_FILE_INDEX_EXISTS"] = (
@@ -157,24 +117,7 @@ def app_init(app):
         app.auth = ArboristClient(arborist_base_url=arborist_url)
     else:
         app.logger.info("Using default Arborist base URL")
-        app.auth = ArboristClient()
-
-
-    app.node_authz_entity_name = os.environ.get("AUTHZ_ENTITY_NAME", None)
-    app.node_authz_entity = None
-    app.subject_entity  = None
-    if app.node_authz_entity_name:
-        full_module_name = "datamodelutils.models"
-        mymodule = importlib.import_module(full_module_name)
-        for i in dir(mymodule):
-            app.logger.warn(i)
-            if i.lower() == "person":
-                attribute = getattr(mymodule, i)
-                app.subject_entity  = attribute
-            if i.lower() == app.node_authz_entity_name.lower():
-                attribute = getattr(mymodule, i)
-                app.node_authz_entity = attribute
-    
+        app.auth = ArboristClient()    
 
 
 app = Flask(__name__)
@@ -205,11 +148,11 @@ def health_check():
       default:
         description: Unhealthy
     """
-    with app.db.session_scope() as session:
-        try:
-            session.execute("SELECT 1")
-        except Exception:
-            raise UnhealthyCheck("Unhealthy")
+    # with app.db.session_scope() as session:
+    #     try:
+    #         session.execute("SELECT 1")
+    #     except Exception:
+    #         raise UnhealthyCheck("Unhealthy")
 
     return "Healthy", 200
 
