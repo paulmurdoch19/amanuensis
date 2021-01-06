@@ -1,0 +1,223 @@
+import os
+import sys
+import importlib
+import logging
+
+from flask import Flask, jsonify
+from sqlalchemy import MetaData, Table
+
+from authutils import AuthError
+from cdispyutils.log import get_handler
+from cdispyutils.uwsgi import setup_user_harakiri
+from dictionaryutils import DataDictionary
+from datamodelutils import postgres_admin
+from indexclient.client import IndexClient
+from gen3authz.client.arborist.client import ArboristClient
+from userportaldatamodel.driver import SQLAlchemyDriver
+
+import amanuensis
+from amanuensis.errors import (
+    APIError,
+    setup_default_handlers,
+    UnhealthyCheck,
+    NotFoundError,
+    InternalError,
+)
+from amanuensis.version_data import VERSION, COMMIT
+
+# recursion depth is increased for complex graph traversals
+sys.setrecursionlimit(10000)
+DEFAULT_ASYNC_WORKERS = 8
+
+
+def app_register_blueprints(app):
+    # TODO: (jsm) deprecate the index endpoints on the root path,
+    # these are currently duplicated under /index (the ultimate
+    # path) for migration
+
+    app.url_map.strict_slashes = False
+
+    amanuensis_blueprint = amanuensis.create_blueprint("request")
+    app.register_blueprint(amanuensis_blueprint, url_prefix="/request")
+
+
+
+def db_init(app):
+    app.logger.info("Initializing DB driver")
+    app.logger.info('postgresql://' + app.config["PSQLGRAPH"]["user"] + ':' + app.config["PSQLGRAPH"]["password"] + '@' + app.config["PSQLGRAPH"]["host"] + ':5432/' + app.config["PSQLGRAPH"]["database"])
+    app.db = SQLAlchemyDriver('postgresql://' + app.config["PSQLGRAPH"]["user"] + ':' + app.config["PSQLGRAPH"]["password"] + '@' + app.config["PSQLGRAPH"]["host"] + ':5432/' + app.config["PSQLGRAPH"]["database"])
+   
+    app.logger.info("DB connected")
+    #TODO
+    # if app.config.get("AUTO_MIGRATE_DATABASE"):
+    #     migrate_database(app)
+
+
+def migrate_database(app):
+    # hardcoded read role
+    read_role = "peregrine"
+    postgres_admin.migrate_transaction_snapshots(app.db)
+    if postgres_admin.check_version(app.db):
+        return
+    try:
+        postgres_admin.create_graph_tables(app.db, timeout=1)
+    except Exception:
+        if not postgres_admin.check_version(app.db):
+            app.logger.exception("ERROR: Fail to migrate database")
+            sys.exit(1)
+        else:
+            # if the version is already up to date, that means there is
+            # another migration wins, so silently exit
+            app.logger.info("The database version matches up. No need to do migration")
+            return
+    # check if such role exists
+    with app.db.session_scope() as session:
+        r = [
+            i
+            for i in session.execute(
+                "SELECT 1 FROM pg_roles WHERE rolname='{}'".format(read_role)
+            )
+        ]
+    if len(r) != 0:
+        try:
+            postgres_admin.grant_read_permissions_to_graph(app.db, read_role)
+        except Exception:
+            app.logger.warn("Fail to grant read permission, continuing anyway")
+            return
+
+
+def app_init(app):
+    # Register duplicates only at runtime
+    app.logger.info("Initializing app")
+
+    # default settings
+    app.config["AUTO_MIGRATE_DATABASE"] = app.config.get("AUTO_MIGRATE_DATABASE", True)
+    app.config["REQUIRE_FILE_INDEX_EXISTS"] = (
+        # If True, enforce indexd record exists before file node registration
+        app.config.get("REQUIRE_FILE_INDEX_EXISTS", False)
+    )
+
+    if app.config.get("USE_USER_HARAKIRI", True):
+        setup_user_harakiri(app)
+
+    app.config["AUTH_NAMESPACE"] = "/" + os.getenv("AUTH_NAMESPACE", "").strip("/")
+
+    app_register_blueprints(app)
+    db_init(app)
+    # exclude es init as it's not used yet
+    # es_init(app)
+    try:
+        app.secret_key = app.config["FLASK_SECRET_KEY"]
+    except KeyError:
+        app.logger.error("Secret key not set in config! Authentication will not work")
+
+    # ARBORIST deprecated, replaced by ARBORIST_URL
+    arborist_url = os.environ.get("ARBORIST_URL", os.environ.get("ARBORIST"))
+    if arborist_url:
+        app.auth = ArboristClient(arborist_base_url=arborist_url)
+    else:
+        app.logger.info("Using default Arborist base URL")
+        app.auth = ArboristClient()    
+
+
+app = Flask(__name__)
+
+
+# Setup logger
+app.logger.setLevel(
+    logging.DEBUG if (os.environ.get("GEN3_DEBUG") == "True") else logging.WARNING
+)
+app.logger.propagate = False
+while app.logger.handlers:
+    app.logger.removeHandler(app.logger.handlers[0])
+app.logger.addHandler(get_handler())
+
+setup_default_handlers(app)
+
+
+@app.route("/_status", methods=["GET"])
+def health_check():
+    """
+    Health check endpoint
+    ---
+    tags:
+      - system
+    responses:
+      200:
+        description: Healthy
+      default:
+        description: Unhealthy
+    """
+    # with app.db.session_scope() as session:
+    #     try:
+    #         session.execute("SELECT 1")
+    #     except Exception:
+    #         raise UnhealthyCheck("Unhealthy")
+
+    return "Healthy", 200
+
+
+@app.route("/_version", methods=["GET"])
+def version():
+    """
+    Returns the version of amanuensis
+    ---
+    tags:
+      - system
+    responses:
+      200:
+        description: successful operation
+    """
+    dictver = {"version": dictionary_version(), "commit": dictionary_commit()}
+    base = {"version": VERSION, "commit": COMMIT, "dictionary": dictver}
+
+    return jsonify(base), 200
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return jsonify(message=e.description), e.code
+
+
+@app.errorhandler(500)
+def server_error(e):
+    app.logger.exception(e)
+    return jsonify(message="internal server error"), 500
+
+
+def _log_and_jsonify_exception(e):
+    """
+    Log an exception and return the jsonified version along with the code.
+
+    This is the error handling mechanism for ``APIErrors`` and
+    ``AuthError``.
+    """
+    app.logger.exception(e)
+    if hasattr(e, "json") and e.json:
+        return jsonify(**e.json), e.code
+    else:
+        return jsonify(message=e.message), e.code
+
+
+app.register_error_handler(APIError, _log_and_jsonify_exception)
+
+app.register_error_handler(amanuensis.errors.APIError, _log_and_jsonify_exception)
+app.register_error_handler(AuthError, _log_and_jsonify_exception)
+
+
+def run_for_development(**kwargs):
+    # app.logger.setLevel(logging.INFO)
+
+    for key in ["http_proxy", "https_proxy"]:
+        if os.environ.get(key):
+            del os.environ[key]
+    app.config.from_object("amanuensis.dev_settings")
+
+    kwargs["port"] = app.config["AMANUENSIS_PORT"]
+    kwargs["host"] = app.config["AMANUENSIS_HOST"]
+
+    try:
+        app_init(app)
+    except Exception:
+        app.logger.exception("Couldn't initialize application, continuing anyway")
+    app.run(**kwargs)
