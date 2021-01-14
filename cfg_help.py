@@ -9,7 +9,7 @@ Quickstart:
 
   1. Create configuration file by copying example in this repo
   2. Edit the new configuration file
-  3. Run fence as you normally would
+  3. Run amanuensis as you normally would
 
 Support for Multiple Configs:
 
@@ -21,14 +21,14 @@ Support for Multiple Configs:
   1. Create another configuration file and specify new name
   2. Easily obtain the path of your new configuration
   3. Open config file in your editor with a command like
-  4. Run fence and point it to the right configuration file
+  4. Run amanuensis and point it to the right configuration file
 
 
-Fence searches specific folders for configuration files. Check fence's
+amanuensis searches specific folders for configuration files. Check amanuensis's
 settings for those paths. The LOCAL_CONFIG_FOLDER var here should be included
 in the search paths.
 
-NOTE: If using in production with wsgi.py, fence will still look for
+NOTE: If using in production with wsgi.py, amanuensis will still look for
       configuration files in the defined search paths, but will not be able
       to take in a custom configuration name by default.
 
@@ -46,7 +46,7 @@ import sys
 from gen3config import config
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
-LOCAL_CONFIG_FOLDER = "{}/.gen3/fence".format(expanduser("~"))
+LOCAL_CONFIG_FOLDER = "{}/.gen3/amanuensis".format(expanduser("~"))
 
 
 def main():
@@ -57,10 +57,10 @@ def main():
     create.add_argument(
         "-n",
         "--name",
-        default="fence-config.yaml",
+        default="amanuensis-config.yaml",
         help=(
             "configuration file name if you want something "
-            'other than "fence-config.yaml"'
+            'other than "amanuensis-config.yaml"'
         ),
     )
     create.add_argument(
@@ -75,10 +75,10 @@ def main():
     edit.add_argument(
         "-n",
         "--name",
-        default="fence-config.yaml",
+        default="amanuensis-config.yaml",
         help=(
             "configuration file name if you used something "
-            'other than "fence-config.yaml"'
+            'other than "amanuensis-config.yaml"'
         ),
     )
 
@@ -98,7 +98,7 @@ def create_config_file(file_name, full_path=None):
     if dir_name and not os.path.exists(dir_name):
         os.makedirs(os.path.dirname(config_path))
 
-    copyfile(os.path.join(ROOT_DIR, "fence/config-default.yaml"), config_path)
+    copyfile(os.path.join(ROOT_DIR, "amanuensis/config-default.yaml"), config_path)
 
     return config_path
 

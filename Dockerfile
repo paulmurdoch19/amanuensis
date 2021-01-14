@@ -1,9 +1,9 @@
-# To run: docker run --rm -d -v /path/to/fence-config.yaml:/var/www/fence/fence-config.yaml --name=fence -p 80:80 fence
-# To check running container: docker exec -it fence /bin/bash
+# To run: docker run --rm -d -v /path/to/amanuensis-config.yaml:/var/www/amanuensis/amanuensis-config.yaml --name=amanuensis -p 80:80 amanuensis
+# To check running container: docker exec -it amanuensis /bin/bash
 
 FROM quay.io/cdis/python-nginx:pybase3-1.4.1
 
-ENV appname=fence
+ENV appname=amanuensis
 
 RUN apk update \
     && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
@@ -30,7 +30,7 @@ RUN (cd /tmp \
   && /bin/rm -rf /tmp/*)
 
 #
-# mcrypt is required to decrypt dbgap user files - see fence/sync/sync_users.py
+# mcrypt is required to decrypt dbgap user files - see amanuensis/sync/sync_users.py
 #
 RUN (cd /tmp \
   && wget -O mcrypt.tar.gz https://sourceforge.net/projects/mcrypt/files/MCrypt/Production/mcrypt-2.6.4.tar.gz/download \
@@ -57,7 +57,7 @@ WORKDIR /$appname
 # cache so that poetry install will run if these files change
 COPY poetry.lock pyproject.toml /$appname/
 
-# install Fence and dependencies via poetry
+# install amanuensis and dependencies via poetry
 RUN source $HOME/.poetry/env \
     && poetry config virtualenvs.create false \
     && poetry install -vv --no-dev --no-interaction \
