@@ -223,12 +223,28 @@ def app_config(
     # dump the settings into the config singleton before loading a configuration file
     config.update(dict(settings_cfg))
 
+    logger.warning("LUCAAAAAA CONFIG")
+    logger.warning(dict(config))
+
     # load the configuration file, this overwrites anything from settings/local_settings
     config.load(
         config_path=config_path,
         search_folders=CONFIG_SEARCH_FOLDERS,
         file_name=file_name,
     )
+
+    logger.warning("LUCAAAA after load")
+    logger.warning(dict(config))
+    logger.warning("LUCAAAA CHECK CONFIGS")
+
+    logger.warning(config["DEBUG"])
+    logger.warning(app.config.get("DEBUG"))
+    logger.warning(config["FORCE_ISSUER"])
+    logger.warning(config["USER_API"])
+    logger.warning(app.config.get("FORCE_ISSUER"))
+    logger.warning(app.config.get("USER_API"))
+
+
 
     # load all config back into flask app config for now, we should PREFER getting config
     # directly from the amanuensis config singleton in the code though.

@@ -161,7 +161,7 @@ class GoogleCredentialsList(Resource):
             give_service_account_billing_access_if_necessary(
                 key,
                 r_pays_project,
-                default_billing_project=config["BILLING_PROJECT_FOR_SA_CREDS"],
+                default_billing_project="",
             )
 
         if client_id is None:

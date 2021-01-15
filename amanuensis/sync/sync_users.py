@@ -31,7 +31,6 @@ from amanuensis.models import (
     Client,
 )
 from amanuensis.resources.storage import StorageManager
-from amanuensis.resources.google.access_utils import bulk_update_google_groups
 from amanuensis.sync import utils
 
 
@@ -830,11 +829,6 @@ class UserSyncer(object):
         self._update_from_db(sess, to_update, user_project_lowercase)
 
         self._validate_and_update_user_admin(sess, user_info_lowercase)
-
-        if config["GOOGLE_BULK_UPDATES"]:
-            self.logger.info("Doing bulk Google update...")
-            bulk_update_google_groups(google_bulk_mapping)
-            self.logger.info("Bulk Google update done!")
 
         sess.commit()
 

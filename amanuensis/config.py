@@ -80,7 +80,7 @@ class AmanuensisConfig(Config):
         #       to share the credentials directly with end-users and 2) will not mis-use
         #       billing rights (in other words, only use it when interacting with buckets
         #       amanuensis is aware of)
-        if self._configs.get("BILLING_PROJECT_FOR_SA_CREDS") or self._configs.get(
+        if self._configs.get(
             "BILLING_PROJECT_FOR_SIGNED_URLS"
         ):
             if (

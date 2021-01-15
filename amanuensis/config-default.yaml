@@ -23,6 +23,7 @@
 #   - Fill out all variables!
 # //////////////////////////////////////////////////////////////////////////////////////
 APP_NAME: 'Gen3 Data Commons'
+HOSTNAME: 'localhost'
 # Where amanuensis microservice is deployed
 BASE_URL: 'http://localhost/amanuensis'
 # postgres db to connect to
@@ -53,7 +54,7 @@ MOCK_AUTH: false
 # WARNING: DO NOT ENABLE IN PRODUCTION (for testing purposes only)
 # will login as the username set in cookie DEV_LOGIN_COOKIE_NAME
 MOCK_GOOGLE_AUTH: false
-DEV_LOGIN_COOKIE_NAME: "dev_login"
+
 # if true, will ignore anything configured in STORAGE_CREDENTIALS
 MOCK_STORAGE: true
 # allow OIDC traffic on http for development. By default it requires https.
@@ -67,6 +68,35 @@ SESSION_COOKIE_SECURE: true
 
 ENABLE_CSRF_PROTECTION: true
 
+OIDC_ISSUER: 'https://{{HOSTNAME}}/user'
+
+OAUTH2:
+  client_id: 'oauth2_client_id'
+  client_secret: 'oauth2_client_secret'
+  api_base_url: 'https://{{HOSTNAME}}/user/'
+  authorize_url: 'https://{{HOSTNAME}}/user/oauth2/authorize'
+  access_token_url: 'https://{{HOSTNAME}}/user/oauth2/token'
+  refresh_token_url: 'https://{{HOSTNAME}}/user/oauth2/token'
+  client_kwargs: 
+    # redirect_uri: 'https://{{HOSTNAME}}/api/v0/oauth2/authorize'
+    redirect_uri: 'https://{{HOSTNAME}}/amanuensis/oauth2/authorize'
+    scope: 'openid data user'
+  # deprecated key values, should be removed after all commons use new oidc
+  internal_oauth_provider: 'http://fence-service/oauth2/'
+  oauth_provider: 'https://{{HOSTNAME}}/user/oauth2/'
+  # redirect_uri: 'https://{{HOSTNAME}}/api/v0/oauth2/authorize'
+  redirect_uri: 'https://{{HOSTNAME}}/amanuensis/oauth2/authorize'
+
+USER_API: 'http://fence-service/'
+# option to force authutils to prioritize USER_API setting over the issuer from
+# token when redirecting, used during local docker compose setup when the
+# services are on different containers but the hostname is still localhost
+FORCE_ISSUER: true
+
+OPENID_CONNECT:
+  google: 
+    client_id: ''
+
 # amanuensis (at the moment) attempts a migration on startup. setting this to false will disable that
 # WARNING: ONLY set to false if you do NOT want to automatically migrate your database.
 #          You should be careful about incompatible versions of your db schema with what
@@ -74,17 +104,6 @@ ENABLE_CSRF_PROTECTION: true
 #          amanuensis that expects a schema your database isn't migrated to.
 # NOTE: We are working to improve the migration process in the near future
 ENABLE_DB_MIGRATION: true
-
-# these are the *possible* scopes a client can be given, NOT scopes that are
-# given to all clients. You can be more restrictive during client creation
-CLIENT_ALLOWED_SCOPES:
-  - "openid"
-  - "user"
-  - "data"
-  - "google_credentials"
-  - "google_service_account"
-  - "google_link"
-  - "ga4gh_passport_v1"
 
 # these are the scopes that CAN be included in a user's own access_token
 USER_ALLOWED_SCOPES:
@@ -501,7 +520,6 @@ GOOGLE_SERVICE_ACCOUNT_PREFIX: ''
 #          the service account used in either of these methods actually has billing
 #          permission in the specified project.
 BILLING_PROJECT_FOR_SIGNED_URLS:
-BILLING_PROJECT_FOR_SA_CREDS:
 
 # Setting this to `true` will make Fence automatically attempt to create a Custom Role
 # in the billing project and give the necessary Google Service Account that role
@@ -516,7 +534,6 @@ BILLING_PROJECT_FOR_SA_CREDS:
 #       NOTE2: It may be possible to further restrict the permissions in the future to
 #              be more fine-grained.
 #
-ENABLE_AUTOMATIC_BILLING_PERMISSION_SIGNED_URLS: false
 ENABLE_AUTOMATIC_BILLING_PERMISSION_SA_CREDS: false
 
 # //////////////////////////////////////////////////////////////////////////////////////
@@ -660,16 +677,5 @@ ALLOWED_USER_SERVICE_ACCOUNT_DOMAINS:
   # user-managed service account
   - 'iam.gserviceaccount.com'
 
-# Synapse integration and DREAM challenge mapping. Team is from Synapse, and group is
-# providing the actual permission in Arborist. User will be added to the group for TTL
-# seconds if the team matches.
-DREAM_CHALLENGE_TEAM: 'DREAM'
-DREAM_CHALLENGE_GROUP: 'DREAM'
-SYNAPSE_URI: 'https://repo-prod.prod.sagebase.org/auth/v1'
-SYNAPSE_JWKS_URI:
-SYNAPSE_DISCOVERY_URL:
-SYNAPSE_AUTHZ_TTL: 86400
-# RAS refresh_tokens expire in 15 days
-RAS_REFRESH_EXPIRATION: 1296000
-# Number of projects that can be registered to a Google Service Accont
-SERVICE_ACCOUNT_LIMIT: 6
+
+

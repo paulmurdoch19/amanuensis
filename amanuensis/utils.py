@@ -61,13 +61,7 @@ def create_client(
             client_secret.encode("utf-8"), bcrypt.gensalt()
         ).decode("utf-8")
     auth_method = "client_secret_basic" if confidential else "none"
-    allowed_scopes = allowed_scopes or config["CLIENT_ALLOWED_SCOPES"]
-    if not set(allowed_scopes).issubset(set(config["CLIENT_ALLOWED_SCOPES"])):
-        raise ValueError(
-            "Each allowed scope must be one of: {}".format(
-                config["CLIENT_ALLOWED_SCOPES"]
-            )
-        )
+    allowed_scopes = allowed_scopes
     if "openid" not in allowed_scopes:
         allowed_scopes.append("openid")
         logger.warning('Adding required "openid" scope to list of allowed scopes.')

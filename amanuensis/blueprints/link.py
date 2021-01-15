@@ -281,9 +281,7 @@ class GoogleCallback(Resource):
                     "Unable to parse Google email from token, using default mock value. "
                     "Error: {}".format(exc)
                 )
-                email = flask.request.cookies.get(
-                    config.get("DEV_LOGIN_COOKIE_NAME"), "test@example.com"
-                )
+                email = "test@example.com"
 
         error = ""
         error_description = ""
