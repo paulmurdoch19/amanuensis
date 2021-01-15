@@ -6,8 +6,8 @@ from flask_sqlalchemy_session import current_session
 # from amanuensis.models import Application, Certificate
 from amanuensis.resources.search import get_all, create, delete, update
 from amanuensis.config import config
-
-
+from amanuensis.auth.auth import current_user
+from amanuensis.errors import AuthError
 
 
 REQUIRED_CERTIFICATES = {
@@ -22,7 +22,14 @@ blueprint = flask.Blueprint("cohort", __name__)
 @blueprint.route("/", methods=["GET"])
 # @login_required({"user"})
 def get_searches():
-    return flask.jsonify(get_all())
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning(
+            "Unable to load or find the user, check your token"
+        )
+
+    return flask.jsonify(get_all(logged_user_id))
 
 
 @blueprint.route("/", methods=["POST"])
@@ -34,12 +41,17 @@ def create_search():
 
     Returns a json object
     """
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning(
+            "Unable to load or find the user, check your token"
+        )
+
     name = flask.request.get_json().get("name", None)
-    # user_id = flask.request.get_json().get("user_id", None)
     filter_object = flask.request.get_json().get("filters", None)
     description = flask.request.get_json().get("description", None)
-    return flask.jsonify(create(name, description, filter_object))
-
+    return flask.jsonify(create(logged_user_id, name, description, filter_object))
 
 
 @blueprint.route("/<search_id>", methods=["PUT"])
@@ -51,10 +63,17 @@ def update_search(search_id):
 
     Returns a json object
     """
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning(
+            "Unable to load or find the user, check your token"
+        )
+
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
     filter_object = flask.request.get_json().get("filters", None)
-    return flask.jsonify(update(search_id, name, description, filter_object))
+    return flask.jsonify(update(logged_user_id, search_id, name, description, filter_object))
 
 
 @blueprint.route("/<search_id>", methods=["DELETE"])
@@ -65,6 +84,13 @@ def delete_search(search_id):
 
     Returns json object
     """
-    response = flask.jsonify(delete(search_id))
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning(
+            "Unable to load or find the user, check your token"
+        )
+
+    response = flask.jsonify(delete(logged_user_id, search_id))
     return response
 

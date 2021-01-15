@@ -75,19 +75,6 @@ def app_sessions(app):
         logger.info("NOT running database migration.")
 
     session = flask_scoped_session(app.db.Session, app)  # noqa
-    # app.session_interface = UserSessionInterface()
-
-    # new_search = Search(name="Test_5", user_id=7, description="ciaone")
-    # logger.warning("done")
-    # logger.warning(new_search.name)
-    # logger.warning(new_search.description)
-    # logger.warning(new_search.user_id)
-    # session.add(new_search)
-    # session.commit()
-    # logger.warning("saved new entity")
-    # search_1 = session.query(Search).all()
-    # for s in search_1:
-    #     logger.warning(s.name)
 
 
 def app_register_blueprints(app):
@@ -223,28 +210,12 @@ def app_config(
     # dump the settings into the config singleton before loading a configuration file
     config.update(dict(settings_cfg))
 
-    logger.warning("LUCAAAAAA CONFIG")
-    logger.warning(dict(config))
-
     # load the configuration file, this overwrites anything from settings/local_settings
     config.load(
         config_path=config_path,
         search_folders=CONFIG_SEARCH_FOLDERS,
         file_name=file_name,
     )
-
-    logger.warning("LUCAAAA after load")
-    logger.warning(dict(config))
-    logger.warning("LUCAAAA CHECK CONFIGS")
-
-    logger.warning(config["DEBUG"])
-    logger.warning(app.config.get("DEBUG"))
-    logger.warning(config["FORCE_ISSUER"])
-    logger.warning(config["USER_API"])
-    logger.warning(app.config.get("FORCE_ISSUER"))
-    logger.warning(app.config.get("USER_API"))
-
-
 
     # load all config back into flask app config for now, we should PREFER getting config
     # directly from the amanuensis config singleton in the code though.

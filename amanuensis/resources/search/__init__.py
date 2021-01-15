@@ -23,36 +23,26 @@ from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, 
 logger = get_logger(__name__)
 
 
-def get_all():
+def get_all(logged_user_id):
     with flask.current_app.db.session as session:
-        return get_all_searches(session)
+        return get_all_searches(session, logged_user_id)
 
 
-def get_by_id(search_id):
+def get_by_id(logged_user_id, search_id):
     with flask.current_app.db.session as session:
-        return get_search(session, search_id)
+        return get_search(session, logged_user_id, search_id)
 
 
-def create(name, description, filter_object):
+def create(logged_user_id, name, description, filter_object):
+    with flask.current_app.db.session as session:    
+        return create_search(session, logged_user_id, name, description, filter_object)
+
+
+def update(logged_user_id, search_id, name, description, filter_object):
     with flask.current_app.db.session as session:
-        # user = get_current_user()
-        # username = get_current_user()
-        # logger.warning(username)
-
-        logger.warning(flask.current_app.config.get("FORCE_ISSUER"))
-        logger.warning(flask.current_app.config.get("USER_API"))
-
-        # logger.warning(current_user.id)
-        # logger.warning(current_user.username)
-        #TODO try to read json and make an object of it {"lastName": "test_graglia", "firstName": "test_shea", "institution": "University of Chicago"}
-        return create_search(session, name, description, filter_object)
+        return update_search(session, logged_user_id, search_id, name, description, filter_object)
 
 
-def update(search_id, name, description, filter_object):
+def delete(logged_user_id, search_id):
     with flask.current_app.db.session as session:
-        return update_search(session, search_id, name, description, filter_object)
-
-
-def delete(search_id):
-    with flask.current_app.db.session as session:
-        return delete_search(session, search_id)
+        return delete_search(session, logged_user_id, search_id)

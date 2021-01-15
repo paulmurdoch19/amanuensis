@@ -7,7 +7,6 @@ from amanuensis.models import (
 
 
 __all__ = [
-    # "get_user",
     "get_all_searches",
     "get_search",
     "create_search",
@@ -16,28 +15,32 @@ __all__ = [
 ]
 
 
-# def get_user(current_session, username):
-#     return query_for_user(session=current_session, username=username)
 
-def get_search(current_session, search_id):
-    return current_session.query(Search).filter_by(id=search_id).first()
+def get_search(current_session, logged_user_id, search_id):
+    search = current_session.query(Search).filter_by(id=search_id).filter_by(user_id=logged_user_id).first()
+    return {"name": search.name, "id": search.id, "description": search.description, "filters": search.filters}
 
 
-def get_all_searches(current_session):
+def get_all_searches(current_session, logged_user_id):
 	#TODO make class Search serializable
-	searches = [{"name": s.name, "id": s.id, "description": s.description, "filters": s.filter_object} for s in current_session.query(Search).filter(Search.active == True).all()]
+	searches = [{"name": s.name, "id": s.id, "description": s.description, "filters": s.filter_object} for s in current_session.query(Search).filter(Search.active == True, Search.user_id == logged_user_id).all()]
 	return {"searches": searches}
 
 
-def create_search(current_session, name, description, filter_object):
-    new_search = Search(name=name, filter_object=filter_object, description=description)
+def create_search(current_session, logged_user_id, name, description, filter_object):
+    new_search = Search(user_id=logged_user_id, 
+                        user_source="fence", 
+                        name=name, 
+                        description=description, 
+                        filter_object=filter_object)
+    #TODO add es_index, add dataset_version
     current_session.add(new_search)
     current_session.flush()
     #TODO try with serialization
     return {"name": new_search.name, "id": new_search.id, "description": new_search.description, "filters": new_search.filter_object}
 
 
-def update_search(current_session, search_id, name, description, filter_object):
+def update_search(current_session, logged_user_id, search_id, name, description, filter_object):
     data = {}
     if name:
         data['name'] = name
@@ -46,23 +49,20 @@ def update_search(current_session, search_id, name, description, filter_object):
     if filter_object:
         data['filter_object'] = filter_object
 
-    return (
-        current_session.query(Search).filter(Search.id == search_id).update(data)
-    )
-
- #    session.query(Table).filter_by(col=val1).update(dict(col2=val2,col3=val3))
-
- #    data = {'field1': 1, 'field2': 2, 'field3': 3}
-	# session.query(BlogPost).filter(blog_post_id).update(data)
-	# session.commit()
+    #TODO check that at least one has changed
+    result = current_session.query(Search).filter(Search.id == search_id, Search.user_id == logged_user_id).update(data)
+    if  result > 0:
+        return  {"code": 200, "updated": search_id}
+    else:
+        return {"code": 500, "error": "Nothing has been updated, check the logs to see what happened during the transaction."}
 
 
-def delete_search(current_session, search_id):
+def delete_search(current_session, logged_user_id, search_id):
     """
     Delete the search from the database.
     The search has to be assigned to 0 project request
     """
-    search = current_session.query(Search).filter(Search.id == search_id).first()
+    search = current_session.query(Search).filter(Search.id == search_id, Search.user_id == logged_user_id).first()
 
     if not search:
         return {"code": 404, "result": "error, search not found"}
