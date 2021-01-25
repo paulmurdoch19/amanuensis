@@ -1,34 +1,71 @@
-# To run: docker run -v /path/to/wsgi.py:/var/www/amanuensis/wsgi.py --name=amanuensis -p 81:80 amanuensis
+# To run: docker run --rm -d -v /path/to/amanuensis-config.yaml:/var/www/amanuensis/amanuensis-config.yaml --name=amanuensis -p 80:80 amanuensis
 # To check running container: docker exec -it amanuensis /bin/bash
 
 FROM quay.io/cdis/python-nginx:pybase3-1.4.1
 
+ENV appname=amanuensis
+
 RUN apk update \
     && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
-    && apk add linux-headers musl-dev gcc libxml2-dev libxslt-dev \
-    && apk add curl bash git vim
+    && apk add linux-headers musl-dev gcc \
+    && apk add curl bash git vim make lftp \
+    && apk update && apk add openssh && apk add libmcrypt-dev
 
-COPY . /amanuensis
-COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
-WORKDIR /amanuensis
+RUN mkdir -p /var/www/$appname \
+    && mkdir -p /var/www/.cache/Python-Eggs/ \
+    && mkdir /run/nginx/ \
+    && ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log \
+    && chown nginx -R /var/www/.cache/Python-Eggs/ \
+    && chown nginx /var/www/$appname
 
-RUN python -m pip install --upgrade pip \
-    && python -m pip install --upgrade setuptools \
-    && pip --version \
-    && pip install -r requirements.txt 
-    # && pip uninstall authlib -y \
-    # && pip install authlib==0.14.2
+#
+# libmhash is required by mcrypt - below - no apk package available
+#
+RUN (cd /tmp \
+  && wget -O mhash.tar.gz https://sourceforge.net/projects/mhash/files/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz/download \
+  && tar xvfz mhash.tar.gz \
+  && cd mhash-0.9.9.9 \
+  && ./configure && make && make install \
+  && /bin/rm -rf /tmp/*)
 
-RUN mkdir -p /var/www/amanuensis \
-    && mkdir /run/ngnix/ \
-    && chown nginx /var/www/amanuensis
-
+#
+# mcrypt is required to decrypt dbgap user files - see amanuensis/sync/sync_users.py
+#
+RUN (cd /tmp \
+  && wget -O mcrypt.tar.gz https://sourceforge.net/projects/mcrypt/files/MCrypt/Production/mcrypt-2.6.4.tar.gz/download \
+  && tar xvfz mcrypt.tar.gz \
+  && cd mcrypt-2.6.4 \
+  && ./configure && make && make install \
+  && /bin/rm -rf /tmp/*)
 EXPOSE 80
 
-RUN COMMIT=`git rev-parse HEAD` && echo "COMMIT=\"${COMMIT}\"" >amanuensis/version_data.py \
-    && VERSION=`git describe --always --tags` && echo "VERSION=\"${VERSION}\"" >>amanuensis/version_data.py \
-    && python setup.py install
+# aws cli v2 - needed for storing files in s3 during usersync k8s job
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && /bin/rm -rf awscliv2.zip ./aws
 
-WORKDIR /var/www/amanuensis
+# install poetry
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
 
-CMD /dockerrun.sh
+COPY . /$appname
+COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
+COPY ./deployment/uwsgi/wsgi.py /$appname/wsgi.py
+WORKDIR /$appname
+
+# cache so that poetry install will run if these files change
+COPY poetry.lock pyproject.toml /$appname/
+
+# install amanuensis and dependencies via poetry
+RUN source $HOME/.poetry/env \
+    && poetry config virtualenvs.create false \
+    && poetry install -vv --no-dev --no-interaction \
+    && poetry show -v
+
+# RUN COMMIT=`git rev-parse HEAD` && echo "COMMIT=\"${COMMIT}\"" >$appname/version_data.py \
+#    && VERSION=`git describe --always --tags` && echo "VERSION=\"${VERSION}\"" >>$appname/version_data.py
+
+WORKDIR /var/www/$appname
+
+CMD ["sh","-c","bash /dockerrun.sh"]
