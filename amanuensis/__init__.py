@@ -62,8 +62,8 @@ def app_init(
 
 def app_sessions(app):
     app.url_map.strict_slashes = False
-    # app.db = SQLAlchemyDriver(config["DB"])
-    app.db = SQLAlchemyDriver('postgresql://amanuensis_user:amanuensis_pass@postgres:5432/amanuensis_db')
+    app.db = SQLAlchemyDriver(config["DB"])
+    # app.db = SQLAlchemyDriver('postgresql://amanuensis_user:amanuensis_pass@postgres:5432/amanuensis_db')
     logger.warning("LUCA - DB connected")
     # TODO: we will make a more robust migration system external from the application
     #       initialization soon
