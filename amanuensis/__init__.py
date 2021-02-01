@@ -62,8 +62,8 @@ def app_init(
 
 def app_sessions(app):
     app.url_map.strict_slashes = False
-    # app.db = SQLAlchemyDriver(config["DB"])
-    app.db = SQLAlchemyDriver('postgresql://amanuensis_user:amanuensis_pass@postgres:5432/amanuensis_db')
+    app.db = SQLAlchemyDriver(config["DB"])
+    # app.db = SQLAlchemyDriver('postgresql://amanuensis_user:amanuensis_pass@postgres:5432/amanuensis_db')
     logger.warning("LUCA - DB connected")
     # TODO: we will make a more robust migration system external from the application
     #       initialization soon
@@ -94,9 +94,6 @@ def app_register_blueprints(app):
     # google_blueprint = amanuensis.blueprints.google.make_google_blueprint()
     # app.register_blueprint(google_blueprint, url_prefix="/google")
 
-    # app.register_blueprint(
-    #     amanuensis.blueprints.privacy.blueprint, url_prefix="/privacy-policy"
-    # )
 
     app.register_blueprint(amanuensis.blueprints.search.blueprint, url_prefix="/cohort")
     

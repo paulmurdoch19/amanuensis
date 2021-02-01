@@ -46,36 +46,5 @@ def make_creds_blueprint():
         OtherCredentials, "/<provider>/<access_key>", strict_slashes=False
     )
 
-    @blueprint.route("/", methods=["GET"])
-    @require_auth_header({"credentials"})
-    def list_sources():
-        """
-        List different resources user can have credentials
-
-        **Example:**
-        .. code-block:: http
-
-               GET /credentials/ HTTP/1.1
-               Content-Type: application/json
-               Accept: application/json
-
-        .. code-block:: JavaScript
-
-            {
-                "/api": "access to CDIS APIs",
-                "/ceph": "access to Ceph storage",
-                "/cleversafe": "access to cleversafe storage",
-                "/aws-s3", "access to AWS S3 storage"
-                "/google", "access to Google Cloud storage"
-            }
-        """
-        services = set(
-            [
-                info.get("backend")
-                for _, info in config["STORAGE_CREDENTIALS"].items()
-                if info.get("backend")
-            ]
-        )
-        return flask.jsonify(get_endpoints_descriptions(services, current_session))
 
     return blueprint

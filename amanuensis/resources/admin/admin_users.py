@@ -366,7 +366,7 @@ def delete_user(current_session, username):
                 "Could not find Google proxy group for this user in amanuensis db. Checking cirrus..."
             )
             pgname = get_proxy_group_name_for_user(
-                user.id, user.username, prefix=config["GOOGLE_GROUP_PREFIX"]
+                user.id, user.username, prefix='a'
             )
             google_proxy_group_from_google = gcm.get_group(pgname)
             gpg_email = (

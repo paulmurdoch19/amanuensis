@@ -143,10 +143,7 @@ def create_primary_service_account_key(user_id, username, proxy_group_id, expire
     private_key_bytes = json.dumps(sa_private_key).encode("utf-8")
     private_key = fernet_key.encrypt(private_key_bytes).decode("utf-8")
 
-    expires = expires or (
-        int(time.time())
-        + config["GOOGLE_SERVICE_ACCOUNT_KEY_FOR_URL_SIGNING_EXPIRES_IN"]
-    )
+    expires = expires 
 
     add_custom_service_account_key_expiration(
         key_id, service_account.id, expires, private_key=private_key
@@ -191,11 +188,11 @@ def give_service_account_billing_access_if_necessary(
             "You did NOT provide a `userProject` for requester pays billing, "
             "so we could not create a custom role in that project to provide "
             "the necessary service account ({}) billing permission. "
-            "Our main service account ({}) will need valid permissions in the "
+            "Our main service account () will need valid permissions in the "
             "project you supplied to create a custom role and change the project "
             "IAM policy. There is no configured default billing project so you must "
             "provide a `userProject` query parameter.".format(
-                sa_account_id, config["CIRRUS_CFG"].get("GOOGLE_ADMIN_EMAIL")
+                sa_account_id
             )
         )
 
@@ -229,11 +226,10 @@ def give_service_account_billing_access_if_necessary(
                     "amanuensis has a configured Google Project for requester pays billing ({}), "
                     "but could not create a custom role in that project to provide "
                     "the necessary service account ({}) billing permission. It could be that "
-                    "the amanuensis admin service account ({}) does not have valid permissions in the "
+                    "the amanuensis admin service account () does not have valid permissions in the "
                     "project.".format(
                         r_pays_project,
                         sa_account_id,
-                        config["CIRRUS_CFG"].get("GOOGLE_ADMIN_EMAIL"),
                     )
                 )
             else:
@@ -241,11 +237,10 @@ def give_service_account_billing_access_if_necessary(
                     "You provided {} as a `userProject` for requester pays billing, "
                     "but we could not create a custom role in that project to provide "
                     "the necessary service account ({}) billing permission. It could be that "
-                    "our main service account ({}) does not have valid permissions in the "
+                    "our main service account () does not have valid permissions in the "
                     "project you supplied to create a custom role and change the project IAM policy.".format(
                         r_pays_project,
                         sa_account_id,
-                        config["CIRRUS_CFG"].get("GOOGLE_ADMIN_EMAIL"),
                     )
                 )
 
@@ -411,11 +406,11 @@ def get_or_create_service_account(client_id, user_id, username, proxy_group_id):
     if proxy_group_id:
         if client_id:
             service_account_id = get_valid_service_account_id_for_client(
-                client_id, user_id, prefix=config["GOOGLE_SERVICE_ACCOUNT_PREFIX"]
+                client_id, user_id, prefix='a'
             )
         else:
             service_account_id = get_valid_service_account_id_for_user(
-                user_id, username, prefix=config["GOOGLE_SERVICE_ACCOUNT_PREFIX"]
+                user_id, username, prefix='a'
             )
 
         with GoogleCloudManager() as g_cloud:
@@ -439,50 +434,6 @@ def _update_service_account_db_entry(
     """
     Now that SA exists in Google so lets check our db and update/add as necessary
     """
-
-    # if we're now using a prefix for SAs, cleanup the db
-    if config["GOOGLE_SERVICE_ACCOUNT_PREFIX"]:
-        # - if using the old naming convention without a prefix,
-        # remove that SA from the db b/c we'll be using the new one from now on
-        # - construct old email using account id provided and
-        # domain from new email to find the db entry
-        old_service_account_id = get_valid_service_account_id_for_client(
-            client_id, user_id
-        )
-        old_sa_email = "@".join(
-            (old_service_account_id, new_service_account["email"].split("@")[-1])
-        )
-
-        # clear out old SA and keys if there is one
-        old_service_account_db_entry = (
-            current_session.query(GoogleServiceAccount)
-            .filter(GoogleServiceAccount.email == old_sa_email)
-            .first()
-        )
-        if old_service_account_db_entry:
-            logger.info(
-                "Found Google Service Account using old naming convention without a prefix: "
-                "{}. Removing from db. Keys should still have access in Google until "
-                "cronjob removes them (e.g. amanuensis-create google-manage-keys). NOTE: "
-                "the SA will still exist in Google but amanuensis will use new SA {} for "
-                "new keys.".format(old_sa_email, new_service_account["email"])
-            )
-
-            old_service_account_keys_db_entries = (
-                current_session.query(GoogleServiceAccountKey)
-                .filter(
-                    GoogleServiceAccountKey.service_account_id
-                    == old_service_account_db_entry.id
-                )
-                .all()
-            )
-
-            # remove the keys then the sa itself from db
-            for old_key in old_service_account_keys_db_entries:
-                current_session.delete(old_key)
-
-            current_session.commit()
-            current_session.delete(old_service_account_db_entry)
 
     service_account_db_entry = (
         current_session.query(GoogleServiceAccount)
@@ -615,7 +566,7 @@ def _create_proxy_group(user_id, username):
 
 def get_default_google_account_expiration():
     now = int(time.time())
-    expiration = now + config["GOOGLE_ACCOUNT_ACCESS_EXPIRES_IN"]
+    expiration = now + 1000
     return expiration
 
 
@@ -679,7 +630,6 @@ def get_prefix_for_google_proxy_groups():
     Returns:
         str: prefix for proxy groups
     """
-    prefix = config.get("GOOGLE_GROUP_PREFIX")
     if not prefix:
         raise NotSupported(
             "GOOGLE_GROUP_PREFIX must be set in the configuration. "
@@ -834,9 +784,7 @@ def get_google_app_creds(app_creds_file=None):
     """
     Get the google app creds from the cirrus configuration.
     """
-    app_creds_file = app_creds_file or config.get("CIRRUS_CFG", {}).get(
-        "GOOGLE_APPLICATION_CREDENTIALS"
-    )
+    app_creds_file = app_creds_file or {}
 
     creds = None
     if app_creds_file and os.path.exists(app_creds_file):
@@ -869,9 +817,7 @@ def is_google_managed_service_account(service_account_email):
     """
     service_account_domain = "{}".format(service_account_email.split("@")[-1])
 
-    google_managed_service_account_domains = config.get(
-        "GOOGLE_MANAGED_SERVICE_ACCOUNT_DOMAINS", []
-    )
+    google_managed_service_account_domains = []
 
     return service_account_domain in google_managed_service_account_domains
 

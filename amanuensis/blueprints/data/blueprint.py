@@ -165,7 +165,7 @@ def upload_data_file():
     blank_index = BlankIndex(
         file_name=params["file_name"], authz=params.get("authz"), uploader=uploader
     )
-    expires_in = flask.current_app.config.get("MAX_PRESIGNED_URL_TTL", 3600)
+    expires_in = 3600
 
     if "expires_in" in params:
         is_valid_expiration(params["expires_in"])
@@ -193,7 +193,7 @@ def init_multipart_upload():
     if "file_name" not in params:
         raise UserError("missing required argument `file_name`")
     blank_index = BlankIndex(file_name=params["file_name"])
-    expires_in = flask.current_app.config.get("MAX_PRESIGNED_URL_TTL", 3600)
+    expires_in = 3600
     if "expires_in" in params:
         is_valid_expiration(params["expires_in"])
         expires_in = min(params["expires_in"], expires_in)
@@ -222,7 +222,7 @@ def generate_multipart_upload_presigned_url():
     if missing:
         raise UserError("missing required arguments: {}".format(list(missing)))
 
-    expires_in = flask.current_app.config.get("MAX_PRESIGNED_URL_TTL", 3600)
+    expires_in = 3600
     if "expires_in" in params:
         is_valid_expiration(params["expires_in"])
         expires_in = min(params["expires_in"], expires_in)
@@ -253,7 +253,7 @@ def complete_multipart_upload():
     if missing:
         raise UserError("missing required arguments: {}".format(list(missing)))
 
-    expires_in = flask.current_app.config.get("MAX_PRESIGNED_URL_TTL", 3600)
+    expires_in = 3600
     if "expires_in" in params:
         is_valid_expiration(params["expires_in"])
         expires_in = min(params["expires_in"], expires_in)

@@ -26,40 +26,7 @@ SEND_TO = "phillis.tt@gmail.com"
 
 HMAC_ENCRYPTION_KEY = ""
 
-DEFAULT_LOGIN_URL = BASE_URL + "/login/google"
 
-STORAGE_CREDENTIALS = {
-    "cleversafe-server-a": {
-        "backend": "cleversafe",
-        "aws_access_key_id": "",
-        "aws_secret_access_key": "",
-        "host": "somemanager.osdc.io",
-        "public_host": "someobjstore.datacommons.io",
-        "port": 443,
-        "is_secure": True,
-        "username": "someone",
-        "password": "somepass",
-        "calling_format": OrdinaryCallingFormat(),
-        "is_mocked": True,
-    },
-    "google-cloud-server": {
-        "backend": "google",
-        "google_project_id": "some-project-id-239870as9f23flkja8010",
-    },
-}
-
-# Configuration necessary for cirrus (Cloud Management Library)
-# https://github.com/uc-cdis/cirrus
-# will eventually be passed as params but cirrus looks for env vars right now
-CIRRUS_CFG = {
-    "GOOGLE_API_KEY": "",
-    "GOOGLE_PROJECT_ID": "",
-    "GOOGLE_APPLICATION_CREDENTIALS": "",
-    "GOOGLE_STORAGE_CREDS": "",
-    "GOOGLE_ADMIN_EMAIL": "",
-    "GOOGLE_IDENTITY_DOMAIN": "",
-    "GOOGLE_CLOUD_IDENTITY_ADMIN_EMAIL": "",
-}
 
 """
 If the api is behind firewall that need to set http proxy:
@@ -68,16 +35,8 @@ If the api is behind firewall that need to set http proxy:
 HTTP_PROXY = None
 STORAGES = ["/cleversafe"]
 
-SHIBBOLETH_HEADER = "persistent_id"
 
-# assumes shibboleth is deployed under {BASE_URL}/shibboleth
-SSO_URL = "https://auth.nih.gov/affwebservices/public/saml2sso?SPID={}/shibboleth&RelayState=".format(
-    BASE_URL
-)
 
-ITRUST_GLOBAL_LOGOUT = (
-    "https://auth.nih.gov/siteminderagent/smlogout.asp?mode=nih&AppReturnUrl="
-)
 
 SESSION_COOKIE_SECURE = False
 ENABLE_CSRF_PROTECTION = True
@@ -103,65 +62,15 @@ S3_BUCKETS = {
     "bucket3": {"cred": "CRED1", "role-arn": "arn:aws:iam::role1"},
 }
 
-#: Confiure which identity providers this amanuensis instance can use for login.
-#:
-#: See ``amanuensis/blueprints/login/__init__.py`` for which identity providers can
-#: be loaded.
-#:
-#: NOTE: Don't enable shibboleth if the deployment is not protected by
-#: shibboleth module, the shib module takes care of preventing header spoofing.
-ENABLED_IDENTITY_PROVIDERS = {
-    # ID for which of the providers to default to.
-    "default": "google",
-    # Information for identity providers. The name will be what show
-    # up in portal login page
-    "providers": {
-        "fence": {"name": "NIH Login"},
-        "google": {"name": "Google OAuth"},
-        "shibboleth": {"name": "NIH Login"},
-    },
-}
 
 APP_NAME = ""
 
-GOOGLE_GROUP_PREFIX = ""
 
-#: ``MAX_PRESIGNED_URL_TTL: int``
-#: The number of seconds after a pre-signed url is issued until it expires.
-MAX_PRESIGNED_URL_TTL = 3600
 
-#: ``MAX_API_KEY_TTL: int``
-#: The number of seconds after an API KEY is issued until it expires.
-MAX_API_KEY_TTL = 2592000
-
-#: ``MAX_ACCESS_TOKEN_TTL: int``
-#: The number of seconds after an access token is issued until it expires.
-MAX_ACCESS_TOKEN_TTL = 3600
 dir_path = "/secrets"
 fence_creds = os.path.join(dir_path, "fence_credentials.json")
 
-GOOGLE_MANAGED_SERVICE_ACCOUNT_DOMAINS = {
-    "dataflow-service-producer-prod.iam.gserviceaccount.com",
-    "cloudbuild.gserviceaccount.com",
-    "cloud-ml.google.com.iam.gserviceaccount.com",
-    "container-engine-robot.iam.gserviceaccount.com",
-    "dataflow-service-producer-prod.iam.gserviceaccount.com",
-    "sourcerepo-service-accounts.iam.gserviceaccount.com",
-    "dataproc-accounts.iam.gserviceaccount.com",
-    "gae-api-prod.google.com.iam.gserviceaccount.com",
-    "genomics-api.google.com.iam.gserviceaccount.com",
-    "containerregistry.iam.gserviceaccount.com",
-    "container-analysis.iam.gserviceaccount.com",
-    "cloudservices.gserviceaccount.com",
-    "stackdriver-service.iam.gserviceaccount.com",
-    "appspot.gserviceaccount.com",
-    "partnercontent.gserviceaccount.com",
-    "trifacta-gcloud-prod.iam.gserviceaccount.com",
-    "gcf-admin-robot.iam.gserviceaccount.com",
-    "compute-system.iam.gserviceaccount.com",
-    "gcp-sa-websecurityscanner.iam.gserviceaccount.com",
-    "storage-transfer-service.iam.gserviceaccount.com",
-}
+
 
 REMOVE_SERVICE_ACCOUNT_EMAIL_NOTIFICATION = {
     "enable": False,
@@ -185,19 +94,9 @@ if os.path.exists(fence_creds):
         data = json.load(f)
         AWS_CREDENTIALS = data["AWS_CREDENTIALS"]
         S3_BUCKETS = data["S3_BUCKETS"]
-        DEFAULT_LOGIN_URL = data["DEFAULT_LOGIN_URL"]
-        OPENID_CONNECT.update(data["OPENID_CONNECT"])
         OIDC_ISSUER = data["OIDC_ISSUER"]
-        ENABLED_IDENTITY_PROVIDERS = data["ENABLED_IDENTITY_PROVIDERS"]
         APP_NAME = data["APP_NAME"]
         HTTP_PROXY = data["HTTP_PROXY"]
         dbGaP = data["dbGaP"]
-        GOOGLE_GROUP_PREFIX = data.get("GOOGLE_GROUP_PREFIX")
-        WHITE_LISTED_SERVICE_ACCOUNT_EMAILS = data.get(
-            "WHITE_LISTED_SERVICE_ACCOUNT_EMAILS"
-        )
-        WHITE_LISTED_GOOGLE_PARENT_ORGS = data.get("WHITE_LISTED_GOOGLE_PARENT_ORGS")
-        GOOGLE_MANAGED_SERVICE_ACCOUNT_DOMAINS.update(
-            data.get("GOOGLE_MANAGED_SERVICE_ACCOUNT_DOMAINS", [])
-        )
+
         GUN_MAIL = data.get("GUN_MAIL")
