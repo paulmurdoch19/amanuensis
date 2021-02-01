@@ -54,51 +54,7 @@ class ApiKeyList(Resource):
 
         return flask.jsonify(result)
 
-    @require_auth_header({"credentials"})
-    def post(self):
-        """
-        Generate a key for user
-
-        **Example:**
-        .. code-block:: http
-
-               POST /credentials/api/?expires_in=3600 HTTP/1.1
-               Content-Type: application/json
-               Accept: application/json
-
-        .. code-block:: JavaScript
-
-            {
-                "key_id": result,
-                "api_key": result
-            }
-        """
-        client_id = current_token.get("azp") or None
-        user_id = current_token["sub"]
-
-        # amanuensis identifies access_token endpoint, openid is the default
-        # scope for service endpoints
-        default_scope = ["amanuensis", "openid"]
-        content_type = flask.request.headers.get("Content-Type")
-        if content_type == "application/x-www-form-urlencoded":
-            scope = flask.request.form.getlist("scope")
-        else:
-            try:
-                scope = (json.loads(flask.request.data).get("scope")) or []
-            except ValueError:
-                scope = []
-        if not isinstance(scope, list):
-            scope = scope.split(",")
-        scope.extend(default_scope)
-        for s in scope:
-            if s not in config["USER_ALLOWED_SCOPES"]:
-                flask.abort(400, "Scope {} is not supported".format(s))
-        max_ttl = config.get("MAX_API_KEY_TTL", 2592000)
-        expires_in = min(int(flask.request.args.get("expires_in", max_ttl)), max_ttl)
-        api_key, claims = create_api_key(
-            user_id, flask.current_app.keypairs[0], expires_in, scope, client_id
-        )
-        return flask.jsonify(dict(key_id=claims["jti"], api_key=api_key))
+    
 
 
 class ApiKey(Resource):
@@ -162,7 +118,7 @@ class AccessKey(Resource):
                 api_key = None
         if not api_key:
             flask.abort(400, "Please provide an api_key in payload")
-        max_ttl = config.get("MAX_ACCESS_TOKEN_TTL", 3600)
+        max_ttl = 3600
         expires_in = min(int(flask.request.args.get("expires_in", max_ttl)), max_ttl)
         result = create_user_access_token(
             flask.current_app.keypairs[0], api_key, expires_in

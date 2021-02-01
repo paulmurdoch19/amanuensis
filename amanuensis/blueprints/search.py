@@ -17,6 +17,7 @@ REQUIRED_CERTIFICATES = {
 
 blueprint = flask.Blueprint("cohort", __name__)
 
+# cache = SimpleCache()
 
 
 @blueprint.route("/", methods=["GET"])

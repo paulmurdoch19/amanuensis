@@ -44,9 +44,7 @@ def bulk_update_google_groups(google_bulk_mapping):
     Args:
         google_bulk_mapping (dict): {"googlegroup@google.com": ["member1", "member2"]}
     """
-    google_project_id = (
-        config["STORAGE_CREDENTIALS"].get("google", {}).get("google_project_id")
-    )
+    
     with GoogleCloudManager(google_project_id) as gcm:
         for group, expected_members in google_bulk_mapping.items():
             expected_members = set(expected_members)
@@ -208,7 +206,7 @@ def is_valid_service_account_type(account_id, google_cloud_manager):
     """
     try:
         sa_type = google_cloud_manager.get_service_account_type(account_id)
-        return sa_type in config["ALLOWED_USER_SERVICE_ACCOUNT_DOMAINS"]
+        return sa_type in 'a'
     except Exception as exc:
         logger.error(
             "validity of Google service account {} (google project: {}) type "
@@ -853,9 +851,7 @@ def add_user_service_account_to_db(session, to_add_project_ids, service_account)
 
         # timestamp at which the SA will lose bucket access
         # by default: use configured time or 7 days
-        expiration_time = int(time.time()) + config.get(
-            "GOOGLE_USER_SERVICE_ACCOUNT_ACCESS_EXPIRES_IN", 604800
-        )
+        expiration_time = int(time.time()) + 604800
         requested_expires_in = (
             get_valid_expiration_from_request()
         )  # requested time (in seconds)
@@ -945,9 +941,7 @@ def extend_service_account_access(service_account_email, db=None):
 
         # timestamp at which the SA will lose bucket access
         # by default: use configured time or 7 days
-        expiration_time = int(time.time()) + config.get(
-            "GOOGLE_USER_SERVICE_ACCOUNT_ACCESS_EXPIRES_IN", 604800
-        )
+        expiration_time = int(time.time()) + 604800
         requested_expires_in = get_valid_expiration_from_request()
         if requested_expires_in:
             requested_expiration = int(time.time()) + requested_expires_in
@@ -1030,7 +1024,7 @@ def remove_white_listed_service_account_ids(sa_ids):
     Returns:
         List[str]: Service account emails
     """
-    white_listed_sa_emails = config.get("WHITE_LISTED_SERVICE_ACCOUNT_EMAILS", [])
+    white_listed_sa_emails = []
 
     logger.debug(
         "Removing whitelisted SAs {} from the SAs on the project.".format(
@@ -1061,7 +1055,7 @@ def is_org_whitelisted(parent_org):
         bool: whether or not the provide Google parent organization is whitelisted
     """
 
-    white_listed_google_parent_orgs = config.get("WHITE_LISTED_GOOGLE_PARENT_ORGS", {})
+    white_listed_google_parent_orgs = {}
 
     # make sure we're comparing same types
     return str(parent_org) in [

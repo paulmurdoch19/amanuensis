@@ -94,9 +94,6 @@ def app_register_blueprints(app):
     # google_blueprint = amanuensis.blueprints.google.make_google_blueprint()
     # app.register_blueprint(google_blueprint, url_prefix="/google")
 
-    # app.register_blueprint(
-    #     amanuensis.blueprints.privacy.blueprint, url_prefix="/privacy-policy"
-    # )
 
     app.register_blueprint(amanuensis.blueprints.search.blueprint, url_prefix="/cohort")
     

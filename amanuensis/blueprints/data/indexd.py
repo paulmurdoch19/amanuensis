@@ -63,7 +63,7 @@ def get_signed_url_for_file(action, file_id, file_name=None):
         force_signed_url = False
 
     indexed_file = IndexedFile(file_id)
-    expires_in = config.get("MAX_PRESIGNED_URL_TTL", 3600)
+    expires_in = 3600
     requested_expires_in = get_valid_expiration_from_request()
     if requested_expires_in:
         expires_in = min(requested_expires_in, expires_in)
@@ -918,10 +918,6 @@ class GoogleStorageIndexedFileLocation(IndexedFileLocation):
                 user_id=user_id, username=username, proxy_group_id=proxy_group_id
             )
 
-        # use configured project if it exists and no user project was given
-        if config["BILLING_PROJECT_FOR_SIGNED_URLS"] and not r_pays_project:
-            r_pays_project = config["BILLING_PROJECT_FOR_SIGNED_URLS"]
-
         final_url = cirrus.google_cloud.utils.get_signed_url(
             resource_path,
             http_verb,
@@ -937,7 +933,7 @@ class GoogleStorageIndexedFileLocation(IndexedFileLocation):
     def delete(self, bucket, file_id):
         try:
             with GoogleCloudManager(
-                creds=config["CIRRUS_CFG"]["GOOGLE_STORAGE_CREDS"]
+                creds='a'
             ) as gcm:
                 gcm.delete_data_file(bucket, file_id)
             return ("", 204)
