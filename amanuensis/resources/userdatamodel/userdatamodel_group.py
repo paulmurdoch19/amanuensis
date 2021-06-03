@@ -35,6 +35,7 @@ def clear_users_in_group(current_session, groupname):
             current_session.delete(link)
 
 
+
 def get_group(current_session, groupname):
     return current_session.query(Group).filter_by(name=groupname).first()
 

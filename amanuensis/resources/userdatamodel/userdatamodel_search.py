@@ -18,7 +18,7 @@ __all__ = [
 
 def get_search(current_session, logged_user_id, search_id):
     search = current_session.query(Search).filter_by(id=search_id).filter_by(user_id=logged_user_id).first()
-    return {"name": search.name, "id": search.id, "description": search.description, "filters": search.filters}
+    return search
 
 
 def get_all_searches(current_session, logged_user_id):
