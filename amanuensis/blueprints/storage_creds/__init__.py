@@ -5,8 +5,6 @@ from amanuensis.auth import require_auth_header
 from amanuensis.blueprints.storage_creds.api import AccessKey, ApiKey, ApiKeyList
 from amanuensis.blueprints.storage_creds.google import GoogleCredentialsList
 from amanuensis.blueprints.storage_creds.google import GoogleCredentials
-from amanuensis.blueprints.storage_creds.other import OtherCredentialsList
-from amanuensis.blueprints.storage_creds.other import OtherCredentials
 from amanuensis.resources.storage import get_endpoints_descriptions
 from amanuensis.restful import RestfulApi
 from amanuensis.config import config
@@ -39,12 +37,6 @@ def make_creds_blueprint():
         AccessKey, "/api/access_token", "/cdis/access_token", strict_slashes=False
     )
 
-    blueprint_api.add_resource(
-        OtherCredentialsList, "/<provider>", strict_slashes=False
-    )
-    blueprint_api.add_resource(
-        OtherCredentials, "/<provider>/<access_key>", strict_slashes=False
-    )
 
 
     return blueprint

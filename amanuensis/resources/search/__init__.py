@@ -30,7 +30,9 @@ def get_all(logged_user_id):
 
 def get_by_id(logged_user_id, search_id):
     with flask.current_app.db.session as session:
-        return get_search(session, logged_user_id, search_id)
+        search = get_search(session, logged_user_id, search_id)
+        return search
+
 
 
 def create(logged_user_id, name, description, filter_object):
