@@ -65,8 +65,6 @@ def app_init(
 
 def app_sessions(app):
     app.url_map.strict_slashes = False
-    logger.info("LUCA TEST DB CONNECTION")
-    logger.info(config["DB"])
     app.db = SQLAlchemyDriver(config["DB"])
     # app.db = SQLAlchemyDriver('postgresql://amanuensis_user:amanuensis_pass@postgres:5432/amanuensis_db')
     logger.warning("LUCA - DB connected")
@@ -103,7 +101,7 @@ def app_register_blueprints(app):
     app.register_blueprint(amanuensis.blueprints.search.blueprint, url_prefix="/cohort")
     app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/project")
     app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/request")
-    app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/messages")
+    app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
     
     app.register_blueprint(oauth2_blueprint.blueprint, url_prefix="/oauth2")
 
@@ -209,7 +207,6 @@ def app_config(
     logger.info("Loading settings...")
     # not using app.config.from_object because we don't want all the extra flask cfg
     # vars inside our singleton when we pass these through in the next step
-    logger.info("STEP 1")
     settings_cfg = flask.Config(app.config.root_path)
     settings_cfg.from_object(settings)
 
