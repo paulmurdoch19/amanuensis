@@ -2,23 +2,18 @@ import flask
 from flask_sqlalchemy_session import current_session
 
 from amanuensis.resources import message as m
-from amanuensis.resources.message import get_all_messages, get_messages_by_request, send_message
 
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
 
-# from amanuensis.models import MessageScema
-# from amanuensis.schema import MessageSchema
 
 
-
-blueprint = flask.Blueprint("messages", __name__)
+blueprint = flask.Blueprint("message", __name__)
 
 
 @blueprint.route("/", methods=["GET"])
-# @login_required({"user"})
-def get_all_user_messages():
+def get_messages():
     try:
         logged_user_id = current_user.id
     except AuthError:
@@ -26,30 +21,23 @@ def get_all_user_messages():
             "Unable to load or find the user, check your token"
         )
 
-    return flask.jsonify(m.get_all_messages(logged_user_id))
+    request_id = flask.request.args.get("request_id", None)
 
+    if request_id:
+        request_id = int(request_id)
 
-@blueprint.route("/request", methods=["GET"])
-# @login_required({"user"})
-def get_message_by_request():
-    try:
-        logged_user_id = current_user.id
-    except AuthError:
-        logger.warning(
-            "Unable to load or find the user, check your token"
-        )
+    if request_id and isinstance(request_id, int):
+        return flask.jsonify(m.get_messages(logged_user_id, request_id))
+    else:
+        return flask.jsonify(m.get_messages(logged_user_id))
 
-    request_id = flask.request.get_json().get("request_id", None)
-
-    return flask.jsonify(m.get_messages_by_request(logged_user_id, request_id))
 
 
 @blueprint.route("/", methods=["POST"])
-# @admin_login_required
 # @debug_log
 def send_message():
     """
-    Create a search on the userportaldatamodel database
+    Send a message to all the users that are working on a request (requestor plu committee members)
 
     Returns a json object
     """
@@ -63,7 +51,8 @@ def send_message():
     request_id = flask.request.get_json().get("request_id", None)
     body = flask.request.get_json().get("body", None)
 
-    # message_schema = MessageSchema()
+    # if body is None or body == "":
+    #     return 400
 
     return flask.jsonify(m.send_message(logged_user_id, request_id, body))
 

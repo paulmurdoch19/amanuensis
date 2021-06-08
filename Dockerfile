@@ -20,20 +20,6 @@ RUN mkdir -p /var/www/$appname \
     && chown nginx -R /var/www/.cache/Python-Eggs/ \
     && chown nginx /var/www/$appname
 
-# RUN apk update \
-#    && apk add postgresql-libs postgresql-dev libffi-dev libressl-dev \
-#    && apk add linux-headers musl-dev gcc \
-#    && apk add curl bash git vim make lftp \
-#    && apk update && apk add openssh && apk add libmcrypt-dev
-#
-# RUN mkdir -p /var/www/$appname \
-#    && mkdir -p /var/www/.cache/Python-Eggs/ \
-#    && mkdir /run/nginx/ \
-#    && ln -sf /dev/stdout /var/log/nginx/access.log \
-#    && ln -sf /dev/stderr /var/log/nginx/error.log \
-#    && chown nginx -R /var/www/.cache/Python-Eggs/ \
-#    && chown nginx /var/www/$appname
-
 #
 # libmhash is required by mcrypt - below - no apk package available
 #

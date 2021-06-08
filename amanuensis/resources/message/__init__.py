@@ -30,29 +30,33 @@ from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, 
 logger = get_logger(__name__)
 
 
-def get_all_messages(logged_user_id):
+def get_messages(logged_user_id, request_id=None):
     with flask.current_app.db.session as session:
-        msgs = udm.get_all_messages(session, logged_user_id)
+        if request_id:
+            msgs = udm.get_messages_by_request(session, logged_user_id, request_id)
+        else:
+            msgs = udm.get_all_messages(session, logged_user_id)
+        
         message_schema = MessageSchema(many=True)
         return message_schema.dump(msgs)
-
-
-def get_messages_by_request(logged_user_id, request_id):
-    with flask.current_app.db.session as session:
-        search = udm.get_messages_by_request(session, logged_user_id, request_id)
-        message_schema = MessageSchema(many=True)
-        return message_schema.dump(search)
 
 
 
 def send_message(logged_user_id, request_id, body):
     with flask.current_app.db.session as session:    
         #TODO get receivers from consorium EC members list
+        # user = get_user from fence
+        # if logged_user_id is commettee memeber send to other commettee members and requestor
+        # otherwise send to commettee memebers
         receivers = [Receiver(receiver_id=r_id) for r_id in [1,2]]
+
+        # TODO Check the request exists
+        # request = 
+
+        # TODO Trigger emails
         msg = udm.send_message(session, logged_user_id, request_id, body, receivers)
 
         message_schema = MessageSchema()
-
         return message_schema.dump(msg)
 
 
