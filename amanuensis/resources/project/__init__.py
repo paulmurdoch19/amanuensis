@@ -41,14 +41,24 @@ logger = get_logger(__name__)
 #         return get_search(session, logged_user_id, search_id)
 
 
-def create(logged_user_id, description, search_ids):
+def create(logged_user_id, name, description, search_ids):
+    #TODO get all the searches
     s_1 = search.get_by_id(logged_user_id, search_ids[0])
-    logger.info(s_1)
+    searches = []
+    searches.append(s_1)
+
+    #TODO execute the searches and see what consortium the data are coming from 
+    #TODO make sure to populate the consortium table
+    requests = []
+    req_1 = Request(consortium_data_contributor_id=1)
+    requests.append(req_1)
+  
+
     with flask.current_app.db.session as session:
-        test = Search()
+        # test = Search()
         test_1 = Request()
-        logger.info(test)
-        return create_project(session, logged_user_id, description, s_1, test_1)
+        # logger.info(test)
+        return create_project(session, logged_user_id, description, searches, requests)
 
 
 # def update(logged_user_id, search_id, name, description, filter_object):

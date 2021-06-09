@@ -10,6 +10,8 @@ from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
 
 
+from amanuensis.schema import ProjectSchema
+
 
 blueprint = flask.Blueprint("project", __name__)
 
@@ -48,7 +50,9 @@ def create_project():
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
     search_ids = flask.request.get_json().get("search_ids", None)
-    return flask.jsonify(create(logged_user_id, description, search_ids))
+
+    project_schema = ProjectSchema()
+    return flask.jsonify(project_schema.dump(create(logged_user_id, name, description, search_ids)))
 
 
 # @blueprint.route("/<search_id>", methods=["PUT"])

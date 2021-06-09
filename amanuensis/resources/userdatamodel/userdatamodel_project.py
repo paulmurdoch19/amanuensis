@@ -39,37 +39,23 @@ __all__ = [
 #     return project
 
 
-def create_project(current_session, user_id, description, search, request):
+def create_project(current_session, user_id, description, searches, requests):
     """
     Creates a project with an associated auth_id and storage access
     """
     new_project = Project(user_id=user_id, description=description)
-    # current_session.add(new_project)
-    # current_session.flush()
 
     current_session.add(new_project)
-    # current_session.commit()
+    new_project.searches.append(searches)
+    new_project.requests.append(requests)
 
-    # new_project = Project(user_id=user_id, description=description)
-    # new_search = Search(user_id=user_id, 
-    #                     user_source="fence", 
-    #                     name="test", 
-    #                     description=description)
-
-    new_project.searches.append(search)
-    new_project.requests.append(request)
+    # current_session.flush()
     # current_session.add(new_project)
     # current_session.merge(new_project)
 
     current_session.commit()
     
-
-
-
-
-
-
-    return {"user_id": new_project.user_id, "id": new_project.id, "description": new_project.description}
+    return new_project
 
 
 

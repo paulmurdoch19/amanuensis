@@ -1,12 +1,11 @@
 import flask
 from flask_sqlalchemy_session import current_session
 
-from amanuensis.resources import message as m
-
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
-
+from amanuensis.schema import MessageSchema
+from amanuensis.resources import message as m
 
 
 blueprint = flask.Blueprint("message", __name__)
@@ -27,9 +26,13 @@ def get_messages():
         request_id = int(request_id)
 
     if request_id and isinstance(request_id, int):
-        return flask.jsonify(m.get_messages(logged_user_id, request_id))
+        msgs = m.get_messages(logged_user_id, request_id)
+        message_schema = MessageSchema(many=True)
+        return flask.jsonify(message_schema.dump(msgs))
     else:
-        return flask.jsonify(m.get_messages(logged_user_id))
+        msgs = m.get_messages(logged_user_id)
+        message_schema = MessageSchema(many=True)
+        return flask.jsonify(message_schema.dump(msgs))
 
 
 
@@ -54,7 +57,8 @@ def send_message():
     # if body is None or body == "":
     #     return 400
 
-    return flask.jsonify(m.send_message(logged_user_id, request_id, body))
+    message_schema = MessageSchema()
+    return flask.jsonify(message_schema.dump(m.send_message(logged_user_id, request_id, body)))
 
 
 

@@ -1,13 +1,14 @@
 from userportaldatamodel.schemas.schemas import (
     ReceiverSchema,
     MessageSchema,
+    ConsortiumDataContributorSchema,
     SearchSchema,
     ProjectSchema,
     RequestSchema,
     AttributesSchema,
     AttributeListSchema,
     AttributeListValueSchema,
-    InputType
+    InputTypeSchema
 )
 
 

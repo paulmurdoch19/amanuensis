@@ -34,6 +34,7 @@ from userportaldatamodel import Base
 from userportaldatamodel.models import (
     Search,
     Project,
+    ConsortiumDataContributor,
     Request,
     Message,
     Receiver,
