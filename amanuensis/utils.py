@@ -318,11 +318,10 @@ def get_consortium_list(path, src_filter):
         )
 
         print("LUCA PRIMNTTTTTTTTTT")
-        print(r)
     except requests.HTTPError as e:
         print(e.message)
 
-    return r
+    return r.json()
     # if r.status_code == 200:
     #     return r.json()
     # return []

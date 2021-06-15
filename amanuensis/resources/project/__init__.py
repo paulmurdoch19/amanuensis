@@ -29,6 +29,9 @@ from amanuensis.models import (
 )
 
 
+from amanuensis.schema import ProjectSchema
+
+
 
 logger = get_logger(__name__)
 
@@ -62,18 +65,22 @@ def create(logged_user_id, name, description, search_ids):
     requests = []
     for consortia in consortiums:
         # get consortium's ID
-        consortium_id = consortium_data_contributor.get(code=consortia)
-        if consortium_id is None:
+        consortium = consortium_data_contributor.get(code=consortia)
+        if consortium is None:
             raise NotFound(
                 "Consortium with code {} not found.".format(
                     consortia
                 )
             )
-        req = Request(consortium_data_contributor_id=consortium_id)
+        req = Request()
+        req.consortium_data_contributor = consortium
         requests.append(req)
   
     with flask.current_app.db.session as session:
-        return create_project(session, logged_user_id, description, searches, requests)
+        project_schema = ProjectSchema()
+        project = create_project(session, logged_user_id, description, searches, requests)
+        project_schema.dump(project)
+        return project
 
 
 # def update(logged_user_id, search_id, name, description, filter_object):

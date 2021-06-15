@@ -46,16 +46,19 @@ def create_project(current_session, user_id, description, searches, requests):
     new_project = Project(user_id=user_id, description=description)
 
     current_session.add(new_project)
-    new_project.searches.append(searches)
-    new_project.requests.append(requests)
+    new_project.searches.extend(searches)
+    new_project.requests.extend(requests)
 
     # current_session.flush()
     # current_session.add(new_project)
     # current_session.merge(new_project)
 
+    # current_session.flush()
+    # current_session.refresh(new_project)
     current_session.commit()
     
     return new_project
+
 
 
 
