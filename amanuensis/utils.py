@@ -16,9 +16,11 @@ import flask
 from userportaldatamodel.driver import SQLAlchemyDriver
 from werkzeug.datastructures import ImmutableMultiDict
 
-from amanuensis.models import Client, User, query_for_user
+# from amanuensis.models import Client, User, query_for_user
+from amanuensis.models import query_for_user
 from amanuensis.errors import NotFound, UserError
 from amanuensis.config import config
+from amanuensis.auth.auth import get_jwt_from_header
 
 
 rng = SystemRandom()
@@ -68,28 +70,28 @@ def create_client(
     with driver.session as s:
         user = query_for_user(session=s, username=username)
 
-        if not user:
-            user = User(username=username, is_admin=is_admin)
-            s.add(user)
+        # if not user:
+        #     user = User(username=username, is_admin=is_admin)
+        #     s.add(user)
         if s.query(Client).filter(Client.name == name).first():
             if arborist is not None:
                 arborist.delete_client(client_id)
             raise Exception("client {} already exists".format(name))
-        client = Client(
-            client_id=client_id,
-            client_secret=hashed_secret,
-            user=user,
-            redirect_uris=urls,
-            _allowed_scopes=" ".join(allowed_scopes),
-            description=description,
-            name=name,
-            auto_approve=auto_approve,
-            grant_types=grant_types,
-            is_confidential=confidential,
-            token_endpoint_auth_method=auth_method,
-        )
-        s.add(client)
-        s.commit()
+        # client = Client(
+        #     client_id=client_id,
+        #     client_secret=hashed_secret,
+        #     user=user,
+        #     redirect_uris=urls,
+        #     _allowed_scopes=" ".join(allowed_scopes),
+        #     description=description,
+        #     name=name,
+        #     auto_approve=auto_approve,
+        #     grant_types=grant_types,
+        #     is_confidential=confidential,
+        #     token_endpoint_auth_method=auth_method,
+        # )
+        # s.add(client)
+        # s.commit()
     return client_id, client_secret
 
 
@@ -222,6 +224,108 @@ def split_url_and_query_params(url):
     query_params = parse_qs(query_string)
     url = urlunsplit((scheme, netloc, path, None, fragment))
     return url, query_params
+
+
+
+# Convert filter obj into GQL filter format
+# @param {object | undefined} filter
+
+#TODO Consider importing it from data-portal or executing it in guppy instead of translating it here - https://medium.com/analytics-vidhya/run-javascript-from-python-c0fe8f8aeb1e
+def getGQLFilter(src_filter):
+    #TODO Translate filter to ES format
+    # {
+    #     "AND":[
+    #         {
+    #             "IN":{
+    #                 "consortium":["INRG"]
+    #             }
+    #         }
+    #     ]
+    # }
+    # FROM:
+    # {
+    #     "race": {
+    #         "selectedValues": [
+    #             "Black or African American"
+    #         ]
+    #     },
+    #     "consortium": {
+    #         "selectedValues": [
+    #             "INRG"
+    #         ]
+    #     }
+    # }
+
+    # If filter is empty, not a dictionary or undefined
+    # or not isinstance(filter, dict) ?? TODO check this 
+    if (filter is None or not bool(filter)):
+        return {}
+
+    facetsList = []
+
+    for field,filterValues in src_filter.items():
+        fieldSplitted = field.split('.')
+        fieldName = fieldSplitted[len(fieldSplitted) - 1]
+        isRangeFilter = ('lowerBound' in filterValues and filterValues["lowerBound"]) or ('upperBound' in filterValues and filterValues["upperBound"])
+        hasSelectedValues = len(filterValues["selectedValues"]) > 0 if filterValues and 'selectedValues' in filterValues else False
+
+        if not isRangeFilter and not hasSelectedValues:
+            if '__combineMode' in filterValues:
+                # This filter only has a combine setting so far. We can ignore it.
+                return None;
+            else:
+                raise UserError(
+                    "Invalid filter object '{}'. ".format(filterValues)
+                )
+
+        # @type {{ AND?: any[]; IN?: { [x: string]: string[] }}} 
+        facetsPiece = {}
+        if isRangeFilter:
+            facetsPiece["AND"] = [
+                { '>=': { fieldName: filterValues["lowerBound"] } },
+                { '<=': { fieldName: filterValues["upperBound"] } },
+            ]
+        elif hasSelectedValues:
+            if '__combineMode' in filterValues and filterValues["__combineMode"] == 'AND':
+                facetsPiece["AND"] = map(lambda selectedValue: { "IN": { fieldName: selectedValue },}, filterValues["selectedValues"])
+            # combine mode defaults to OR when not set.
+            else: 
+                facetsPiece["IN"] = { fieldName: filterValues["selectedValues"] }
+
+        facetsList.append(
+            facetsPiece if len(fieldSplitted) == 1 else { "nested": { "path": '.'.join(fieldSplitted[0:-1]), **facetsPiece, }, }
+        )
+    
+
+    return { "AND": facetsList }
+
+
+
+def get_consortium_list(path, src_filter):
+    transformed_filter = getGQLFilter(src_filter)
+    target_filter = {}
+    target_filter["filter"] = transformed_filter
+
+    try:
+        url = path
+        headers = {'Content-Type': 'application/json'}
+        body = json.dumps(target_filter, separators=(',', ':'))
+        jwt = get_jwt_from_header()
+        headers['Authorization'] = 'bearer ' + jwt
+
+        r = requests.post(
+            url, data=body, headers=headers # , proxies=flask.current_app.config.get("EXTERNAL_PROXIES")
+        )
+
+        print("LUCA PRIMNTTTTTTTTTT")
+        print(r)
+    except requests.HTTPError as e:
+        print(e.message)
+
+    return r
+    # if r.status_code == 200:
+    #     return r.json()
+    # return []
 
 
 def send_email(from_email, to_emails, subject, text, smtp_domain):

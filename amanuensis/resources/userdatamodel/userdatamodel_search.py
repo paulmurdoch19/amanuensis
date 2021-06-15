@@ -12,6 +12,7 @@ __all__ = [
     "create_search",
     "delete_search",
     "update_search",
+    "get_searches_by_id",
 ]
 
 
@@ -19,6 +20,10 @@ __all__ = [
 def get_search(current_session, logged_user_id, search_id):
     search = current_session.query(Search).filter_by(id=search_id).filter_by(user_id=logged_user_id).first()
     return search
+
+def get_searches_by_id(current_session, logged_user_id, search_ids):
+    searches = current_session.query(Search).filter(Search.id.in_(search_ids)).filter_by(user_id=logged_user_id).all()
+    return searches
 
 
 def get_all_searches(current_session, logged_user_id):
