@@ -8,7 +8,7 @@ from amanuensis.resources.request import get
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
-
+from amanuensis.schema import RequestSchema
 
 
 blueprint = flask.Blueprint("request", __name__)
@@ -29,8 +29,12 @@ def get_request():
             "Unable to load or find the user, check your token"
         )
 
+    #TODO check if user is EC consortium member or not
     consortium = flask.request.args.get('consortium', None)
-    
-    return flask.jsonify(get(logged_user_id, consortium))
+    print(consortium)
+    print(current_user)
+
+    request_schema = RequestSchema(many=True)
+    return flask.jsonify(request_schema.dump(get(logged_user_id, consortium)))
 
 

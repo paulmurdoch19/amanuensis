@@ -8,18 +8,11 @@ from gen3authz.client.arborist.errors import ArboristError
 from amanuensis.resources.userdatamodel import (
     get_requests,
     get_request_by_id,
+    get_request_by_consortium,
 )
-
-
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
-# from amanuensis.jwt.utils import get_jwt_header
-# from amanuensis.models import query_for_user
-# from amanuensis.auth.auth import register_arborist_user
-# from amanuensis.crm import hubspot
-
-
 from amanuensis.models import (
     Request
 )
@@ -27,24 +20,26 @@ from amanuensis.models import (
 from amanuensis.schema import RequestSchema
 
 
-
 logger = get_logger(__name__)
 
 
-def get(logged_user_id, consortium=None, request_id=None):
+def get(logged_user_id, consortium=None):
+    #TODO
+    # Get from hubspot if User is an EC member for this specific consortium or not
+    isEcMember = False
+    requests = []
     with flask.current_app.db.session as session:
-        if consortium:
-        # TODO Get consortium
-            print("consortium")
-        elif request_id:
-            print("request_id")
-            request = get_request_by_id(session, logged_user_id, request_id)
-            return request
-            # request_schema = RequestSchema()
-            # return request_schema.dump(request)
+        if consortium and isEcMember:
+            requests = get_request_by_consortium(session, logged_user_id, consortium)
         else:
-            requests = get_requests(session, logged_user_id, None)
-            request_schema = RequestSchema(many=True)
-            return request_schema.dump(requests)
+            requests = get_requests(session, logged_user_id)
+            
+        request_schema = RequestSchema(many=True)
+        request_schema.dump(requests)
+        return requests
 
+
+def get_by_id(logged_user_id, request_id):
+    with flask.current_app.db.session as session:
+        return get_request_by_id(session, logged_user_id, request_id)
 
