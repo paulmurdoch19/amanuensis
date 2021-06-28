@@ -33,7 +33,20 @@ from sqlalchemy.schema import ForeignKey
 from userportaldatamodel import Base
 from userportaldatamodel.models import (
     Search,
+    Project,
+    ConsortiumDataContributor,
+    Request,
+    Message,
+    Receiver,
+    InputType,
+    AttributeListValue,
+    AttributeList,
+    Attributes
 )
+# from userportaldatamodel.schema import (
+#     # MessageSchema,
+#     ReceiverSchema
+# )
 import warnings
 
 from amanuensis.config import config
@@ -45,6 +58,8 @@ def query_for_user(session, username):
         .filter(func.lower(User.username) == username.lower())
         .first()
     )
+
+
 
 
 class ClientAuthType(Enum):

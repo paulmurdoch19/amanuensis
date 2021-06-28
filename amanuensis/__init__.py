@@ -18,6 +18,9 @@ from amanuensis.config import config
 from amanuensis.settings import CONFIG_SEARCH_FOLDERS
 import amanuensis.blueprints.misc
 import amanuensis.blueprints.search
+import amanuensis.blueprints.project
+import amanuensis.blueprints.request
+import amanuensis.blueprints.message
 
 from cdislogging import get_logger
 
@@ -96,6 +99,9 @@ def app_register_blueprints(app):
 
 
     app.register_blueprint(amanuensis.blueprints.search.blueprint, url_prefix="/cohort")
+    app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/project")
+    app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/request")
+    app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
     
     app.register_blueprint(oauth2_blueprint.blueprint, url_prefix="/oauth2")
 
