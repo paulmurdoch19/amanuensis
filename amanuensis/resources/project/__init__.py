@@ -7,6 +7,8 @@ from gen3authz.client.arborist.errors import ArboristError
 
 from amanuensis.resources.userdatamodel import (
     create_project,
+    get_project_by_consortium,
+    get_project_by_user
 )
 from amanuensis.resources import search, consortium_data_contributor
 
@@ -36,14 +38,29 @@ from amanuensis.schema import ProjectSchema
 logger = get_logger(__name__)
 
 
-# def get_all(logged_user_id):
-#     with flask.current_app.db.session as session:
-#         return get_all_searches(session, logged_user_id)
+def get_all(logged_user_id, approver):
+    project_schema = ProjectSchema(many=True)
+    with flask.current_app.db.session as session:
+        if approver:
+            #TODO check if the user is part of a EC commettee, if so get the one submitted to the consortium
+            #Get consortium
+            isEcMember = True
+            consortium = "INRG"
+            if isEcMember and consortium:
+                projects = get_project_by_consortium(session, consortium, logged_user_id)
+                project_schema.dump(projects)
+                return projects
+            else:
+                raise NotFound(
+                    "User role and consortium not matching or user {} is not assigned to the Executive Commettee in the system. Consortium: {}".format(
+                            logged_user_id,
+                            consortium
+                        )
+                    )
 
-
-# def get_by_id(logged_user_id, search_id):
-#     with flask.current_app.db.session as session:
-#         return get_search(session, logged_user_id, search_id)
+        projects = get_project_by_user(session, logged_user_id)
+        project_schema.dump(projects)
+        return projects
 
 
 def create(logged_user_id, name, description, search_ids):
@@ -81,6 +98,11 @@ def create(logged_user_id, name, description, search_ids):
         project = create_project(session, logged_user_id, description, searches, requests)
         project_schema.dump(project)
         return project
+
+# def get_by_id(logged_user_id, search_id):
+#     with flask.current_app.db.session as session:
+#         return get_search(session, logged_user_id, search_id)
+
 
 
 # def update(logged_user_id, search_id, name, description, filter_object):

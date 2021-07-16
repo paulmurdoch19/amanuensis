@@ -4,7 +4,7 @@ from flask_sqlalchemy_session import current_session
 # from amanuensis.auth import login_required, current_token
 # from amanuensis.errors import Unauthorized, UserError, NotFound
 # from amanuensis.models import Application, Certificate
-from amanuensis.resources.project import create
+from amanuensis.resources.project import create, get_all
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
@@ -13,22 +13,26 @@ from amanuensis.errors import AuthError
 from amanuensis.schema import ProjectSchema
 
 
-blueprint = flask.Blueprint("project", __name__)
+blueprint = flask.Blueprint("projects", __name__)
 
 # cache = SimpleCache()
 
 
-# @blueprint.route("/", methods=["GET"])
-# # @login_required({"user"})
-# def get_searches():
-#     try:
-#         logged_user_id = current_user.id
-#     except AuthError:
-#         logger.warning(
-#             "Unable to load or find the user, check your token"
-#         )
+@blueprint.route("/", methods=["GET"])
+# @login_required({"user"})
+def get_projetcs():
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning(
+            "Unable to load or find the user, check your token"
+        )
 
-#     return flask.jsonify(get_all(logged_user_id))
+    approver = flask.request.args.get('approver', None)
+    print(approver)
+
+    project_schema = ProjectSchema(many=True)
+    return flask.jsonify(project_schema.dump(get_all(logged_user_id, approver)))
 
 
 @blueprint.route("/", methods=["POST"])
