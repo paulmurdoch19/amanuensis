@@ -15,7 +15,7 @@ from amanuensis.models import (
     Message,
     Receiver
 )
-
+from amanuensis.crm import hubspot
 
 
 logger = get_logger(__name__)
@@ -31,7 +31,7 @@ def get_messages(logged_user_id, request_id=None):
         return msgs
 
 
-def send_message(logged_user_id, request_id, body):
+def send_message(logged_user_id, request_id, subject, body):
     with flask.current_app.db.session as session:    
         # TODO get receivers from consorium EC members list (connect to fence and/or hubspot)
         # 1. retrieve from Hubspot all the EC members
@@ -46,21 +46,63 @@ def send_message(logged_user_id, request_id, body):
         # consortium = req.consortium_data_contributor
 
         # Get EC members emails
-        ec_members = config["EXECUTIVE_COMMITTEE"]["INSTRUCT"] #consortium.code]
-        print(ec_members)
-        print("LUCAAAAAAAA")
+        # ec_members = config["EXECUTIVE_COMMITTEE"]["INSTRUCT"] #consortium.code]
+        # print(ec_members)
+        # print("LUCAAAAAAAA")
 
+        # hubspot_response = hubspot.get_users()
+
+        hubspot_response = { }
+
+        # DEBUG -- TEST DATA
+        # hubspot_response = {
+        #     "results": [
+        #         {
+        #             "id": "9601",
+        #             "properties": {
+        #                 "firstname": "Luca",
+        #                 "lastname": "Graglia",
+        #                 "email": "lgraglia@uchicago.edu"
+        #             },
+        #             "createdAt": "2019-12-18T03:30:17.883Z",
+        #             "updatedAt": "2021-07-08T16:50:06.678Z"
+        #         },
+        #         {
+        #             "id": "52551",
+        #             "properties": {
+        #                 "firstname": "Debra",
+        #                 "lastname": "Venckus",
+        #                 "email": "dvenckus@uchicago.edu"
+        #             },
+        #             "createdAt": "2021-04-09T03:30:17.883Z",
+        #             "updatedAt": "2021-07-07T16:50:06.678Z"
+        #         }
+        #     ]
+        # }
+
+        # rid_list = []
+        emails = []
+        if hubspot_response:
+            for member in hubspot_response["results"]:
+                emails.append(member['properties']['email'])
+
+
+        # ----------------------------
+        # NOTE -- uncertain about this
+        # The location and structure of the 
+        # ec user data hasn't been finalized
+        # it may all come from hubspot
+        # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        # ----------------------------
         #TODO Get EC members Fence ID
         # user = get_user from fence
         #TODO get requestor email
         # if logged_user_id is commettee memeber send to other commettee members and requestor
-        # otherwise send to commettee memebers
+        # otherwise send to committee memebers
 
-        receivers = [Receiver(receiver_id=r_id) for r_id in [1,2]]
-
-
-        # TODO Trigger emails
-        msg = udm.send_message(session, logged_user_id, request_id, body, receivers)
+        if emails:
+            receivers = [Receiver(receiver_id=r_id) for r_id in [1,2]]
+            msg = udm.send_message(session, logged_user_id, request_id, subject, body, receivers, emails)
 
         return msg
 

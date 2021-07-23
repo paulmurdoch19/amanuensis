@@ -4,7 +4,8 @@ from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Message,
 )
-
+# do this until AWS-related requests is handled by it's own project
+from amanuensis.utils import send_email_ses
 
 __all__ = [
     "get_all_messages",
@@ -24,12 +25,20 @@ def get_messages_by_request(current_session, logged_user_id, request_id):
     return messages
 
 
-def send_message(current_session, logged_user_id, request_id, body, receivers):
+def send_message(current_session, logged_user_id, request_id, subject, body, receivers, emails):
     new_message = Message(sender_id=logged_user_id, 
                         body=body,
                         request_id=request_id)
     
+    # DEBUG -- comment out 3 lines for testing
     current_session.add(new_message)
     new_message.receivers.extend(receivers)
     current_session.commit()
+
+    # Send the Messsage via AWS SES
+    send_email_ses(body, emails, subject)
+
     return new_message
+
+
+
