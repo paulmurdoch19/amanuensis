@@ -16,6 +16,7 @@ from amanuensis.models import (
     Receiver
 )
 from amanuensis.crm import hubspot
+from hubspotclient.client.hubspot.client import HubspotClient
 
 
 logger = get_logger(__name__)
