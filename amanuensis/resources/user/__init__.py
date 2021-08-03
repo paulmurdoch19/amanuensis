@@ -116,7 +116,7 @@ def get_user_info(current_session, username):
             user_info["id"] = contact.get('id')
             user_info["email"] = flask.g.user.username
 
-        # user_info = hubspot.get_user(user.username, user.additional_info["hubspot_id"])
+        # deprecated: user_info = hubspot.get_user(user.username, user.additional_info["hubspot_id"])
         if user_info:
             additional_info_merged.update(user_info)
 
