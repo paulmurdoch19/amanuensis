@@ -26,17 +26,19 @@ def get_messages_by_request(current_session, logged_user_id, request_id):
 
 
 def send_message(current_session, logged_user_id, request_id, subject, body, receivers, emails):
+    '''store message in db and send message to emails via aws ses'''
     new_message = Message(sender_id=logged_user_id, 
                         body=body,
                         request_id=request_id)
     
-    # DEBUG -- comment out 3 lines for testing
-    current_session.add(new_message)
-    new_message.receivers.extend(receivers)
-    current_session.commit()
+    if receivers:
+        current_session.add(new_message)
+        new_message.receivers.extend(receivers)
+        current_session.commit()
 
-    # Send the Messsage via AWS SES
-    send_email_ses(body, emails, subject)
+    if emails:
+        # Send the Messsage via AWS SES
+        send_email_ses(body, emails, subject)
 
     return new_message
 

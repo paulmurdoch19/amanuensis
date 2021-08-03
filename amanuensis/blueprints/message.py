@@ -61,9 +61,10 @@ def send_message():
 
     request_id = flask.request.get_json().get("request_id", None)
     body = flask.request.get_json().get("body", None)
+    subject = flask.request.get_json().get("subject", None)
 
-    # ToDo:  should this be a passed in as a parameter?
-    subject = "[PCDC GEN3] Project Event"
+    if not subject:
+        subject = "[PCDC GEN3] Project Activity"
 
     # if body is None or body == "":
     #     return 400
