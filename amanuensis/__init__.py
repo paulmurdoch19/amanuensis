@@ -99,8 +99,8 @@ def app_register_blueprints(app):
 
 
     app.register_blueprint(amanuensis.blueprints.search.blueprint, url_prefix="/cohort")
-    app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/project")
-    app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/request")
+    app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/projects")
+    app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/requests")
     app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
     
     app.register_blueprint(oauth2_blueprint.blueprint, url_prefix="/oauth2")

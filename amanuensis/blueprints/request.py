@@ -11,7 +11,7 @@ from amanuensis.errors import AuthError
 from amanuensis.schema import RequestSchema
 
 
-blueprint = flask.Blueprint("request", __name__)
+blueprint = flask.Blueprint("requests", __name__)
 
 
 

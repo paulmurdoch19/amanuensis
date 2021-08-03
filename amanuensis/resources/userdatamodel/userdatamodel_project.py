@@ -11,32 +11,17 @@ from amanuensis.models import (
 
 __all__ = [
     "create_project",
+    "get_project_by_consortium",
+    "get_project_by_user"
 ]
 
 
-# def get_projects(current_session, user_id):
-#     return current_session.query(Project).filter_by(user_id=user_id).all()
+def get_project_by_consortium(current_session, consortium, logged_user_id):
+    return current_session.query(Project).join(Project.requests).join(Request.consortium_data_contributor).filter_by(code=consortium).all()
 
 
-# def create_project_with_dict(current_session, project_data):
-#     """
-#     Create a project given a dict of all needed info
-#     Args:
-#         project_data (dict): dict of project info
-#     Return:
-#         None
-#     """
-#     auth_id = project_data["auth_id"]
-#     name = project_data.get("name") or auth_id
-#     storage_accesses = project_data.get("storage_accesses", [])
-#     project = create_project(
-#         current_session, name, auth_id, [sa["name"] for sa in storage_accesses]
-#     )
-#     for sa in storage_accesses:
-#         for bucket in sa.get("buckets", []):
-#             create_bucket_on_project(current_session, name, bucket, sa["name"])
-
-#     return project
+def get_project_by_user(current_session, logged_user_id):
+    return current_session.query(Project).filter_by(user_id=logged_user_id).all()
 
 
 def create_project(current_session, user_id, description, searches, requests):
@@ -58,6 +43,28 @@ def create_project(current_session, user_id, description, searches, requests):
     current_session.commit()
     
     return new_project
+
+
+     
+# def create_project_with_dict(current_session, project_data):
+#     """
+#     Create a project given a dict of all needed info
+#     Args:
+#         project_data (dict): dict of project info
+#     Return:
+#         None
+#     """
+#     auth_id = project_data["auth_id"]
+#     name = project_data.get("name") or auth_id
+#     storage_accesses = project_data.get("storage_accesses", [])
+#     project = create_project(
+#         current_session, name, auth_id, [sa["name"] for sa in storage_accesses]
+#     )
+#     for sa in storage_accesses:
+#         for bucket in sa.get("buckets", []):
+#             create_bucket_on_project(current_session, name, bucket, sa["name"])
+
+#     return project
 
 
 
