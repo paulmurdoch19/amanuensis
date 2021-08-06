@@ -1,6 +1,7 @@
 import flask
 from flask_sqlalchemy_session import current_session
 
+from os import environ
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
@@ -49,10 +50,11 @@ def send_message():
     """
     try:
         #DEBUG -- switch lines below for testing
-        # logged_user_id = 1
-
-        # very real legit code
-        logged_user_id = current_user.id
+        if bool(environ('GEN3_DEBUG')):
+            logged_user_id = 1
+        else:
+            # very real legit code
+            logged_user_id = current_user.id
         
     except AuthError:
         logger.warning(

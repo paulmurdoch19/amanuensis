@@ -2,6 +2,7 @@ import flask
 import jwt
 import smtplib
 import json
+from os import environ
 from cdislogging import get_logger
 from gen3authz.client.arborist.errors import ArboristError
 
@@ -40,6 +41,12 @@ def get(logged_user_id, consortium=None):
 
 
 def get_by_id(logged_user_id, request_id):
+    
+    if bool(environ('GEN3_DEBUG')):
+        return {
+            "consortium_data_contributor": 1
+        }
+
     with flask.current_app.db.session as session:
         return get_request_by_id(session, logged_user_id, request_id)
 

@@ -47,33 +47,11 @@ def send_message(logged_user_id, request_id, subject, body):
         # returns [ email, disease_group_executive_committee ]
         hubspot_response = hubspot.get_contacts_by_committee(f"{consortium} Executive Committee Member")
 
-        # DEBUG -- TEST DATA
-        # hubspot_response = {
-        #     "results": [
-        #         {
-        #             "id": "9601",
-        #             "properties": {
-        #                 "email": "lgraglia@uchicago.edu",
-        #                 "disease_group_executive_committee": "INSTRuCT Executive Committee Member"
-        #             },
-        #             "createdAt": "2019-12-18T03:30:17.883Z",
-        #             "updatedAt": "2021-07-08T16:50:06.678Z"
-        #         },
-        #         {
-        #             "id": "52551",
-        #             "properties": {
-        #                 "email": "dvenckus@uchicago.edu",
-        #                 "disease_group_executive_committee": "INSTRuCT Executive Committee Member"
-        #             },
-        #             "createdAt": "2021-04-09T03:30:17.883Z",
-        #             "updatedAt": "2021-07-07T16:50:06.678Z"
-        #         }
-        #     ]
-        # }
+        logger.debug('Hubspot Response: ', hubspot_response)
 
         emails = []
         receivers = []
-        if hubspot_response:
+        if hubspot_response and int(hubspot_response.get('total')):
             for member in hubspot_response["results"]:
                 email = member['properties']['email']
                 emails.append(email)

@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import string
+from os import environ
 from email.contentmanager import get_text_content
 from functools import wraps
 from random import SystemRandom
@@ -391,6 +392,16 @@ def send_email_ses(body, to_emails, subject):
         KeyError
 
     """
+
+    # DON'T SEND EMAILS IN DEBUG MODE
+    if bool(environ(GEN3_DEBUG)):
+        response = {
+            'MessageId': 12345,
+        }
+        logger.info("send_email_ses:  Success!")
+        return response
+
+
     #TODO add import for boto
 
     if not config["AWS_SES"]:
@@ -454,7 +465,7 @@ def send_email_ses(body, to_emails, subject):
     else:
         print("Email sent! Message ID:"),
         print(response['MessageId'])
-    logging.warning(json.dumps(response))
+    logging.debug(json.dumps(response))
     return response
 
 
