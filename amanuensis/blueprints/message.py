@@ -50,7 +50,7 @@ def send_message():
     """
     try:
         #DEBUG -- switch lines below for testing
-        if bool(environ('GEN3_DEBUG')):
+        if bool(environ.get('GEN3_DEBUG')):
             logged_user_id = 1
         else:
             # very real legit code

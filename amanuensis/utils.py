@@ -394,7 +394,7 @@ def send_email_ses(body, to_emails, subject):
     """
 
     # DON'T SEND EMAILS IN DEBUG MODE
-    if bool(environ(GEN3_DEBUG)):
+    if bool(environ.get('GEN3_DEBUG')):
         response = {
             'MessageId': 12345,
         }
