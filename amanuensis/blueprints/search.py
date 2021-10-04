@@ -15,7 +15,7 @@ REQUIRED_CERTIFICATES = {
     "training_certificate": "certificate obtained from training",
 }
 
-blueprint = flask.Blueprint("cohort", __name__)
+blueprint = flask.Blueprint("filter-set", __name__)
 
 # cache = SimpleCache()
 
