@@ -10,13 +10,13 @@ from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, 
 from amanuensis.resources import userdatamodel as udm
 # from amanuensis.resources.userdatamodel import get_all_messages, get_messages_by_request, send_message
 from amanuensis.resources.request import get_by_id
+from amanuensis.resources.fence import fence_get_users
 from amanuensis.auth.auth import current_user
 from amanuensis.models import (
     ConsortiumDataContributor,
     Message,
-    Receiver,
-    # Request,
-    query_for_user
+    Receiver
+    # Request
 )
 # from userdatamodel.user import User
 from hubspotclient.client.hubspot.client import HubspotClient
@@ -55,20 +55,30 @@ def send_message(logged_user_id, request_id, subject, body):
 
         # logger.info('Hubspot Response: ' + str(hubspot_response))
 
-        emails = []
+        # Connect to fence to get the user.id from the username(email)
+        usernames = []
         receivers = []
         if hubspot_response and int(hubspot_response["total"]):
             for member in hubspot_response["results"]:
                 email = member['properties']['email']
-                emails.append(email)
-                ec_user = query_for_user(session, email)
-                if ec_user and ec_user.id:
-                    receivers.append(Receiver(receiver_id=ec_user.id))
+                usernames.append(email)
+
+            # make one request for all users to be messaged
+            logger.info(f"send_message hubspot: {usernames}")
+            ec_users_results = fence_get_users(usernames, config)
+            logger.info(f"fence_get_users, ec_users_results: {ec_users_results}")
+            ec_users = ec_users_results['users'] if 'users' in ec_users_results else None
+            logger.info(f"fence_get_users, ec_users: {ec_users}")
+           
+            if ec_users:
+                for ecu in ec_users:
+                    logger.info(f"send_message to: {ecu}")
+                    receivers.append(Receiver(receiver_id=ecu['id']))
 
         #TODO get requestor email
         # if logged_user_id is commettee memeber send to other commettee members and requestor
         # otherwise send to committee memebers
 
-        return udm.send_message(session, logged_user_id, request_id, subject, body, receivers, emails)
+        return udm.send_message(session, logged_user_id, request_id, subject, body, receivers, usernames)
 
 

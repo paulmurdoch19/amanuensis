@@ -15,3 +15,9 @@ class ArboristUnhealthyError(ArboristError):  # pragma: no cover
         self.message = "could not reach arborist service"
         self.code = 500
         self.json = {"error": self.message, "code": self.code}
+
+
+class NoPrivateKeyError(APIError):
+    def __init__(self, message):
+        self.message = message
+        self.code = 500

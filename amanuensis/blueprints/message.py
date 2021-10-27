@@ -49,9 +49,11 @@ def send_message():
     Returns a json object
     """
     try:
-        #DEBUG -- switch lines below for testing
-        if bool(environ.get('GEN3_DEBUG')):
-            logged_user_id = 1
+        
+        logged_user_id = None
+        if environ.get('SEND_MESSAGE_DEBUG', '').lower() == 'true':
+            # debug code
+            logged_user_id = flask.request.get_json().get("user_id", None)
         else:
             # very real legit code
             logged_user_id = current_user.id
@@ -67,6 +69,8 @@ def send_message():
 
     if not subject:
         subject = "[PCDC GEN3] Project Activity"
+
+    logger.info(f"Message (POST) received: {logged_user_id} {request_id} {subject} {body}")
 
     # if body is None or body == "":
     #     return 400

@@ -16,6 +16,7 @@ import flask
 import requests
 from cdislogging import get_logger
 import html2text
+from botocore.exceptions import ClientError
 from userportaldatamodel.driver import SQLAlchemyDriver
 from werkzeug.datastructures import ImmutableMultiDict
 
@@ -319,7 +320,7 @@ def get_consortium_list(path, src_filter):
             url, data=body, headers=headers # , proxies=flask.current_app.config.get("EXTERNAL_PROXIES")
         )
 
-        print("LUCA PRIMNTTTTTTTTTT")
+        # print("LUCA PRIMNTTTTTTTTTT")
     except requests.HTTPError as e:
         print(e.message)
 
@@ -392,15 +393,6 @@ def send_email_ses(body, to_emails, subject):
         KeyError
 
     """
-
-    # DON'T SEND EMAILS IN DEBUG MODE
-    if bool(environ.get('GEN3_DEBUG')):
-        response = {
-            'MessageId': 12345,
-        }
-        logger.info("send_email_ses:  Success!")
-        return response
-
 
     #TODO add import for boto
 

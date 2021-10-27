@@ -44,14 +44,13 @@ sqlalchemy = "^1.3.3"
 marshmallow-sqlalchemy = "0.24.2"
 storageclient = {git = "https://github.com/uc-cdis/storage-client", rev = "1.0.1"}
 userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", branch = "pcdc_dev"}
-# hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", branch = "pcdc_dev"}
-# hubspotclient = "0.0.2"
-hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", branch = "PEDS-436_send_emails"}
+hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", branch = "pcdc_dev"}
 
 
 userdatamodel = "^2.3.3"
 werkzeug = "^0.16.0"
 html2text = "^2020.1.16"
+pycryptodome = "3.9.8"
 
 [tool.poetry.dev-dependencies]
 addict = "^2.2.1"

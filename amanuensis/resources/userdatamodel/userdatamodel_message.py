@@ -1,11 +1,14 @@
+import os
 from sqlalchemy import func
-
+from cdislogging import get_logger
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Message,
 )
 # do this until AWS-related requests is handled by it's own project
 from amanuensis.utils import send_email_ses
+
+logger = get_logger(__name__)
 
 __all__ = [
     "get_all_messages",
@@ -30,16 +33,26 @@ def send_message(current_session, logged_user_id, request_id, subject, body, rec
     new_message = Message(sender_id=logged_user_id, 
                         body=body,
                         request_id=request_id)
-    
     if receivers:
-        current_session.add(new_message)
         new_message.receivers.extend(receivers)
-        current_session.commit()
+    
+    
+    if os.environ.get('SEND_MESSAGE_DEBUG', '').lower() == 'true':
+        # logger.info(f"send_message receivers (debug mode): {str(receivers)}")
+        logger.info(f"send_message receivers (debug mode)")
+    else:
+        if receivers:
+            current_session.add(new_message)
+            current_session.commit()
 
-    if emails:
-        # Send the Messsage via AWS SES
-        send_email_ses(body, emails, subject)
 
+    if os.environ.get('AWS_SES_DEBUG', '').lower() == 'true':
+        logger.info(f"send_message emails (debug mode): {str(emails)}")
+    else:
+        if emails:
+            # Send the Messsage via AWS SES
+            send_email_ses(body, emails, subject)
+        
     return new_message
 
 

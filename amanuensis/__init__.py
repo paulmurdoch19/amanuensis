@@ -16,6 +16,7 @@ from amanuensis.resources.aws.boto_manager import BotoManager
 from amanuensis.error_handler import get_error_response
 from amanuensis.config import config
 from amanuensis.settings import CONFIG_SEARCH_FOLDERS
+from amanuensis.auth import loadkey
 import amanuensis.blueprints.misc
 import amanuensis.blueprints.search
 import amanuensis.blueprints.project
@@ -59,6 +60,10 @@ def app_init(
         config_path=config_path,
         file_name=config_file_name,
     )
+
+    # setup private key for cross-service access
+    config["RSA_PRIVATE_KEY"] = loadkey()
+
     app_sessions(app)
     app_register_blueprints(app)
 

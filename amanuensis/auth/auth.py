@@ -1,10 +1,10 @@
 # from functools import wraps
-
-import flask
+from flask import current_app, request
 from authutils.user import current_user
 from authutils.token.validate import current_token
 from cdislogging import get_logger
 
+from cdiserrors import AuthNError
 from amanuensis.auth.errors import ArboristError
 from amanuensis.errors import Forbidden, Unauthorized
 
@@ -19,14 +19,12 @@ except ImportError:
     )
 
 
-
 def get_current_user():
     return current_user
 
-
 def get_jwt_from_header():
     jwt = None
-    auth_header = flask.request.headers.get("Authorization")
+    auth_header = request.headers.get("Authorization")
     if auth_header:
         items = auth_header.split(" ")
         if len(items) == 2 and items[0].lower() == "bearer":
@@ -60,12 +58,12 @@ def check_arborist_auth(resource, method, constraints=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*f_args, **f_kwargs):
-            if not hasattr(flask.current_app, "arborist"):
+            if not hasattr(current_app, "arborist"):
                 raise Forbidden(
                     "this amanuensis instance is not configured with arborist;"
                     " this endpoint is unavailable"
                 )
-            if not flask.current_app.arborist.auth_request(
+            if not current_app.arborist.auth_request(
                 jwt=get_jwt_from_header(),
                 service="amanuensis",
                 methods=method,
@@ -77,5 +75,3 @@ def check_arborist_auth(resource, method, constraints=None):
         return wrapper
 
     return decorator
-
-
