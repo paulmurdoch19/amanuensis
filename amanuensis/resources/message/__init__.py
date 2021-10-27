@@ -46,12 +46,13 @@ def send_message(logged_user_id, request_id, subject, body):
 
         
         # The hubspot oAuth implementation is on the way, but not supported yet.
-        hubspot_auth_token =  config['HUBSPOT']['API_KEY']
-        hubspot = HubspotClient(hubspot_auth_token)
+        hapikey =  config['HUBSPOT']['API_KEY']
+        hubspot = HubspotClient(hubspot_auth_token=hapikey)
 
         # Get EC members emails
         # returns [ email, disease_group_executive_committee ]
-        hubspot_response = hubspot.get_contacts_by_committee(f"{consortium_code} Executive Committee Member")
+        committee = f"{consortium_code} Executive Committee Member"
+        hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
 
         # logger.info('Hubspot Response: ' + str(hubspot_response))
 

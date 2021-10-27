@@ -63,11 +63,11 @@ def update_user(current_session, additional_info):
         additional_info_tmp = {}  
 
         # The hubspot oAuth implementation is on the way, but not supported yet.
-        hubspot = HubspotClient(flask.current_app.hubspot_api_key)
+        hubspot = HubspotClient(hubspot_auth_token=flask.current_app.hubspot_api_key)
 
         hubspot_contact = hubspot.get_contact_by_email(email=flask.g.user.username)
         if hubspot_contact and hubspot_contact.get('total') == 1:
-            contact = hubspot_contact.get('results')
+            contact = hubspot_contact.get('results')[0]
             additional_info_tmp["hubspot_id"] = contact.get('id')
             hubspot_update = hubspot.update_contact(additional_info_tmp["hubspot_id"], additional_info)
 
@@ -107,11 +107,11 @@ def get_user_info(current_session, username):
     # logger.error(type(user.additional_info))
     additional_info_merged = user.additional_info.copy()
     if flask.current_app.hubspot_api_key and user.additional_info and user.additional_info["hubspot_id"] is not None:
-        hubspot = HubspotClient(flask.current_app.hubspot_api_key)
+        hubspot = HubspotClient(hubspot_auth_token=flask.current_app.hubspot_api_key)
         hubspot_contact = hubspot.get_contact_by_email(email=flask.g.user.username)
         user_info = {}
         if hubspot_contact and hubspot_contact['total'] == 1:
-            contact = hubspot_contact.get('results')
+            contact = hubspot_contact.get('results')[0]
             user_info = contact.get('properties')
             user_info["id"] = contact.get('id')
             user_info["email"] = flask.g.user.username
