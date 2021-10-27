@@ -49,13 +49,15 @@ def send_message():
     Returns a json object
     """
     try:
-        
         logged_user_id = None
-        if environ.get('SEND_MESSAGE_DEBUG', '').lower() == 'true':
+        if environ.get('GEN3_DEBUG', '').lower() == 'true':
             # debug code
+            # if we're in debug mode, check if the user_id was sent
+            # for testing purposes, otherwise just do normal handling
             logged_user_id = flask.request.get_json().get("user_id", None)
-        else:
-            # very real legit code
+        
+        # normal handling
+        if not logged_user_id:
             logged_user_id = current_user.id
         
     except AuthError:
@@ -67,6 +69,7 @@ def send_message():
     body = flask.request.get_json().get("body", None)
     subject = flask.request.get_json().get("subject", None)
 
+    # subject is optional, use default if not sent with request
     if not subject:
         subject = "[PCDC GEN3] Project Activity"
 
