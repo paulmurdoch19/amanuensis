@@ -38,7 +38,7 @@ def get(logged_user_id, consortium=None):
 
 def get_by_id(logged_user_id, request_id):
     
-    if environ.get('GEN3_DEBUG', '').lower() == 'true':
+    if environ.get('GEN3_DEBUG', '').lower() == 'true' and int(request_id) == 12345:
         request = Request()
         request.id = 12345
         # request.project = Project()
