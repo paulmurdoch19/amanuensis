@@ -16,12 +16,13 @@ from amanuensis.resources.aws.boto_manager import BotoManager
 from amanuensis.error_handler import get_error_response
 from amanuensis.config import config
 from amanuensis.settings import CONFIG_SEARCH_FOLDERS
-from amanuensis.auth import loadkey
 import amanuensis.blueprints.misc
 import amanuensis.blueprints.search
 import amanuensis.blueprints.project
 import amanuensis.blueprints.request
 import amanuensis.blueprints.message
+
+from pcdcutils.signature import SignatureManager
 
 from cdislogging import get_logger
 
@@ -61,9 +62,6 @@ def app_init(
         file_name=config_file_name,
     )
 
-    # setup private key for cross-service access
-    config["RSA_PRIVATE_KEY"] = loadkey()
-
     app_sessions(app)
     app_register_blueprints(app)
 
@@ -72,7 +70,7 @@ def app_sessions(app):
     app.url_map.strict_slashes = False
     app.db = SQLAlchemyDriver(config["DB"])
     # app.db = SQLAlchemyDriver('postgresql://amanuensis_user:amanuensis_pass@postgres:5432/amanuensis_db')
-    logger.warning("LUCA - DB connected")
+    logger.warning("DB connected")
     # TODO: we will make a more robust migration system external from the application
     #       initialization soon
     if config["ENABLE_DB_MIGRATION"]:
@@ -238,6 +236,10 @@ def app_config(
     app.debug = config["DEBUG"]
     # Following will update logger level, propagate, and handlers
     get_logger(__name__, log_level="debug" if config["DEBUG"] == True else "info")
+
+    # load private key for cross-service access
+    key_path = config.get("PRIVATE_KEY_PATH", None)
+    config["RSA_PRIVATE_KEY"] = SignatureManager(key_path=key_path).get_key()
 
     # _check_s3_buckets(app)
 

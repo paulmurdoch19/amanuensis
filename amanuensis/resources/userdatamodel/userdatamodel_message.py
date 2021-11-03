@@ -7,6 +7,7 @@ from amanuensis.models import (
 )
 # do this until AWS-related requests is handled by it's own project
 from amanuensis.utils import send_email_ses
+from pcdcutils.environment import is_env_enabled
 
 logger = get_logger(__name__)
 
@@ -37,17 +38,16 @@ def send_message(current_session, logged_user_id, request_id, subject, body, rec
         new_message.receivers.extend(receivers)
     
     
-    if os.environ.get('SEND_MESSAGE_DEBUG', '').lower() == 'true':
-        # logger.info(f"send_message receivers (debug mode): {str(receivers)}")
-        logger.info(f"send_message receivers (debug mode)")
+    if is_env_enabled('SEND_MESSAGE_DEBUG'):
+        # logger.debug(f"send_message receivers (debug mode): {str(receivers)}")
+        logger.debug(f"send_message receivers (debug mode)")
     else:
         if receivers:
             current_session.add(new_message)
             current_session.commit()
 
-
-    if os.environ.get('AWS_SES_DEBUG', '').lower() == 'true':
-        logger.info(f"send_message emails (debug mode): {str(emails)}")
+    if is_env_enabled('AWS_SES_DEBUG'):
+        logger.debug(f"send_message emails (debug mode): {str(emails)}")
     else:
         if emails:
             # Send the Messsage via AWS SES

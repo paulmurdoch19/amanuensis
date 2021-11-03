@@ -8,6 +8,7 @@ from amanuensis.errors import AuthError
 from amanuensis.schema import MessageSchema
 from amanuensis.resources import message as m
 from cdislogging import get_logger
+from pcdcutils.environment import is_env_enabled
 
 
 blueprint = flask.Blueprint("message", __name__)
@@ -50,7 +51,7 @@ def send_message():
     """
     try:
         logged_user_id = None
-        if environ.get('GEN3_DEBUG', '').lower() == 'true':
+        if is_env_enabled('GEN3_DEBUG'):
             # debug code
             # if we're in debug mode, check if the user_id was sent
             # for testing purposes, otherwise just do normal handling
@@ -73,7 +74,7 @@ def send_message():
     if not subject:
         subject = "[PCDC GEN3] Project Activity"
 
-    logger.info(f"Message (POST) received: {logged_user_id} {request_id} {subject} {body}")
+    logger.debug(f"Message (POST) received: {logged_user_id} {request_id} {subject} {body}")
 
     # if body is None or body == "":
     #     return 400

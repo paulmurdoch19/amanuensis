@@ -16,6 +16,7 @@ from amanuensis.models import Request, Project
 from amanuensis.resources.userdatamodel import (get_request_by_consortium,
                                                 get_request_by_id, get_requests)
 from amanuensis.schema import RequestSchema
+# from pcdcutils.environment import is_env_enabled
 
 logger = get_logger(__name__)
 
@@ -38,20 +39,20 @@ def get(logged_user_id, consortium=None):
 
 def get_by_id(logged_user_id, request_id):
     
-    if environ.get('GEN3_DEBUG', '').lower() == 'true' and int(request_id) == 12345:
-        request = Request()
-        request.id = 12345
-        # request.project = Project()
-        request.create_date = "2021-07-01 12:00:01"
-        request.update_date = "2021-07-01 12:00:01"
-        request.consortium_data_contributor_id = 1
-        consortium = ConsortiumDataContributor(id = 1)
-        consortium.code = "FAKE"
-        consortium.name = "FAKE Data Consortium"
-        consortium.create_date = "2021-07-01 12:00:01"
-        consortium.update_date = "2021-07-01 12:00:01"
-        request.consortium_data_contributor = consortium
-        return request
+    # if is_env_enabled('GEN3_DEBUG') and int(request_id) == 12345:
+    #     request = Request()
+    #     request.id = 12345
+    #     # request.project = Project()
+    #     request.create_date = "2021-07-01 12:00:01"
+    #     request.update_date = "2021-07-01 12:00:01"
+    #     request.consortium_data_contributor_id = 1
+    #     consortium = ConsortiumDataContributor(id = 1)
+    #     consortium.code = "FAKE"
+    #     consortium.name = "FAKE Data Consortium"
+    #     consortium.create_date = "2021-07-01 12:00:01"
+    #     consortium.update_date = "2021-07-01 12:00:01"
+    #     request.consortium_data_contributor = consortium
+    #     return request
 
     with flask.current_app.db.session as session:
         return get_request_by_id(session, logged_user_id, request_id)

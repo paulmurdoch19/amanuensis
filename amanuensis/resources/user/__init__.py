@@ -55,9 +55,9 @@ def update_user(current_session, additional_info):
     #TODO check if user is already in the system - you can get create_user_if_not_exist with new gen3authz version. 
     register_arborist_user(flask.g.user)
 
-    logger.debug("IN UPDATE")
-    logger.debug(flask.g.user.username)
-    logger.debug(flask.g.user.additional_info)
+    # logger.debug("IN UPDATE")
+    # logger.debug(flask.g.user.username)
+    # logger.debug(flask.g.user.additional_info)
     
     if flask.current_app.hubspot_api_key:
         additional_info_tmp = {}  
@@ -66,7 +66,7 @@ def update_user(current_session, additional_info):
         hubspot = HubspotClient(hubspot_auth_token=flask.current_app.hubspot_api_key)
 
         hubspot_contact = hubspot.get_contact_by_email(email=flask.g.user.username)
-        if hubspot_contact and hubspot_contact.get('total') == 1:
+        if hubspot_contact and ('total' in hubspot_contact) and int(hubspot_contact.get('total', '0')) == 1:
             contact = hubspot_contact.get('results')[0]
             additional_info_tmp["hubspot_id"] = contact.get('id')
             hubspot_update = hubspot.update_contact(additional_info_tmp["hubspot_id"], additional_info)
@@ -108,13 +108,13 @@ def get_user_info(current_session, username):
     additional_info_merged = user.additional_info.copy()
     if flask.current_app.hubspot_api_key and user.additional_info and user.additional_info["hubspot_id"] is not None:
         hubspot = HubspotClient(hubspot_auth_token=flask.current_app.hubspot_api_key)
-        hubspot_contact = hubspot.get_contact_by_email(email=flask.g.user.username)
+        hubspot_contact = hubspot.get_contact_by_email(email=user.username)
         user_info = {}
-        if hubspot_contact and hubspot_contact['total'] == 1:
+        if hubspot_contact and ('total' in hubspot_contact) and int(hubspot_contact.get('total', '0')) == 1:
             contact = hubspot_contact.get('results')[0]
             user_info = contact.get('properties')
             user_info["id"] = contact.get('id')
-            user_info["email"] = flask.g.user.username
+            user_info["email"] = user.username
 
         # deprecated: user_info = hubspot.get_user(user.username, user.additional_info["hubspot_id"])
         if user_info:

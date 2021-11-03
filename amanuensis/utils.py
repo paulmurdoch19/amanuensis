@@ -319,8 +319,6 @@ def get_consortium_list(path, src_filter):
         r = requests.post(
             url, data=body, headers=headers # , proxies=flask.current_app.config.get("EXTERNAL_PROXIES")
         )
-
-        # print("LUCA PRIMNTTTTTTTTTT")
     except requests.HTTPError as e:
         print(e.message)
 

@@ -40,10 +40,9 @@ def send_message(logged_user_id, request_id, subject, body):
 
         # Get consortium and check that the request exists
         request = get_by_id(logged_user_id, request_id)
-        # logger.info("Request: " + str(request))
+        # logger.debug("Request: " + str(request))
         consortium_code = request.consortium_data_contributor.code
-        logger.info(f"Consortium Code: {consortium_code}")
-
+        # logger.debug(f"Consortium Code: {consortium_code}")
         
         # The hubspot oAuth implementation is on the way, but not supported yet.
         hapikey =  config['HUBSPOT']['API_KEY']
@@ -54,26 +53,26 @@ def send_message(logged_user_id, request_id, subject, body):
         committee = f"{consortium_code} Executive Committee Member"
         hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
 
-        # logger.info('Hubspot Response: ' + str(hubspot_response))
+        # logger.debug('Hubspot Response: ' + str(hubspot_response))
 
         # Connect to fence to get the user.id from the username(email)
         usernames = []
         receivers = []
-        if hubspot_response and int(hubspot_response["total"]):
+        if hubspot_response and ('total' in hubspot_response) and int(hubspot_response.get("total", '0')):
             for member in hubspot_response["results"]:
                 email = member['properties']['email']
                 usernames.append(email)
 
             # make one request for all users to be messaged
-            logger.info(f"send_message hubspot: {usernames}")
+            logger.debug(f"send_message hubspot: {usernames}")
             ec_users_results = fence_get_users(usernames, config)
-            logger.info(f"fence_get_users, ec_users_results: {ec_users_results}")
+            logger.debug(f"fence_get_users, ec_users_results: {ec_users_results}")
             ec_users = ec_users_results['users'] if 'users' in ec_users_results else None
-            logger.info(f"fence_get_users, ec_users: {ec_users}")
+            # logger.debug(f"fence_get_users, ec_users: {ec_users}")
            
             if ec_users:
                 for ecu in ec_users:
-                    logger.info(f"send_message to: {ecu}")
+                    # logger.debug(f"send_message to: {ecu}")
                     receivers.append(Receiver(receiver_id=ecu['id']))
 
         #TODO get requestor email
