@@ -15,6 +15,3 @@ class ArboristUnhealthyError(ArboristError):  # pragma: no cover
         self.message = "could not reach arborist service"
         self.code = 500
         self.json = {"error": self.message, "code": self.code}
-
-
-
