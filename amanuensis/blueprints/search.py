@@ -8,12 +8,15 @@ from amanuensis.resources.search import get_all, create, delete, update
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
+from cdislogging import get_logger
 
 
 REQUIRED_CERTIFICATES = {
     "AUP_COC_NDA": "documents needed for user e-sign",
     "training_certificate": "certificate obtained from training",
 }
+
+logger = get_logger(__name__)
 
 blueprint = flask.Blueprint("filter-set", __name__)
 
