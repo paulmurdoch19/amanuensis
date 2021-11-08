@@ -25,6 +25,8 @@ def get_messages():
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     request_id = flask.request.args.get("request_id", None)
 
@@ -66,6 +68,8 @@ def send_message():
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     request_id = flask.request.get_json().get("request_id", None)
     body = flask.request.get_json().get("body", None)

@@ -33,6 +33,8 @@ def get_searches():
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     return flask.jsonify(get_all(logged_user_id))
 
@@ -53,6 +55,8 @@ def create_search():
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     name = flask.request.get_json().get("name", None)
     filter_object = flask.request.get_json().get("filters", None)
@@ -76,6 +80,8 @@ def update_search(search_id):
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
@@ -98,6 +104,8 @@ def delete_search(search_id):
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     response = flask.jsonify(delete(logged_user_id, search_id))
     return response

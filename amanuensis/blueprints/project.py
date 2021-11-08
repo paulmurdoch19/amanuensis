@@ -53,6 +53,8 @@ def create_project():
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
@@ -77,6 +79,8 @@ def create_project():
 #         logger.warning(
 #             "Unable to load or find the user, check your token"
 #         )
+    # except Exception as e:
+    #     logger.error(e)
 
 #     name = flask.request.get_json().get("name", None)
 #     description = flask.request.get_json().get("description", None)
@@ -98,6 +102,8 @@ def create_project():
 #         logger.warning(
 #             "Unable to load or find the user, check your token"
 #         )
+    # except Exception as e:
+    #     logger.error(e)
 
 #     response = flask.jsonify(delete(logged_user_id, search_id))
 #     return response

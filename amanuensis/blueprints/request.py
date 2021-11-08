@@ -30,6 +30,8 @@ def get_request():
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     #TODO check if user is EC consortium member or not
     consortium = flask.request.args.get('consortium', None)
