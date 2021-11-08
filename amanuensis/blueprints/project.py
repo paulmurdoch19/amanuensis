@@ -8,12 +8,13 @@ from amanuensis.resources.project import create, get_all
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
-
-
 from amanuensis.schema import ProjectSchema
+from cdislogging import get_logger
 
 
 blueprint = flask.Blueprint("projects", __name__)
+
+logger = get_logger(__name__)
 
 # cache = SimpleCache()
 
@@ -21,6 +22,7 @@ blueprint = flask.Blueprint("projects", __name__)
 @blueprint.route("/", methods=["GET"])
 # @login_required({"user"})
 def get_projetcs():
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
@@ -44,6 +46,7 @@ def create_project():
 
     Returns a json object
     """
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:

@@ -26,6 +26,7 @@ blueprint = flask.Blueprint("filter-set", __name__)
 @blueprint.route("/", methods=["GET"])
 # @login_required({"user"})
 def get_searches():
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
@@ -45,6 +46,7 @@ def create_search():
 
     Returns a json object
     """
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
@@ -67,6 +69,7 @@ def update_search(search_id):
 
     Returns a json object
     """
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
@@ -88,6 +91,7 @@ def delete_search(search_id):
 
     Returns json object
     """
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:

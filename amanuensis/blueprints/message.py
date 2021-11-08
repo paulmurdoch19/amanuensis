@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 @blueprint.route("/", methods=["GET"])
 def get_messages():
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
@@ -49,8 +50,8 @@ def send_message():
 
     Returns a json object
     """
+    logged_user_id = None
     try:
-        logged_user_id = None
         if is_env_enabled('GEN3_DEBUG'):
             # debug code
             # if we're in debug mode, check if the user_id was sent
