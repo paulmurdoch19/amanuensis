@@ -8,12 +8,15 @@ from amanuensis.resources.search import get_all, create, delete, update
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
+from cdislogging import get_logger
 
 
 REQUIRED_CERTIFICATES = {
     "AUP_COC_NDA": "documents needed for user e-sign",
     "training_certificate": "certificate obtained from training",
 }
+
+logger = get_logger(__name__)
 
 blueprint = flask.Blueprint("filter-set", __name__)
 
@@ -23,12 +26,15 @@ blueprint = flask.Blueprint("filter-set", __name__)
 @blueprint.route("/", methods=["GET"])
 # @login_required({"user"})
 def get_searches():
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     return flask.jsonify(get_all(logged_user_id))
 
@@ -42,12 +48,15 @@ def create_search():
 
     Returns a json object
     """
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     name = flask.request.get_json().get("name", None)
     filter_object = flask.request.get_json().get("filters", None)
@@ -64,12 +73,15 @@ def update_search(search_id):
 
     Returns a json object
     """
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
@@ -85,12 +97,15 @@ def delete_search(search_id):
 
     Returns json object
     """
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     response = flask.jsonify(delete(logged_user_id, search_id))
     return response

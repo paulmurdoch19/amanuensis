@@ -32,7 +32,7 @@ from gen3authz.client.arborist.client import ArboristClient
 
 # Can't read config yet. Just set to debug for now, else no handlers.
 # Later, in app_config(), will actually set level based on config
-logger = get_logger(__name__, log_level="debug")
+logger = get_logger(__name__)
 
 app = flask.Flask(__name__)
 CORS(app=app, headers=["content-type", "accept"], expose_headers="*")

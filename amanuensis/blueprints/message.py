@@ -18,12 +18,15 @@ logger = get_logger(__name__)
 
 @blueprint.route("/", methods=["GET"])
 def get_messages():
+    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     request_id = flask.request.args.get("request_id", None)
 
@@ -49,8 +52,8 @@ def send_message():
 
     Returns a json object
     """
+    logged_user_id = None
     try:
-        logged_user_id = None
         if is_env_enabled('GEN3_DEBUG'):
             # debug code
             # if we're in debug mode, check if the user_id was sent
@@ -65,6 +68,8 @@ def send_message():
         logger.warning(
             "Unable to load or find the user, check your token"
         )
+    except Exception as e:
+        logger.error(e)
 
     request_id = flask.request.get_json().get("request_id", None)
     body = flask.request.get_json().get("body", None)
