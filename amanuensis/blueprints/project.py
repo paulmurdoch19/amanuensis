@@ -8,12 +8,13 @@ from amanuensis.resources.project import create, get_all
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
-
-
 from amanuensis.schema import ProjectSchema
+from cdislogging import get_logger
 
 
 blueprint = flask.Blueprint("projects", __name__)
+
+logger = get_logger(__name__)
 
 # cache = SimpleCache()
 

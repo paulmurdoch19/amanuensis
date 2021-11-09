@@ -9,10 +9,11 @@ from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
 from amanuensis.schema import RequestSchema
-
+from cdislogging import get_logger
 
 blueprint = flask.Blueprint("requests", __name__)
 
+logger = get_logger(__name__)
 
 
 @blueprint.route("/", methods=["GET"])

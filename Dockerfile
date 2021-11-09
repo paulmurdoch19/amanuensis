@@ -1,16 +1,24 @@
 # To run: docker run --rm -d -v /path/to/amanuensis-config.yaml:/var/www/amanuensis/amanuensis-config.yaml --name=amanuensis -p 80:80 amanuensis
 # To check running container: docker exec -it amanuensis /bin/bash
 
-FROM quay.io/cdis/python-nginx:pybase3-1.6.1
+# FROM quay.io/cdis/python-nginx:pybase3-1.6.1
+# FROM quay.io/cdis/python:pybase3-2.0.0
+FROM quay.io/pcdc/python:3.6-buster
 
 ENV appname=amanuensis
 
 RUN pip install --upgrade pip
-RUN apk add --update \
-    postgresql-libs postgresql-dev libffi-dev libressl-dev \
-    linux-headers musl-dev gcc g++ logrotate \
-    curl bash git vim make lftp \
-    openssh libmcrypt-dev
+# RUN apk add --update \
+#    postgresql-libs postgresql-dev libffi-dev libressl-dev \
+#    linux-headers musl-dev gcc g++ logrotate \
+#    curl bash git vim make lftp \
+#    openssh libmcrypt-dev
+RUN pip install --upgrade poetry
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl bash git \
+    libmcrypt4 libmhash2 mcrypt \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/
 
 RUN mkdir -p /var/www/$appname \
     && mkdir -p /var/www/.cache/Python-Eggs/ \
@@ -20,26 +28,6 @@ RUN mkdir -p /var/www/$appname \
     && chown nginx -R /var/www/.cache/Python-Eggs/ \
     && chown nginx /var/www/$appname
 
-#
-# libmhash is required by mcrypt - below - no apk package available
-#
-RUN (cd /tmp \
-  && wget -O mhash.tar.gz https://sourceforge.net/projects/mhash/files/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz/download \
-  && tar xvfz mhash.tar.gz \
-  && cd mhash-0.9.9.9 \
-  && ./configure && make && make install \
-  && /bin/rm -rf /tmp/*)
-
-#
-# mcrypt is required to decrypt dbgap user files - see amanuensis/sync/sync_users.py
-#
-RUN (cd /tmp \
-  && wget -O mcrypt.tar.gz https://sourceforge.net/projects/mcrypt/files/MCrypt/Production/mcrypt-2.6.4.tar.gz/download \
-  && tar xvfz mcrypt.tar.gz \
-  && cd mcrypt-2.6.4 \
-  && ./configure && make && make install \
-  && /bin/rm -rf /tmp/*)
-EXPOSE 80
 
 # aws cli v2 - needed for storing files in s3 during usersync k8s job
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -47,20 +35,23 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     && ./aws/install \
     && /bin/rm -rf awscliv2.zip ./aws
 
-# install poetry
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
 
+WORKDIR /$appname
+# copy ONLY poetry artifact and install
+# this will make sure than the dependencies is cached
+COPY poetry.lock pyproject.toml /$appname/
+RUN poetry config virtualenvs.create false \
+    && poetry install -vv --no-root --no-dev --no-interaction \
+    && poetry show -v
+
+# copy source code ONLY after installing dependencies
 COPY . /$appname
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./deployment/uwsgi/wsgi.py /$appname/wsgi.py
-WORKDIR /$appname
 
-# cache so that poetry install will run if these files change
-COPY poetry.lock pyproject.toml /$appname/
 
 # install amanuensis and dependencies via poetry
-RUN source $HOME/.poetry/env \
-    && poetry config virtualenvs.create false \
+RUN poetry config virtualenvs.create false \
     && poetry install -vv --no-dev --no-interaction \
     && poetry show -v
 
