@@ -23,15 +23,12 @@ def get_request():
     """
 
     """
-    logged_user_id = None
     try:
         logged_user_id = current_user.id
     except AuthError:
         logger.warning(
             "Unable to load or find the user, check your token"
         )
-    except Exception as e:
-        logger.error(e)
 
     #TODO check if user is EC consortium member or not
     consortium = flask.request.args.get('consortium', None)
