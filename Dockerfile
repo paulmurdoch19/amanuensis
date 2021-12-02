@@ -2,7 +2,8 @@
 # To check running container: docker exec -it amanuensis /bin/bash
 
 # FROM quay.io/cdis/python-nginx:pybase3-1.6.1
-FROM quay.io/cdis/python:pybase3-2.0.0
+# FROM quay.io/cdis/python:pybase3-2.0.0
+FROM quay.io/pcdc/python:3.6-buster
 
 ENV appname=amanuensis
 

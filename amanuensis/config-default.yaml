@@ -44,7 +44,7 @@ ENCRYPTION_KEY: ''
 
 # Cross-service keys
 # Private key for signing requests sent to other Gen3 services
-PRIVATE_KEY_PATH: '/var/www/amanuensis/jwt_private_key.pem'
+PRIVATE_KEY_PATH: ''
 
 # //////////////////////////////////////////////////////////////////////////////////////
 # DEBUG & SECURITY SETTINGS
@@ -205,7 +205,7 @@ INDEXD_PASSWORD: ''
 # url where authz microservice is running
 ARBORIST: null
 
-FENCE: http://fence-service
+FENCE: null
 
 
 # //////////////////////////////////////////////////////////////////////////////////////
