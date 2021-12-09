@@ -6,7 +6,7 @@ from amanuensis.resources.userdatamodel import (
     create_consortium,
     get_consotium_by_code,
 )
-from amanuensis.resources import search
+from amanuensis.resources import filterset
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
 from amanuensis.models import (

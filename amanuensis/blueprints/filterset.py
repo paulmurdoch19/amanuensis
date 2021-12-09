@@ -4,10 +4,11 @@ from flask_sqlalchemy_session import current_session
 # from amanuensis.auth import login_required, current_token
 # from amanuensis.errors import Unauthorized, UserError, NotFound
 # from amanuensis.models import Application, Certificate
-from amanuensis.resources.search import get_all, create, delete, update
+from amanuensis.resources.filterset import get_all, get_by_id, create, delete, update
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
+from amanuensis.schema import SearchSchema
 from cdislogging import get_logger
 
 
@@ -18,14 +19,15 @@ REQUIRED_CERTIFICATES = {
 
 logger = get_logger(__name__)
 
-blueprint = flask.Blueprint("filter-set", __name__)
+blueprint = flask.Blueprint("filter-sets", __name__)
+
+# deprecated - remove once portal switches to the correct url
 
 # cache = SimpleCache()
 
-
 @blueprint.route("/", methods=["GET"])
 # @login_required({"user"})
-def get_searches():
+def get_filter_sets():
     try:
         logged_user_id = current_user.id
     except AuthError:
@@ -33,7 +35,26 @@ def get_searches():
             "Unable to load or find the user, check your token"
         )
 
-    return flask.jsonify(get_all(logged_user_id))
+    # get the explorer_id from the querystring
+    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+
+    return flask.jsonify(get_all(logged_user_id, explorer_id))
+
+
+@blueprint.route("/<filter_set_id>", methods=["GET"])
+# @login_required({"user"})
+def get_filter_set(filter_set_id):
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning(
+            "Unable to load or find the user, check your token"
+        )
+
+    # get the explorer_id from the querystring
+    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+
+    return flask.jsonify(get_by_id(logged_user_id, filter_set_id, explorer_id))
 
 
 @blueprint.route("/", methods=["POST"])
@@ -52,16 +73,21 @@ def create_search():
             "Unable to load or find the user, check your token"
         )
 
+    # get the explorer_id from the querystring
+    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+
     name = flask.request.get_json().get("name", None)
     filter_object = flask.request.get_json().get("filters", None)
     description = flask.request.get_json().get("description", None)
-    return flask.jsonify(create(logged_user_id, name, description, filter_object))
+    # search_schema = SearchSchema()
+    # return flask.jsonify(search_schema.dump(create(logged_user_id, explorer_id, name, description, filter_object)))
+    return flask.jsonify(create(logged_user_id, explorer_id, name, description, filter_object))
 
 
-@blueprint.route("/<search_id>", methods=["PUT"])
+@blueprint.route("/<filter_set_id>", methods=["PUT"])
 # @admin_login_required
 # @debug_log
-def update_search(search_id):
+def update_search(filter_set_id):
     """
     Create a user on the userdatamodel database
 
@@ -74,14 +100,17 @@ def update_search(search_id):
             "Unable to load or find the user, check your token"
         )
 
+    # get the explorer_id from the querystring
+    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
     filter_object = flask.request.get_json().get("filters", None)
-    return flask.jsonify(update(logged_user_id, search_id, name, description, filter_object))
+    return flask.jsonify(update(logged_user_id, filter_set_id, explorer_id, name, description, filter_object))
 
 
-@blueprint.route("/<search_id>", methods=["DELETE"])
-def delete_search(search_id):
+@blueprint.route("/<filter_set_id>", methods=["DELETE"])
+def delete_search(filter_set_id):
     """
     Remove the user from the userdatamodel database and all associated storage
     solutions.
@@ -95,6 +124,9 @@ def delete_search(search_id):
             "Unable to load or find the user, check your token"
         )
 
-    response = flask.jsonify(delete(logged_user_id, search_id))
+    # get the explorer_id from the querystring
+    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+
+    response = flask.jsonify(delete(logged_user_id, filter_set_id, explorer_id))
     return response
 

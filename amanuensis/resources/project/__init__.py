@@ -10,7 +10,7 @@ from amanuensis.resources.userdatamodel import (
     get_project_by_consortium,
     get_project_by_user
 )
-from amanuensis.resources import search, consortium_data_contributor
+from amanuensis.resources import filterset, consortium_data_contributor
 
 from amanuensis.auth.auth import current_user
 
@@ -62,14 +62,14 @@ def get_all(logged_user_id, approver):
         return projects
 
 
-def create(logged_user_id, name, description, search_ids):
-    # retrieve all the searches associated with this project
-    searches = search.get_by_ids(logged_user_id, search_ids)
-    # example searches - [{"id": 4, "user_id": 1, "name": "INRG_1", "description": "", "filter_object": {"race": {"selectedValues": ["Black or African American"]}, "consortium": {"selectedValues": ["INRG"]}, "data_contributor_id": {"selectedValues": ["COG"]}}}]
+def create(logged_user_id, name, description, filter_set_ids, explorer_id):
+    # retrieve all the filter_sets associated with this project
+    filter_sets = filterset.get_by_ids(logged_user_id, filter_set_ids, explorer_id)
+    # example filter_sets - [{"id": 4, "user_id": 1, "name": "INRG_1", "description": "", "filter_object": {"race": {"selectedValues": ["Black or African American"]}, "consortium": {"selectedValues": ["INRG"]}, "data_contributor_id": {"selectedValues": ["COG"]}}}]
     
     path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
     consortiums = []
-    for s in searches:
+    for s in filter_sets:
         # Get a list of consortiums the cohort of data is from
         # example or retuned values - consoritums = ['INRG']
         # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
@@ -94,21 +94,21 @@ def create(logged_user_id, name, description, search_ids):
   
     with flask.current_app.db.session as session:
         project_schema = ProjectSchema()
-        project = create_project(session, logged_user_id, description, searches, requests)
+        project = create_project(session, logged_user_id, description, filter_sets, requests)
         project_schema.dump(project)
         return project
 
-# def get_by_id(logged_user_id, search_id):
+# def get_by_id(logged_user_id, filter_set_id, explorer_id):
 #     with flask.current_app.db.session as session:
-#         return get_search(session, logged_user_id, search_id)
+#         return get_filter_set(session, logged_user_id, filter_set_id, explorer_id)
 
 
 
-# def update(logged_user_id, search_id, name, description, filter_object):
+# def update(logged_user_id, filter_set_id, explorer_id, name, description, filter_object):
 #     with flask.current_app.db.session as session:
-#         return update_search(session, logged_user_id, search_id, name, description, filter_object)
+#         return update_filter_set(session, logged_user_id, filter_set_id, explorer_id, name, description, filter_object)
 
 
-# def delete(logged_user_id, search_id):
+# def delete(logged_user_id, filter_set_id, explorer_id):
 #     with flask.current_app.db.session as session:
-#         return delete_search(session, logged_user_id, search_id)
+#         return delete_filter_set(session, logged_user_id, filter_set_id, explorer_id)
