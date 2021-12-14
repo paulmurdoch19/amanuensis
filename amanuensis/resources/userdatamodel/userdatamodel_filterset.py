@@ -71,7 +71,7 @@ def update_filter_set(current_session, logged_user_id, filter_set_id, explorer_i
         Search.user_id == logged_user_id
     ).update(data)
     if  num_updated > 0:
-        return  {"code": 200, "updated": filter_set_id, "explorer_id": explorer_id}
+        return  {"code": 200, "updated": int(filter_set_id), "explorer_id": int(explorer_id)}
     else:
         return {"code": 500, "error": "Nothing has been updated, check the logs to see what happened during the transaction."}
 
