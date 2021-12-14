@@ -64,13 +64,13 @@ def update_filter_set(current_session, logged_user_id, filter_set_id, explorer_i
         data['filter_object'] = filter_object
 
     #TODO check that at least one has changed
-    result = current_session.query(Search).filter(
+    num_updated = current_session.query(Search).filter(
         Search.id == filter_set_id, 
         Search.filter_source_internal_id == explorer_id,
         Search.filter_source == FilterSourceType.explorer,
         Search.user_id == logged_user_id
     ).update(data)
-    if  result > 0:
+    if  num_updated > 0:
         return  {"code": 200, "updated": filter_set_id, "explorer_id": explorer_id}
     else:
         return {"code": 500, "error": "Nothing has been updated, check the logs to see what happened during the transaction."}
