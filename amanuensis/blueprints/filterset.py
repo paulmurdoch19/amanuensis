@@ -36,7 +36,7 @@ def get_filter_sets():
         )
 
     # get the explorer_id from the querystring
-    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+    explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
     return flask.jsonify(get_all(logged_user_id, explorer_id))
 
@@ -52,7 +52,7 @@ def get_filter_set(filter_set_id):
         )
 
     # get the explorer_id from the querystring
-    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+    explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
     return flask.jsonify(get_by_id(logged_user_id, filter_set_id, explorer_id))
 
@@ -74,7 +74,7 @@ def create_search():
         )
 
     # get the explorer_id from the querystring
-    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+    explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
     name = flask.request.get_json().get("name", None)
     filter_object = flask.request.get_json().get("filters", None)
@@ -101,7 +101,7 @@ def update_search(filter_set_id):
         )
 
     # get the explorer_id from the querystring
-    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+    explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
@@ -125,7 +125,7 @@ def delete_search(filter_set_id):
         )
 
     # get the explorer_id from the querystring
-    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+    explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
     response = flask.jsonify(delete(logged_user_id, filter_set_id, explorer_id))
     return response

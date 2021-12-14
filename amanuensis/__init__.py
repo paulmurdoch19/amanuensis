@@ -100,7 +100,7 @@ def app_register_blueprints(app):
     # google_blueprint = amanuensis.blueprints.google.make_google_blueprint()
     # app.register_blueprint(google_blueprint, url_prefix="/google")
 
-    app.register_blueprint(amanuensis.blueprints.filterset.blueprint, url_prefix="/filter-set")
+    app.register_blueprint(amanuensis.blueprints.filterset.blueprint, url_prefix="/filter-sets")
     app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/projects")
     app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/requests")
     app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
