@@ -49,7 +49,7 @@ pycryptodome = "3.9.8"
 storageclient = {git = "https://github.com/uc-cdis/storage-client", rev = "1.0.1"}
 pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.1.1"}
 hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "0.1.0"}
-userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "1.1.0"}
+userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "1.1.1"}
 
 
 
