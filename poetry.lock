@@ -1690,7 +1690,7 @@ sqlalchemy = ">=1.3.3,<1.4.0"
 
 [[package]]
 name = "userportaldatamodel"
-version = "0.2.0"
+version = "1.1.0"
 description = ""
 category = "main"
 optional = false
@@ -1706,8 +1706,8 @@ sqlalchemy = ">=1.3.3,<1.4.0"
 [package.source]
 type = "git"
 url = "https://github.com/chicagopcdc/userPortalDataModel.git"
-reference = "eaebad386cfeb7007f676c7269e9741537b182ac"
-resolved_reference = "eaebad386cfeb7007f676c7269e9741537b182ac"
+reference = "1.1.0"
+resolved_reference = "0b5341ef7f1b993c889d84e0f22ba54692d39874"
 
 [[package]]
 name = "websocket-client"
@@ -1766,7 +1766,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "8dad26dd9df116a1a9e70e1566428ed702f0ea5fa373ab2df0f3e3371d45c4a6"
+content-hash = "eab349958bd968245ccff76f84e021ff384001b8037e31b3e5a00d190a08db4f"
 
 [metadata.files]
 addict = [

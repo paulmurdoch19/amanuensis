@@ -49,9 +49,7 @@ pycryptodome = "3.9.8"
 storageclient = {git = "https://github.com/uc-cdis/storage-client", rev = "1.0.1"}
 pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.1.1"}
 hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "0.1.0"}
-# userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "0.1.0"}
-# includes extend_data_request_model branch with filter_source, filter_source_id fields
-userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "eaebad386cfeb7007f676c7269e9741537b182ac"}
+userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "1.1.0"}
 
 
 
