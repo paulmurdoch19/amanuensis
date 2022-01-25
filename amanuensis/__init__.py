@@ -17,7 +17,7 @@ from amanuensis.error_handler import get_error_response
 from amanuensis.config import config
 from amanuensis.settings import CONFIG_SEARCH_FOLDERS
 import amanuensis.blueprints.misc
-import amanuensis.blueprints.search
+import amanuensis.blueprints.filterset
 import amanuensis.blueprints.project
 import amanuensis.blueprints.request
 import amanuensis.blueprints.message
@@ -100,8 +100,7 @@ def app_register_blueprints(app):
     # google_blueprint = amanuensis.blueprints.google.make_google_blueprint()
     # app.register_blueprint(google_blueprint, url_prefix="/google")
 
-
-    app.register_blueprint(amanuensis.blueprints.search.blueprint, url_prefix="/filter-set")
+    app.register_blueprint(amanuensis.blueprints.filterset.blueprint, url_prefix="/filter-sets")
     app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/projects")
     app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/requests")
     app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
@@ -141,6 +140,7 @@ def app_register_blueprints(app):
         return flask.jsonify(
             {"keys": [(keypair.kid, keypair.public_key) for keypair in app.keypairs]}
         )
+
 
 
 # def _check_s3_buckets(app):

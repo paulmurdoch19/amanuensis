@@ -52,12 +52,21 @@ def create_project():
             "Unable to load or find the user, check your token"
         )
 
+    # get the explorer_id from the querystring
+    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
+    
+    #backward compatibility
     search_ids = flask.request.get_json().get("search_ids", None)
+    filter_set_ids = flask.request.get_json().get("filter_set_ids", None)
+
+    if search_ids and not filter_set_ids:
+        filter_set_ids = search_ids
 
     project_schema = ProjectSchema()
-    return flask.jsonify(project_schema.dump(create(logged_user_id, name, description, search_ids)))
+    return flask.jsonify(project_schema.dump(create(logged_user_id, name, description, filter_set_ids, explorer_id)))
 
 
 # @blueprint.route("/<search_id>", methods=["PUT"])
