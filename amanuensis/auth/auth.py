@@ -75,3 +75,36 @@ def check_arborist_auth(resource, method, constraints=None):
         return wrapper
 
     return decorator
+
+
+def has_arborist_access(resource, method):
+    """
+    Check with arborist to verify the authz for a request.
+
+    Args:
+        resource (str):
+            Identifier for the thing being accessed. These look like filepaths. This
+            ``resource`` must correspond to some resource entered previously in
+            arborist. Currently the existing resources are going to be the
+            program/projects set up by the user sync.
+        method (str):
+            Identifier for the action the user is trying to do. Like ``resource``, this
+            is something that has to exist in arborist already.
+
+    Return:
+        true/false
+    """
+    if not hasattr(flask.current_app, "arborist"):
+        raise Forbidden(
+            "this amanuensis instance is not configured with arborist;"
+            " this endpoint is unavailable"
+        )
+
+    if not flask.current_app.arborist.auth_request(
+        jwt=get_jwt_from_header(),
+        service="amanuensis",
+        methods=method,
+        resources=resource,
+    ):
+        return False
+    return True
