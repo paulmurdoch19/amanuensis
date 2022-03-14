@@ -35,9 +35,9 @@ def get_by_ids(logged_user_id, filter_set_ids, explorer_id):
         return get_filter_sets(session, logged_user_id, filter_set_ids, explorer_id)
 
 
-def create(logged_user_id, explorer_id, name, description, filter_object):
+def create(logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object):
     with flask.current_app.db.session as session:    
-        return create_filter_set(session, logged_user_id, explorer_id, name, description, filter_object)
+        return create_filter_set(session, logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object)
 
 
 def update(logged_user_id, filter_set_id, explorer_id, name, description, filter_object):
