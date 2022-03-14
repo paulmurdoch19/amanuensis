@@ -1,4 +1,4 @@
-# from functools import wraps
+from functools import wraps
 from flask import current_app, request
 from authutils.user import current_user
 from authutils.token.validate import current_token
@@ -94,13 +94,13 @@ def has_arborist_access(resource, method):
     Return:
         true/false
     """
-    if not hasattr(flask.current_app, "arborist"):
+    if not hasattr(current_app, "arborist"):
         raise Forbidden(
             "this amanuensis instance is not configured with arborist;"
             " this endpoint is unavailable"
         )
 
-    if not flask.current_app.arborist.auth_request(
+    if not current_app.arborist.auth_request(
         jwt=get_jwt_from_header(),
         service="amanuensis",
         methods=method,

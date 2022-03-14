@@ -2,11 +2,10 @@ import flask
 from flask_sqlalchemy_session import current_session
 
 # from amanuensis.auth import login_required, current_token
-# from amanuensis.errors import Unauthorized, UserError, NotFound
 # from amanuensis.models import Application, Certificate
 from amanuensis.resources.filterset import get_all, get_by_id, create, delete, update
 from amanuensis.config import config
-from amanuensis.auth.auth import current_user, has_arborist_access
+from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError
 from amanuensis.schema import SearchSchema
 from cdislogging import get_logger
@@ -71,11 +70,7 @@ def create_search():
     except AuthError:
         logger.warning(
             "Unable to load or find the user, check your token"
-        )
-        
-    is_amanuensis_admin = False
-    if has_arborist_access("/services/amanuensis", "*"):
-        is_amanuensis_admin = True
+        ) 
 
     # get the explorer_id from the querystring
     explorer_id = flask.request.args.get('explorerId', default=1, type=int)
@@ -84,9 +79,10 @@ def create_search():
     filter_object = flask.request.get_json().get("filters", None)
     description = flask.request.get_json().get("description", None)
     ids_list = flask.request.get_json().get("ids_list", None)
+    
     # search_schema = SearchSchema()
     # return flask.jsonify(search_schema.dump(create(logged_user_id, explorer_id, name, description, filter_object)))
-    return flask.jsonify(create(logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object))
+    return flask.jsonify(create(logged_user_id, False, explorer_id, name, description, filter_object, ids_list))
 
 
 @blueprint.route("/<filter_set_id>", methods=["PUT"])

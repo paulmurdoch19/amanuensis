@@ -62,7 +62,7 @@ def get_all(logged_user_id, approver):
         return projects
 
 
-def create(logged_user_id, name, description, filter_set_ids, explorer_id):
+def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id):
     # retrieve all the filter_sets associated with this project
     filter_sets = filterset.get_by_ids(logged_user_id, filter_set_ids, explorer_id)
     # example filter_sets - [{"id": 4, "user_id": 1, "name": "INRG_1", "description": "", "filter_object": {"race": {"selectedValues": ["Black or African American"]}, "consortium": {"selectedValues": ["INRG"]}, "data_contributor_id": {"selectedValues": ["COG"]}}}]
@@ -73,7 +73,7 @@ def create(logged_user_id, name, description, filter_set_ids, explorer_id):
         # Get a list of consortiums the cohort of data is from
         # example or retuned values - consoritums = ['INRG']
         # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
-        consortiums.extend(get_consortium_list(path, s.filter_object))    
+        consortiums.extend(get_consortium_list(is_amanuensis_admin, path, s.filter_object if s.filter_object else s.ids_list))    
 
 
     #TODO make sure to populate the consortium table
@@ -94,9 +94,11 @@ def create(logged_user_id, name, description, filter_set_ids, explorer_id):
   
     with flask.current_app.db.session as session:
         project_schema = ProjectSchema()
-        project = create_project(session, logged_user_id, description, filter_sets, requests)
+        project = create_project(session, logged_user_id, description, name, institution, filter_sets, requests)
         project_schema.dump(project)
         return project
+
+
 
 # def get_by_id(logged_user_id, filter_set_id, explorer_id):
 #     with flask.current_app.db.session as session:

@@ -303,9 +303,23 @@ def getGQLFilter(src_filter):
     return { "AND": facetsList }
 
 
+def getGQLFilterIdsList(ids_list):
+    # {
+    #     "AND":[
+    #         {
+    #             "IN":{
+    #                 "subject_submitter_id":["{subject_submitter_i}"]
+    #             }
+    #         }
+    #     ]
+    # }
+    # ids_list = ["COG_0xA4CE42BAEAFFD85A5A573F7C0488647D", "COG_0x2B1D2E3C4648236211D982AA60BAC9BD", "COG_0xE23B0F16F4B158D1A417B2B422AEB303"]
 
-def get_consortium_list(path, src_filter):
-    transformed_filter = getGQLFilter(src_filter)
+    return { "AND": [{"IN":{"subject_submitter_id":ids_list}}]} 
+
+
+def get_consortium_list(is_amanuensis_admin, path, src_filter, ids_list):
+    transformed_filter = getGQLFilterIdsList(ids_list) if is_amanuensis_admin else getGQLFilter(src_filter)
     target_filter = {}
     target_filter["filter"] = transformed_filter
 

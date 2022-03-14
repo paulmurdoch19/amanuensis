@@ -24,11 +24,16 @@ def get_project_by_user(current_session, logged_user_id):
     return current_session.query(Project).filter_by(user_id=logged_user_id).all()
 
 
-def create_project(current_session, user_id, description, searches, requests):
+def create_project(current_session, user_id, description, name, institution, searches, requests):
     """
     Creates a project with an associated auth_id and storage access
     """
-    new_project = Project(user_id=user_id, description=description)
+    new_project = Project(user_id=user_id,
+                        user_source="fence",
+                        description=description,
+                        institution=institution,
+                        name=name
+                    )
 
     current_session.add(new_project)
     new_project.searches.extend(searches)
@@ -43,7 +48,7 @@ def create_project(current_session, user_id, description, searches, requests):
     current_session.commit()
     
     return new_project
-
+ 
 
      
 # def create_project_with_dict(current_session, project_data):

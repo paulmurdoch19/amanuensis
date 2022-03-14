@@ -32,26 +32,37 @@ def get_filter_sets(current_session, logged_user_id, filter_set_ids, explorer_id
     return {"filter_sets": filter_sets}
 
 
-def create_filter_set(current_session, logged_user_id, explorer_id, name, description, filter_object):
+def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list):
     new_filter_set = Search(
         user_id=logged_user_id, 
         filter_source_internal_id=explorer_id,
-        filter_source=FilterSourceType.explorer,
+        filter_source=FilterSourceType.manual if is_amanuensis_admin else FilterSourceType.explorer,
         user_source="fence", 
         name=name, 
         description=description, 
-        filter_object=filter_object
+        filter_object=filter_object,
+        ids_list=ids_list
     )
     #TODO add es_index, add dataset_version
     current_session.add(new_filter_set)
     current_session.flush()
-    return {
-        "name": new_filter_set.name, 
-        "id": new_filter_set.id,
-        "explorer_id": new_filter_set.filter_source_internal_id,
-        "description": new_filter_set.description, 
-        "filters": new_filter_set.filter_object
-    }
+
+    if is_amanuensis_admin:
+        return {
+            "name": new_filter_set.name, 
+            "id": new_filter_set.id,
+            "filter_source": new_filter_set.filter_source,
+            "description": new_filter_set.description, 
+            "ids_list": new_filter_set.ids_list
+        }
+    else: 
+        return {
+            "name": new_filter_set.name, 
+            "id": new_filter_set.id,
+            "explorer_id": new_filter_set.filter_source_internal_id,
+            "description": new_filter_set.description, 
+            "filters": new_filter_set.filter_object
+        }
 
 
 def update_filter_set(current_session, logged_user_id, filter_set_id, explorer_id, name, description, filter_object):

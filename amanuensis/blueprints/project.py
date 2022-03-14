@@ -37,7 +37,6 @@ def get_projetcs():
 
 
 @blueprint.route("/", methods=["POST"])
-# @admin_login_required
 # @debug_log
 def create_project():
     """
@@ -66,7 +65,7 @@ def create_project():
         filter_set_ids = search_ids
 
     project_schema = ProjectSchema()
-    return flask.jsonify(project_schema.dump(create(logged_user_id, name, description, filter_set_ids, explorer_id)))
+    return flask.jsonify(project_schema.dump(create(logged_user_id, False, name, description, filter_set_ids, explorer_id)))
 
 
 # @blueprint.route("/<search_id>", methods=["PUT"])

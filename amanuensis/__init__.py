@@ -21,6 +21,7 @@ import amanuensis.blueprints.filterset
 import amanuensis.blueprints.project
 import amanuensis.blueprints.request
 import amanuensis.blueprints.message
+import amanuensis.blueprints.admin
 
 from pcdcutils.signature import SignatureManager
 
@@ -89,7 +90,7 @@ def app_register_blueprints(app):
     # creds_blueprint = amanuensis.blueprints.storage_creds.make_creds_blueprint()
     # app.register_blueprint(creds_blueprint, url_prefix="/credentials")
 
-    # app.register_blueprint(amanuensis.blueprints.admin.blueprint, url_prefix="/admin")
+    app.register_blueprint(amanuensis.blueprints.admin.blueprint, url_prefix="/admin")
     # app.register_blueprint(
     #     amanuensis.blueprints.well_known.blueprint, url_prefix="/.well-known"
     # )
