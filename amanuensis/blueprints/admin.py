@@ -19,7 +19,7 @@ from amanuensis.resources import filterset
 from amanuensis.resources import project
 from amanuensis.resources import admin
 
-from amanuensis.schema import ProjectSchema
+from amanuensis.schema import ProjectSchema, StateSchema, RequestSchema
 
 
 logger = get_logger(__name__)
@@ -90,7 +90,19 @@ def add_state():
     name = request.get_json().get("name", None)
     code = request.get_json().get("code", None)
 
-    return jsonify(admin.create_state(name, code))
+    state_schema = StateSchema()
+    return jsonify(state_schema.dump(admin.create_state(name, code)))
+
+@blueprint.route("/states", methods=["GET"])
+def get_states():
+    """
+    Create a new state
+
+    Returns a json object
+    """
+
+    state_schema = StateSchema(many=True)
+    return jsonify(state_schema.dump(admin.get_all_states()))
 
 
 @blueprint.route("/filter-sets", methods=["POST"])
@@ -140,5 +152,20 @@ def create_project():
     return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution)))
 
 
+@blueprint.route("/projects/state", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def update_project_state():
+    """
+    Create a new state
+
+    Returns a json object
+    """
+
+    project_id = request.get_json().get("project_id", None)
+    state_id = request.get_json().get("state_id", None)
+
+    request_schema = RequestSchema(many=True)
+    return jsonify(request_schema.dump(admin.update_project_state(project_id, state_id)))
 
 

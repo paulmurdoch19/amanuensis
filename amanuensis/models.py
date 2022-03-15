@@ -31,7 +31,7 @@ from userportaldatamodel import Base
 from userportaldatamodel.models import (AttributeList, AttributeListValue,
                                         Attributes, ConsortiumDataContributor,
                                         InputType, Message, Project, Receiver,
-                                        Request, Search, FilterSourceType)
+                                        Request, Search, FilterSourceType, State)
 
 from amanuensis.config import config
 

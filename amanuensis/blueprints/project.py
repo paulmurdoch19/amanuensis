@@ -41,9 +41,10 @@ def get_projetcs():
     for project in projects:
         tmp_project = {}
         tmp_project["id"] = project["id"]
-        tmp_project["nane"] = project["name"]
+        tmp_project["name"] = project["name"]
 
         status = None
+        status_date = None
         submitted_at = None
         completed_at = None
         for request in project["requests"]:
@@ -51,18 +52,26 @@ def get_projetcs():
             # "status": "", // string ("IN REVIEW" | "APPROVED" | "REJECTED")
             # "submitted_at": "", // string (timestamp) or null
             # "completed_at": "" // string (timestamp) or null
-
             if not submitted_at:
                 submitted_at = request["create_date"]
-                
-            if not completed_at and statud == "APPROVED":
-                completed_at = request["update_date"]
+
+            for state in request["states"]:
+                if not status:
+                    status = state["code"]
+
+                if status == "APPROVED" or status == "REJECTED":
+                    if not completed_at:
+                        completed_at = request["update_date"]
+                    break 
+                else:
+                    status = state["code"]
 
         tmp_project["status"] = status
         tmp_project["submitted_at"] = submitted_at
         tmp_project["completed_at"] = completed_at
+        return_projects.append(tmp_project)
 
-    return flask.jsonify()
+    return flask.jsonify(return_projects)
 
 
 @blueprint.route("/", methods=["POST"])

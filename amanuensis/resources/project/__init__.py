@@ -38,7 +38,7 @@ logger = get_logger(__name__)
 
 
 def get_all(logged_user_id, approver):
-    # project_schema = ProjectSchema(many=True)
+    project_schema = ProjectSchema(many=True)
     with flask.current_app.db.session as session:
         if approver:
             #TODO check if the user is part of a EC commettee, if so get the one submitted to the consortium
@@ -58,7 +58,7 @@ def get_all(logged_user_id, approver):
                     )
 
         projects = get_project_by_user(session, logged_user_id)
-        # project_schema.dump(projects)
+        project_schema.dump(projects)
         return projects
 
 

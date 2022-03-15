@@ -3,6 +3,7 @@ from userportaldatamodel.schemas.schemas import (
     MessageSchema,
     ConsortiumDataContributorSchema,
     SearchSchema,
+    StateSchema,
     ProjectSchema,
     RequestSchema,
     AttributesSchema,

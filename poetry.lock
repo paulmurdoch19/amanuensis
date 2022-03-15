@@ -1623,7 +1623,7 @@ sqlalchemy = ">=1.3.3,<1.4.0"
 
 [[package]]
 name = "userportaldatamodel"
-version = "1.2.4"
+version = "1.2.8"
 description = ""
 category = "main"
 optional = false
@@ -1640,7 +1640,7 @@ sqlalchemy = ">=1.3.3,<1.4.0"
 type = "git"
 url = "https://github.com/chicagopcdc/userPortalDataModel.git"
 reference = "handle-manual-data-request"
-resolved_reference = "329176ff812ef8f67810d37c381badb6e8881282"
+resolved_reference = "fcb4f37d2d20ed18cc729330aee20b110cb957d5"
 
 [[package]]
 name = "werkzeug"
