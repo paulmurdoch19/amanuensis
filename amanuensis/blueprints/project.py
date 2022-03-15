@@ -29,11 +29,40 @@ def get_projetcs():
             "Unable to load or find the user, check your token"
         )
 
+    #TODO assign this as a resource in arborist
     approver = flask.request.args.get('approver', None)
     print(approver)
 
     project_schema = ProjectSchema(many=True)
-    return flask.jsonify(project_schema.dump(get_all(logged_user_id, approver)))
+    projects = project_schema.dump(get_all(logged_user_id, approver))
+
+    return_projects = []
+
+    for project in projects:
+        tmp_project = {}
+        tmp_project["id"] = project["id"]
+        tmp_project["nane"] = project["name"]
+
+        status = None
+        submitted_at = None
+        completed_at = None
+        for request in project["requests"]:
+            # get status
+            # "status": "", // string ("IN REVIEW" | "APPROVED" | "REJECTED")
+            # "submitted_at": "", // string (timestamp) or null
+            # "completed_at": "" // string (timestamp) or null
+
+            if not submitted_at:
+                submitted_at = request["create_date"]
+                
+            if not completed_at and statud == "APPROVED":
+                completed_at = request["update_date"]
+
+        tmp_project["status"] = status
+        tmp_project["submitted_at"] = submitted_at
+        tmp_project["completed_at"] = completed_at
+
+    return flask.jsonify()
 
 
 @blueprint.route("/", methods=["POST"])

@@ -38,7 +38,7 @@ logger = get_logger(__name__)
 
 
 def get_all(logged_user_id, approver):
-    project_schema = ProjectSchema(many=True)
+    # project_schema = ProjectSchema(many=True)
     with flask.current_app.db.session as session:
         if approver:
             #TODO check if the user is part of a EC commettee, if so get the one submitted to the consortium
@@ -58,30 +58,30 @@ def get_all(logged_user_id, approver):
                     )
 
         projects = get_project_by_user(session, logged_user_id)
-        project_schema.dump(projects)
+        # project_schema.dump(projects)
         return projects
 
 
-def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id):
+def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id, institution):
     # retrieve all the filter_sets associated with this project
-    filter_sets = filterset.get_by_ids(logged_user_id, filter_set_ids, explorer_id)
+    filter_sets = filterset.get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
     # example filter_sets - [{"id": 4, "user_id": 1, "name": "INRG_1", "description": "", "filter_object": {"race": {"selectedValues": ["Black or African American"]}, "consortium": {"selectedValues": ["INRG"]}, "data_contributor_id": {"selectedValues": ["COG"]}}}]
-    
+
     path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
     consortiums = []
     for s in filter_sets:
         # Get a list of consortiums the cohort of data is from
         # example or retuned values - consoritums = ['INRG']
         # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
-        consortiums.extend(get_consortium_list(is_amanuensis_admin, path, s.filter_object if s.filter_object else s.ids_list))    
-
+        consortiums.extend(get_consortium_list(is_amanuensis_admin, path, s.filter_object, s.ids_list))    
+    consortiums = list(set(consortiums))
 
     #TODO make sure to populate the consortium table
     # insert into consortium_data_contributor ("code", "name") values ('INRG','INRG'), ('INSTRUCT', 'INSTRuCT');
     requests = []
     for consortia in consortiums:
         # get consortium's ID
-        consortium = consortium_data_contributor.get(code=consortia)
+        consortium = consortium_data_contributor.get(code=consortia.upper())
         if consortium is None:
             raise NotFound(
                 "Consortium with code {} not found.".format(

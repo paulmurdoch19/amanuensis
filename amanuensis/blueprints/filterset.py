@@ -24,6 +24,7 @@ blueprint = flask.Blueprint("filter-sets", __name__)
 
 # cache = SimpleCache()
 
+
 @blueprint.route("/", methods=["GET"])
 # @login_required({"user"})
 def get_filter_sets():
@@ -37,7 +38,8 @@ def get_filter_sets():
     # get the explorer_id from the querystring
     explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
-    return flask.jsonify(get_all(logged_user_id, explorer_id))
+    filter_sets = [{"name": s.name, "id": s.id, "description": s.description, "filters": s.filter_object, "ids": s.ids_list} for s in get_all(logged_user_id, explorer_id)] 
+    return flask.jsonify({"filter_sets": filter_sets})
 
 
 @blueprint.route("/<filter_set_id>", methods=["GET"])
@@ -53,7 +55,9 @@ def get_filter_set(filter_set_id):
     # get the explorer_id from the querystring
     explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
-    return flask.jsonify(get_by_id(logged_user_id, filter_set_id, explorer_id))
+    filter_sets = [{"name": s.name, "id": s.id, "description": s.description, "filters": s.filter_object, "ids": s.ids_list} for s in get_by_id(logged_user_id, filter_set_id, explorer_id)] 
+    return flask.jsonify({"filter_sets": filter_sets})
+
 
 
 @blueprint.route("/", methods=["POST"])

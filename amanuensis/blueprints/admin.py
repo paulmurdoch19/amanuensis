@@ -12,9 +12,14 @@ from flask_sqlalchemy_session import current_session
 from cdislogging import get_logger
 
 from amanuensis.auth.auth import check_arborist_auth
-# from amanuensis.resources import admin
 from amanuensis.config import config
 from amanuensis.errors import UserError
+
+from amanuensis.resources import filterset
+from amanuensis.resources import project
+from amanuensis.resources import admin
+
+from amanuensis.schema import ProjectSchema
 
 
 logger = get_logger(__name__)
@@ -72,6 +77,20 @@ def update_user_authz():
     # return jsonify(admin.create_user(current_session, username, role, email))
     return jsonify("test")
 
+@blueprint.route("/states", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def add_state():
+    """
+    Create a new state
+
+    Returns a json object
+    """
+
+    name = request.get_json().get("name", None)
+    code = request.get_json().get("code", None)
+
+    return jsonify(admin.create_state(name, code))
 
 
 @blueprint.route("/filter-sets", methods=["POST"])
@@ -93,7 +112,7 @@ def create_search():
     description = request.get_json().get("description", None)
     ids_list = request.get_json().get("ids_list", None)
     
-    return jsonify(create(user_id, True, None, name, description, filter_object, ids_list))
+    return jsonify(filterset.create(user_id, True, None, name, description, filter_object, ids_list))
 
 
 @blueprint.route("/projects", methods=["POST"])
@@ -113,11 +132,12 @@ def create_project():
 
     name = request.get_json().get("name", None)
     description = request.get_json().get("description", None)
+    institution = request.get_json().get("institution", None)
     
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(create(user_id, True, name, description, filter_set_ids, None)))
+    return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution)))
 
 
 

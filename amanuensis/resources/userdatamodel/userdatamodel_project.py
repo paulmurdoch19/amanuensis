@@ -35,7 +35,9 @@ def create_project(current_session, user_id, description, name, institution, sea
                         name=name
                     )
 
+
     current_session.add(new_project)
+    current_session.flush()
     new_project.searches.extend(searches)
     new_project.requests.extend(requests)
 
