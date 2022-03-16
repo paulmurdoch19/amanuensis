@@ -28,4 +28,4 @@ def download_data(project_id):
     # result = get_signed_url_for_file("download", storage_url)
     result = "https://pcdc-gen3-dictionaries.s3.amazonaws.com/pcdc-schema-prod-20220106.json" 
 
-    return flask.jsonify({"url": result})
+    return flask.jsonify({"download_url": result})
