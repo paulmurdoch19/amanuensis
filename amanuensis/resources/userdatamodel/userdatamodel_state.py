@@ -3,14 +3,29 @@ from sqlalchemy import func
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     State,
-    Request
+    Request,
+    ConsortiumDataContributor
 )
 
 __all__ = [
     "create_state",
     "get_all_states",
-    "update_project_state"
+    "update_project_state",
+    "create_consortium"
 ]
+
+
+def create_consortium(session, name, code):
+    """
+    Creates a consortium
+    """
+    new_consortium = ConsortiumDataContributor(code=code, name=name)
+
+    current_session.add(new_consortium)
+    # current_session.commit()
+    current_session.flush()
+    
+    return new_consortium
 
 
 def create_state(current_session, name, code):

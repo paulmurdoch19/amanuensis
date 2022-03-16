@@ -12,7 +12,8 @@ logger = get_logger(__name__)
 __all__ = [
     "create_state",
     "get_all_states",
-    "update_project_state"
+    "update_project_state",
+    "create_consortium"
 ]
 
 
@@ -33,3 +34,12 @@ def update_project_state(project_id, state_id):
         requests = udm.update_project_state(session, project_id, state_id)
         request_schema.dump(requests) 
         return requests
+
+
+
+def create_consortium(name, code):
+    with flask.current_app.db.session as session:  
+        consortium_schema = ConsortiumDataContributorSchema()  
+        consortium = udm.create_consortium(session, name, code)
+        consortium_schema.dump(state)
+        return consortium

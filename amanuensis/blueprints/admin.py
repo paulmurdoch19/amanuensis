@@ -19,7 +19,7 @@ from amanuensis.resources import filterset
 from amanuensis.resources import project
 from amanuensis.resources import admin
 
-from amanuensis.schema import ProjectSchema, StateSchema, RequestSchema
+from amanuensis.schema import ProjectSchema, StateSchema, RequestSchema, ConsortiumDataContributorSchema
 
 
 logger = get_logger(__name__)
@@ -92,6 +92,22 @@ def add_state():
 
     state_schema = StateSchema()
     return jsonify(state_schema.dump(admin.create_state(name, code)))
+
+@blueprint.route("/consortiums", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def add_consortium():
+    """
+    Create a new state
+
+    Returns a json object
+    """
+
+    name = request.get_json().get("name", None)
+    code = request.get_json().get("code", None)
+
+    consortium_schema = ConsortiumDataContributorSchema()
+    return jsonify(consortium_schema.dump(admin.create_consortium(name, code)))
 
 @blueprint.route("/states", methods=["GET"])
 def get_states():
