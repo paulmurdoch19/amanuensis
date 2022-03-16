@@ -4,7 +4,7 @@ from cdislogging import get_logger
 
 from amanuensis.resources import userdatamodel as udm
 from amanuensis.config import config
-from amanuensis.schema import StateSchema, RequestSchema
+from amanuensis.schema import StateSchema, RequestSchema, ConsortiumDataContributorSchema
 
 
 logger = get_logger(__name__)
@@ -41,5 +41,5 @@ def create_consortium(name, code):
     with flask.current_app.db.session as session:  
         consortium_schema = ConsortiumDataContributorSchema()  
         consortium = udm.create_consortium(session, name, code)
-        consortium_schema.dump(state)
+        consortium_schema.dump(consortium)
         return consortium
