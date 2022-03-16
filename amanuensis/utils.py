@@ -23,8 +23,6 @@ from werkzeug.datastructures import ImmutableMultiDict
 from amanuensis.auth.auth import get_jwt_from_header
 from amanuensis.config import config
 from amanuensis.errors import NotFound, UserError
-# from amanuensis.models import Client, User, query_for_user
-from amanuensis.models import query_for_user
 
 rng = SystemRandom()
 alphanumeric = string.ascii_uppercase + string.ascii_lowercase + string.digits
@@ -37,65 +35,6 @@ def random_str(length):
 
 def json_res(data):
     return flask.Response(json.dumps(data), mimetype="application/json")
-
-
-def create_client(
-    username,
-    urls,
-    DB,
-    name="",
-    description="",
-    auto_approve=False,
-    is_admin=False,
-    grant_types=None,
-    confidential=True,
-    arborist=None,
-    policies=None,
-    allowed_scopes=None,
-):
-    client_id = random_str(40)
-    if arborist is not None:
-        arborist.create_client(client_id, policies)
-    grant_types = grant_types
-    driver = SQLAlchemyDriver(DB)
-    client_secret = None
-    hashed_secret = None
-    if confidential:
-        client_secret = random_str(55)
-        hashed_secret = bcrypt.hashpw(
-            client_secret.encode("utf-8"), bcrypt.gensalt()
-        ).decode("utf-8")
-    auth_method = "client_secret_basic" if confidential else "none"
-    allowed_scopes = allowed_scopes
-    if "openid" not in allowed_scopes:
-        allowed_scopes.append("openid")
-        logger.warning('Adding required "openid" scope to list of allowed scopes.')
-    with driver.session as s:
-        user = query_for_user(session=s, username=username)
-
-        # if not user:
-        #     user = User(username=username, is_admin=is_admin)
-        #     s.add(user)
-        if s.query(Client).filter(Client.name == name).first():
-            if arborist is not None:
-                arborist.delete_client(client_id)
-            raise Exception("client {} already exists".format(name))
-        # client = Client(
-        #     client_id=client_id,
-        #     client_secret=hashed_secret,
-        #     user=user,
-        #     redirect_uris=urls,
-        #     _allowed_scopes=" ".join(allowed_scopes),
-        #     description=description,
-        #     name=name,
-        #     auto_approve=auto_approve,
-        #     grant_types=grant_types,
-        #     is_confidential=confidential,
-        #     token_endpoint_auth_method=auth_method,
-        # )
-        # s.add(client)
-        # s.commit()
-    return client_id, client_secret
 
 
 def hash_secret(f):

@@ -2,7 +2,8 @@ from collections import OrderedDict
 import os
 
 from authutils.oauth2.client import blueprint as oauth2_blueprint
-# from authutils.oauth2.client import OAuthClient
+
+
 import flask
 from flask_cors import CORS
 from flask_sqlalchemy_session import flask_scoped_session, current_session
@@ -22,6 +23,7 @@ import amanuensis.blueprints.project
 import amanuensis.blueprints.request
 import amanuensis.blueprints.message
 import amanuensis.blueprints.admin
+import amanuensis.blueprints.download_urls
 
 from pcdcutils.signature import SignatureManager
 
@@ -70,7 +72,6 @@ def app_init(
 def app_sessions(app):
     app.url_map.strict_slashes = False
     app.db = SQLAlchemyDriver(config["DB"])
-    # app.db = SQLAlchemyDriver('postgresql://amanuensis_user:amanuensis_pass@postgres:5432/amanuensis_db')
     logger.warning("DB connected")
     # TODO: we will make a more robust migration system external from the application
     #       initialization soon
@@ -85,22 +86,8 @@ def app_sessions(app):
 
 
 def app_register_blueprints(app):
-    # app.register_blueprint(amanuensis.blueprints.oauth2.blueprint, url_prefix="/oauth2")
-
-    # creds_blueprint = amanuensis.blueprints.storage_creds.make_creds_blueprint()
-    # app.register_blueprint(creds_blueprint, url_prefix="/credentials")
-
     app.register_blueprint(amanuensis.blueprints.admin.blueprint, url_prefix="/admin")
-    # app.register_blueprint(
-    #     amanuensis.blueprints.well_known.blueprint, url_prefix="/.well-known"
-    # )
-
-    # link_blueprint = amanuensis.blueprints.link.make_link_blueprint()
-    # app.register_blueprint(link_blueprint, url_prefix="/link")
-
-    # google_blueprint = amanuensis.blueprints.google.make_google_blueprint()
-    # app.register_blueprint(google_blueprint, url_prefix="/google")
-
+    app.register_blueprint(amanuensis.blueprints.download_urls.blueprint, url_prefix="/download-urls")
     app.register_blueprint(amanuensis.blueprints.filterset.blueprint, url_prefix="/filter-sets")
     app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/projects")
     app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/requests")

@@ -19,7 +19,6 @@ from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
 from amanuensis.utils import get_consortium_list
 # from amanuensis.jwt.utils import get_jwt_header
-# from amanuensis.models import query_for_user
 # from amanuensis.auth.auth import register_arborist_user
 
 
