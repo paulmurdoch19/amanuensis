@@ -12,7 +12,7 @@ from amanuensis.resources.userdatamodel import (
     get_project_by_id,
     update_project
 )
-from amanuensis.resources import filterset, consortium_data_contributor
+from amanuensis.resources import filterset, consortium_data_contributor, admin
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
@@ -74,6 +74,9 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         consortiums.extend(get_consortium_list(is_amanuensis_admin, path, s.filter_object, s.ids_list))    
     consortiums = list(set(consortiums))
 
+    # Defaulst state is SUBMITTED
+    default_state = admin.get_by_code("IN_REVIEW")
+
     #TODO make sure to populate the consortium table
     # insert into consortium_data_contributor ("code", "name") values ('INRG','INRG'), ('INSTRUCT', 'INSTRuCT');
     requests = []
@@ -88,6 +91,7 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
             )
         req = Request()
         req.consortium_data_contributor = consortium
+        req.states.append(default_state)
         requests.append(req)
   
     with flask.current_app.db.session as session:

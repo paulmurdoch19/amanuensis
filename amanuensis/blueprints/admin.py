@@ -166,7 +166,7 @@ def update_project_state():
     state_id = request.get_json().get("state_id", None)
 
     if not state_id or not project_id:
-        return UserError("There are missing params").
+        return UserError("There are missing params.")
 
     request_schema = RequestSchema(many=True)
     return jsonify(request_schema.dump(admin.update_project_state(project_id, state_id)))

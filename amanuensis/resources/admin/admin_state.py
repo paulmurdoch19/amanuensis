@@ -14,7 +14,8 @@ __all__ = [
     "create_state",
     "get_all_states",
     "update_project_state",
-    "create_consortium"
+    "create_consortium",
+    "get_by_code"
 ]
 
 
@@ -29,6 +30,10 @@ def create_state(name, code):
 def get_all_states():
     with flask.current_app.db.session as session:    
         return udm.get_all_states(session)
+
+def get_by_code(code):
+    with flask.current_app.db.session as session:    
+        return udm.get_state_by_code(session, code)
 
 
 def update_project_state(project_id, state_id):

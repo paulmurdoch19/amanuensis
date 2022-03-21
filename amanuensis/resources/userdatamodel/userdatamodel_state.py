@@ -12,6 +12,7 @@ __all__ = [
     "update_project_state",
     "create_consortium",
     "get_state_by_id",
+    "get_state_by_code",
 ]
 
 
@@ -42,6 +43,10 @@ def create_state(current_session, name, code):
 
 def get_state_by_id(current_session, state_id):
     return current_session.query(State).filter(State.id == state_id).first()
+
+
+def get_state_by_code(current_session, code):
+    return current_session.query(State).filter(State.code == code).first()
 
 
 def get_all_states(current_session):

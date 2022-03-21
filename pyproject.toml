@@ -47,7 +47,8 @@ html2text = "^2020.1.16"
 pycryptodome = "3.9.8"
 pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.1.1"}
 hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "0.1.0"}
-userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "handle-manual-data-request"}
+# userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "handle-manual-data-request"}
+userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "1.2.0"}
 
 
 
@@ -60,7 +61,7 @@ mock = "^2.0.0"
 moto = "^1.1.24"
 pytest = "^3.2.3"
 pytest-cov = "^2.5.1"
-pytest-flask = "^0.11.0"
+pytest-flask = "^0.15.0"
 
 [tool.poetry.scripts]
 fence-create = 'bin.fence_create:main'

@@ -41,6 +41,7 @@ def get_projetcs():
         tmp_project["id"] = project["id"]
         tmp_project["name"] = project["name"]
 
+        status_code = None
         status = None
         status_date = None
         submitted_at = None
@@ -54,15 +55,18 @@ def get_projetcs():
                 submitted_at = request["create_date"]
 
             for state in request["states"]:
-                if not status:
-                    status = state["code"]
+                if not status_code:
+                    status_code = state["code"]
+                    status = state["name"]
 
-                if status == "APPROVED" or status == "REJECTED":
+
+                if status_code == "APPROVED" or status_code == "REJECTED":
                     if not completed_at:
                         completed_at = request["update_date"]
                     break 
                 else:
-                    status = state["code"]
+                    status_code = state["code"]
+                    status = state["name"]
 
         tmp_project["status"] = status
         tmp_project["submitted_at"] = submitted_at
