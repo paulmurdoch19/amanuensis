@@ -150,7 +150,7 @@ def update_project():
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(project.update_project(project_id, approved_url, filter_set_ids)))
+    return jsonify(project_schema.dump(project.update(project_id, approved_url, filter_set_ids)))
 
 
 @blueprint.route("/projects/state", methods=["POST"])

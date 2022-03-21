@@ -97,7 +97,7 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         return project
 
 
-def update_project(project_id, approved_url, filter_set_ids):
+def update(project_id, approved_url, filter_set_ids):
     # TODO retrieve all the filter_sets associated with this project
     # NOT SUPPORTED YET
 
