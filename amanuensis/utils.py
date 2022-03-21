@@ -241,7 +241,6 @@ def getGQLFilter(src_filter):
 
     return { "AND": facetsList }
 
-
 def getGQLFilterIdsList(ids_list):
     # {
     #     "AND":[
@@ -255,7 +254,6 @@ def getGQLFilterIdsList(ids_list):
     # ids_list = ["COG_0xA4CE42BAEAFFD85A5A573F7C0488647D", "COG_0x2B1D2E3C4648236211D982AA60BAC9BD", "COG_0xE23B0F16F4B158D1A417B2B422AEB303"]
 
     return { "AND": [{"IN":{"subject_submitter_id":ids_list}}]} 
-
 
 def get_consortium_list(is_amanuensis_admin, path, src_filter, ids_list):
     transformed_filter = getGQLFilterIdsList(ids_list) if is_amanuensis_admin else getGQLFilter(src_filter)
@@ -280,51 +278,6 @@ def get_consortium_list(is_amanuensis_admin, path, src_filter, ids_list):
     #     return r.json()
     # return []
 
-
-def send_email(from_email, to_emails, subject, text, smtp_domain):
-    """
-    Send email to group of emails using mail gun api.
-
-    https://app.mailgun.com/
-
-    Args:
-        from_email(str): from email
-        to_emails(list): list of emails to receive the messages
-        text(str): the text message
-        smtp_domain(dict): smtp domain server
-
-            {
-                "smtp_hostname": "smtp.mailgun.org",
-                "default_login": "postmaster@mailgun.planx-pla.net",
-                "api_url": "https://api.mailgun.net/v3/mailgun.planx-pla.net",
-                "smtp_password": "password",
-                "api_key": "api key"
-            }
-
-    Returns:
-        Http response
-
-    Exceptions:
-        KeyError
-
-    """
-    if smtp_domain not in config["GUN_MAIL"] or not config["GUN_MAIL"].get(
-        smtp_domain
-    ).get("smtp_password"):
-        raise NotFound(
-            "SMTP Domain '{}' does not exist in configuration for GUN_MAIL or "
-            "smtp_password was not provided. "
-            "Cannot send email.".format(smtp_domain)
-        )
-
-    api_key = config["GUN_MAIL"][smtp_domain].get("api_key", "")
-    email_url = config["GUN_MAIL"][smtp_domain].get("api_url", "") + "/messages"
-
-    return requests.post(
-        email_url,
-        auth=("api", api_key),
-        data={"from": from_email, "to": to_emails, "subject": subject, "text": text},
-    )
 
 
 def send_email_ses(body, to_emails, subject):
