@@ -5,6 +5,7 @@ from cdislogging import get_logger
 from amanuensis.resources import userdatamodel as udm
 from amanuensis.config import config
 from amanuensis.schema import StateSchema, RequestSchema, ConsortiumDataContributorSchema
+from amanuensis.errors import NotFound
 
 
 logger = get_logger(__name__)
@@ -31,9 +32,17 @@ def get_all_states():
 
 
 def update_project_state(project_id, state_id):
-    with flask.current_app.db.session as session:   
+    with flask.current_app.db.session as session: 
+        requests = udm.get_requests_by_project_id(session, project_id)
+        if not requests:
+            raise NotFound("There are no requests associated to this project or there is no project. id: {}".format(project_id))
+
+        state = udm.get_state_by_id(session.state_id)
+        if not state:
+            raise NotFound("The state with id {} has not been found".format(state_id))
+
         request_schema = RequestSchema(many=True)  
-        requests = udm.update_project_state(session, project_id, state_id)
+        requests = udm.update_project_state(session, requests, state)
         request_schema.dump(requests) 
         return requests
 
