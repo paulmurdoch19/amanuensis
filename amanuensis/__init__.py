@@ -1,14 +1,10 @@
 from collections import OrderedDict
 import os
 
-from authutils.oauth2.client import blueprint as oauth2_blueprint
-
-
 import flask
 from flask_cors import CORS
 from flask_sqlalchemy_session import flask_scoped_session, current_session
 from userportaldatamodel.driver import SQLAlchemyDriver
-from userportaldatamodel.models import Search
 
 from amanuensis.errors import UserError
 from amanuensis.models import migrate
@@ -96,7 +92,6 @@ def app_register_blueprints(app):
     amanuensis.blueprints.misc.register_misc(app)
 
 
-
 def app_config(
     app, settings="amanuensis.settings", root_dir=None, config_path=None, file_name=None
 ):
@@ -141,9 +136,6 @@ def app_config(
     config["RSA_PRIVATE_KEY"] = SignatureManager(key_path=key_path).get_key()
 
     # _check_s3_buckets(app)
-
-
-
 
 
 # def _check_s3_buckets(app):
@@ -205,6 +197,9 @@ def _setup_data_endpoint_and_boto(app):
         #TODO why does it need to be the first one? (use the key value in the object instead of making it a list)
         value = list(config["AWS_CREDENTIALS"].values())[0]
         app.boto = BotoManager(value, logger=logger)
+        logger.info("BotoManager initialized")
+    else:
+        logger.warning("Missing credentials for BotoManager, delivery of data will fail.")
 
 def _setup_arborist_client(app):
     if app.config.get("ARBORIST"):

@@ -3,21 +3,14 @@ import jwt
 import smtplib
 import json
 from cdislogging import get_logger
-from gen3authz.client.arborist.errors import ArboristError
 
 from amanuensis.resources import userdatamodel as udm
 from amanuensis.resources.userdatamodel import get_filter_sets, create_filter_set, delete_filter_set, update_filter_set
-# from amanuensis.auth.auth import get_current_user
-# from amanuensis.user import get_current_user
-
-from amanuensis.auth.auth import current_user
 
 from amanuensis.schema import SearchSchema
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
-# from amanuensis.jwt.utils import get_jwt_header
-# from amanuensis.auth.auth import register_arborist_user
 
 
 logger = get_logger(__name__)

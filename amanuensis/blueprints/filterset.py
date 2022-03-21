@@ -2,7 +2,6 @@ import flask
 from flask_sqlalchemy_session import current_session
 
 # from amanuensis.auth import login_required, current_token
-# from amanuensis.models import Application, Certificate
 from amanuensis.resources.filterset import get_all, get_by_id, create, delete, update
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
@@ -11,18 +10,9 @@ from amanuensis.schema import SearchSchema
 from cdislogging import get_logger
 
 
-REQUIRED_CERTIFICATES = {
-    "AUP_COC_NDA": "documents needed for user e-sign",
-    "training_certificate": "certificate obtained from training",
-}
-
 logger = get_logger(__name__)
 
 blueprint = flask.Blueprint("filter-sets", __name__)
-
-# deprecated - remove once portal switches to the correct url
-
-# cache = SimpleCache()
 
 
 @blueprint.route("/", methods=["GET"])
@@ -43,7 +33,6 @@ def get_filter_sets():
 
 
 @blueprint.route("/<filter_set_id>", methods=["GET"])
-# @login_required({"user"})
 def get_filter_set(filter_set_id):
     try:
         logged_user_id = current_user.id
@@ -59,10 +48,7 @@ def get_filter_set(filter_set_id):
     return flask.jsonify({"filter_sets": filter_sets})
 
 
-
 @blueprint.route("/", methods=["POST"])
-# @admin_login_required
-# @debug_log
 def create_search():
     """
     Create a search on the userportaldatamodel database
@@ -90,8 +76,6 @@ def create_search():
 
 
 @blueprint.route("/<filter_set_id>", methods=["PUT"])
-# @admin_login_required
-# @debug_log
 def update_search(filter_set_id):
     """
     Create a user on the userdatamodel database

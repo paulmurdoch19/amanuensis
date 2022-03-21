@@ -9,19 +9,14 @@ from amanuensis.resources.userdatamodel import (
     create_project,
     get_project_by_consortium,
     get_project_by_user,
-    get_project_by_id
+    get_project_by_id,
+    update_project
 )
 from amanuensis.resources import filterset, consortium_data_contributor
-
-from amanuensis.auth.auth import current_user
-
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
 from amanuensis.utils import get_consortium_list
-# from amanuensis.jwt.utils import get_jwt_header
-# from amanuensis.auth.auth import register_arborist_user
-
 
 from amanuensis.models import (
     Search,
@@ -29,9 +24,7 @@ from amanuensis.models import (
     ConsortiumDataContributor,
 )
 
-
 from amanuensis.schema import ProjectSchema
-
 
 
 logger = get_logger(__name__)
@@ -60,6 +53,7 @@ def get_all(logged_user_id, approver):
         projects = get_project_by_user(session, logged_user_id)
         project_schema.dump(projects)
         return projects
+
 
 def get_by_id(logged_user_id, project_id):
     with flask.current_app.db.session as session:
@@ -103,18 +97,14 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         return project
 
 
+def update_project(project_id, appoved_url, filter_set_ids):
+    # TODO retrieve all the filter_sets associated with this project
+    # NOT SUPPORTED YET
 
-# def get_by_id(logged_user_id, filter_set_id, explorer_id):
-#     with flask.current_app.db.session as session:
-#         return get_filter_set(session, logged_user_id, filter_set_id, explorer_id)
+    if not appoved_url:
+        return None
+
+    with flask.current_app.db.session as session:
+        return update_project(session, project_id, appoved_url)
 
 
-
-# def update(logged_user_id, filter_set_id, explorer_id, name, description, filter_object):
-#     with flask.current_app.db.session as session:
-#         return update_filter_set(session, logged_user_id, filter_set_id, explorer_id, name, description, filter_object)
-
-
-# def delete(logged_user_id, filter_set_id, explorer_id):
-#     with flask.current_app.db.session as session:
-#         return delete_filter_set(session, logged_user_id, filter_set_id, explorer_id)

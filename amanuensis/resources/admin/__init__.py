@@ -6,4 +6,3 @@ All the operations return a dictionary ready to be converted to JSON.
 """
 
 from amanuensis.resources.admin.admin_state import *
-from amanuensis.resources.admin.admin_projects import *

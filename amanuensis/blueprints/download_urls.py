@@ -28,6 +28,9 @@ def download_data(project_id):
             "Unable to load or find the user, check your token"
         )
 
+    if not app.boto:
+        raise InternalError("BotoManager not found. Check the AWS credentials are set in the config and have the correct permissions.")
+
     # Check param is present
     if not project_id:
         raise UserError("A project_id is needed to retrieve the correct URL")
@@ -42,23 +45,17 @@ def download_data(project_id):
         raise NotFound("The project with id {} doesn't seem to have a loaded file with approved data.".format(project_id))
 
 
-    # Create pre-signed URL for downalod
+    # TODO - assign on file creation metadata to S3 file (play with indexd since it probably supports it). 
+    # Check that user has access to that file before creating the presigned url. The responsibility is on the admin here and a wrong 
+    # project_id in the API call could assign data download rights to the wrong user
 
-    #### TODO move this in the init file or it can be part of the stored URL
-    # if "DATA_DOWNLOAD_BUCKET" not in config:
-    #     raise InternalError("DATA_DOWNLOAD_BUCKET has not been set in the config. There is no bucket to download the data from.")
-    # s3_bucket = config["DATA_DOWNLOAD_BUCKET"]
-    ####
-    # TODO
+
+    # Create pre-signed URL for downalod
     s3_info = get_s3_key_and_bucket(storage_url)
     if s3_info is None:
         raise NotFound("The S3 bucket and key information cannot be extracted from the URL {}".format(storage_url))
 
-
-
     result = flask.current_app.boto.presigned_url(s3_info["bucket"], s3_info["key"], "1800", {}, "get_object")
-    # result = "https://pcdc-gen3-dictionaries.s3.amazonaws.com/pcdc-schema-prod-20220106.json" 
-
     return flask.jsonify({"download_url": result})
 
 

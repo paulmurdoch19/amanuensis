@@ -24,9 +24,11 @@ def create_state(name, code):
         state_schema.dump(state)
         return state
 
+
 def get_all_states():
     with flask.current_app.db.session as session:    
         return udm.get_all_states(session)
+
 
 def update_project_state(project_id, state_id):
     with flask.current_app.db.session as session:   
@@ -34,7 +36,6 @@ def update_project_state(project_id, state_id):
         requests = udm.update_project_state(session, project_id, state_id)
         request_schema.dump(requests) 
         return requests
-
 
 
 def create_consortium(name, code):

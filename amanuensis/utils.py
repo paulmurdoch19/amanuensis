@@ -32,106 +32,17 @@ logger = get_logger(__name__)
 def random_str(length):
     return "".join(rng.choice(alphanumeric) for _ in range(length))
 
-
 def json_res(data):
     return flask.Response(json.dumps(data), mimetype="application/json")
-
-
-def hash_secret(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        has_secret = "client_secret" in flask.request.form
-        has_client_id = "client_id" in flask.request.form
-        if flask.request.form and has_secret and has_client_id:
-            form = flask.request.form.to_dict()
-            with flask.current_app.db.session as session:
-                client = (
-                    session.query(Client)
-                    .filter(Client.client_id == form["client_id"])
-                    .first()
-                )
-                if client:
-                    form["client_secret"] = bcrypt.hashpw(
-                        form["client_secret"].encode("utf-8"),
-                        client.client_secret.encode("utf-8"),
-                    ).decode("utf-8")
-                flask.request.form = ImmutableMultiDict(form)
-
-        return f(*args, **kwargs)
-
-    return wrapper
-
-
-def wrap_list_required(f):
-    @wraps(f)
-    def wrapper(d, *args, **kwargs):
-        data_is_a_list = False
-        if isinstance(d, list):
-            d = {"data": d}
-            data_is_a_list = True
-        if not data_is_a_list:
-            return f(d, *args, **kwargs)
-        else:
-            result = f(d, *args, **kwargs)
-            return result["data"]
-
-    return wrapper
-
-
-@wrap_list_required
-def convert_key(d, converter):
-    if isinstance(d, str) or not isinstance(d, collections.Iterable):
-        return d
-
-    new = {}
-    for k, v in d.items():
-        new_v = v
-        if isinstance(v, dict):
-            new_v = convert_key(v, converter)
-        elif isinstance(v, list):
-            new_v = list()
-            for x in v:
-                new_v.append(convert_key(x, converter))
-        new[converter(k)] = new_v
-    return new
-
-
-@wrap_list_required
-def convert_value(d, converter):
-    if isinstance(d, str) or not isinstance(d, collections.Iterable):
-        return converter(d)
-
-    new = {}
-    for k, v in d.items():
-        new_v = v
-        if isinstance(v, dict):
-            new_v = convert_value(v, converter)
-        elif isinstance(v, list):
-            new_v = list()
-            for x in v:
-                new_v.append(convert_value(x, converter))
-        new[k] = converter(new_v)
-    return new
-
 
 def to_underscore(s):
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", s)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
-
 def strip(s):
     if isinstance(s, str):
         return s.strip()
     return s
-
-
-def clear_cookies(response):
-    """
-    Set all cookies to empty and expired.
-    """
-    for cookie_name in list(flask.request.cookies.keys()):
-        response.set_cookie(cookie_name, "", expires=0, httponly=True)
-
 
 def get_error_params(error, description):
     params = ""
@@ -139,7 +50,6 @@ def get_error_params(error, description):
         args = {"error": error, "error_description": description}
         params = urlencode(args)
     return params
-
 
 def append_query_params(original_url, **kwargs):
     """
@@ -160,13 +70,11 @@ def append_query_params(original_url, **kwargs):
     new_url = urlunsplit((scheme, netloc, path, new_query_string, fragment))
     return new_url
 
-
 def split_url_and_query_params(url):
     scheme, netloc, path, query_string, fragment = urlsplit(url)
     query_params = parse_qs(query_string)
     url = urlunsplit((scheme, netloc, path, None, fragment))
     return url, query_params
-
 
 
 # Convert filter obj into GQL filter format
@@ -278,6 +186,63 @@ def get_consortium_list(is_amanuensis_admin, path, src_filter, ids_list):
     #     return r.json()
     # return []
 
+def _print_func_name(function):
+    return "{}.{}".format(function.__module__, function.__name__)
+
+def _print_kwargs(kwargs):
+    return ", ".join("{}={}".format(k, repr(v)) for k, v in list(kwargs.items()))
+
+def log_backoff_retry(details):
+    args_str = ", ".join(map(str, details["args"]))
+    kwargs_str = (
+        (", " + _print_kwargs(details["kwargs"])) if details.get("kwargs") else ""
+    )
+    func_call_log = "{}({}{})".format(
+        _print_func_name(details["target"]), args_str, kwargs_str
+    )
+    logging.warning(
+        "backoff: call {func_call} delay {wait:0.1f} seconds after {tries} tries".format(
+            func_call=func_call_log, **details
+        )
+    )
+
+
+def log_backoff_giveup(details):
+    args_str = ", ".join(map(str, details["args"]))
+    kwargs_str = (
+        (", " + _print_kwargs(details["kwargs"])) if details.get("kwargs") else ""
+    )
+    func_call_log = "{}({}{})".format(
+        _print_func_name(details["target"]), args_str, kwargs_str
+    )
+    logging.error(
+        "backoff: gave up call {func_call} after {tries} tries; exception: {exc}".format(
+            func_call=func_call_log, exc=sys.exc_info(), **details
+        )
+    )
+
+def exception_do_not_retry(error):
+    def _is_status(code):
+        return (
+            str(getattr(error, "code", None)) == code
+            or str(getattr(error, "status", None)) == code
+            or str(getattr(error, "status_code", None)) == code
+        )
+
+    if _is_status("409") or _is_status("404"):
+        return True
+
+    return False
+
+# Default settings to control usage of backoff library.
+DEFAULT_BACKOFF_SETTINGS = {
+    "on_backoff": log_backoff_retry,
+    "on_giveup": log_backoff_giveup,
+    "max_tries": 3,
+    "giveup": exception_do_not_retry,
+}
+
+
 
 
 def send_email_ses(body, to_emails, subject):
@@ -363,75 +328,3 @@ def send_email_ses(body, to_emails, subject):
         print(response['MessageId'])
     logging.debug(json.dumps(response))
     return response
-
-
-def is_valid_expiration(expires_in):
-    """
-    Throw an error if expires_in is not a positive integer.
-    """
-    try:
-        expires_in = int(flask.request.args["expires_in"])
-        assert expires_in > 0
-    except (ValueError, AssertionError):
-        raise UserError("expires_in must be a positive integer")
-
-
-def _print_func_name(function):
-    return "{}.{}".format(function.__module__, function.__name__)
-
-
-def _print_kwargs(kwargs):
-    return ", ".join("{}={}".format(k, repr(v)) for k, v in list(kwargs.items()))
-
-
-def log_backoff_retry(details):
-    args_str = ", ".join(map(str, details["args"]))
-    kwargs_str = (
-        (", " + _print_kwargs(details["kwargs"])) if details.get("kwargs") else ""
-    )
-    func_call_log = "{}({}{})".format(
-        _print_func_name(details["target"]), args_str, kwargs_str
-    )
-    logging.warning(
-        "backoff: call {func_call} delay {wait:0.1f} seconds after {tries} tries".format(
-            func_call=func_call_log, **details
-        )
-    )
-
-
-def log_backoff_giveup(details):
-    args_str = ", ".join(map(str, details["args"]))
-    kwargs_str = (
-        (", " + _print_kwargs(details["kwargs"])) if details.get("kwargs") else ""
-    )
-    func_call_log = "{}({}{})".format(
-        _print_func_name(details["target"]), args_str, kwargs_str
-    )
-    logging.error(
-        "backoff: gave up call {func_call} after {tries} tries; exception: {exc}".format(
-            func_call=func_call_log, exc=sys.exc_info(), **details
-        )
-    )
-
-
-def exception_do_not_retry(error):
-    def _is_status(code):
-        return (
-            str(getattr(error, "code", None)) == code
-            or str(getattr(error, "status", None)) == code
-            or str(getattr(error, "status_code", None)) == code
-        )
-
-    if _is_status("409") or _is_status("404"):
-        return True
-
-    return False
-
-
-# Default settings to control usage of backoff library.
-DEFAULT_BACKOFF_SETTINGS = {
-    "on_backoff": log_backoff_retry,
-    "on_giveup": log_backoff_giveup,
-    "max_tries": 3,
-    "giveup": exception_do_not_retry,
-}

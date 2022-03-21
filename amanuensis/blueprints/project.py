@@ -20,7 +20,6 @@ logger = get_logger(__name__)
 
 
 @blueprint.route("/", methods=["GET"])
-# @login_required({"user"})
 def get_projetcs():
     try:
         logged_user_id = current_user.id
@@ -31,7 +30,6 @@ def get_projetcs():
 
     #TODO assign this as a resource in arborist
     approver = flask.request.args.get('approver', None)
-    print(approver)
 
     project_schema = ProjectSchema(many=True)
     projects = project_schema.dump(get_all(logged_user_id, approver))
@@ -75,7 +73,6 @@ def get_projetcs():
 
 
 @blueprint.route("/", methods=["POST"])
-# @debug_log
 def create_project():
     """
     Create a search on the userportaldatamodel database
@@ -106,43 +103,5 @@ def create_project():
     return flask.jsonify(project_schema.dump(create(logged_user_id, False, name, description, filter_set_ids, explorer_id)))
 
 
-# @blueprint.route("/<search_id>", methods=["PUT"])
-# # @admin_login_required
-# # @debug_log
-# def update_search(search_id):
-#     """
-#     Create a user on the userdatamodel database
 
-#     Returns a json object
-#     """
-#     try:
-#         logged_user_id = current_user.id
-#     except AuthError:
-#         logger.warning(
-#             "Unable to load or find the user, check your token"
-#         )
-
-#     name = flask.request.get_json().get("name", None)
-#     description = flask.request.get_json().get("description", None)
-#     filter_object = flask.request.get_json().get("filters", None)
-#     return flask.jsonify(update(logged_user_id, search_id, name, description, filter_object))
-
-
-# @blueprint.route("/<search_id>", methods=["DELETE"])
-# def delete_search(search_id):
-#     """
-#     Remove the user from the userdatamodel database and all associated storage
-#     solutions.
-
-#     Returns json object
-#     """
-#     try:
-#         logged_user_id = current_user.id
-#     except AuthError:
-#         logger.warning(
-#             "Unable to load or find the user, check your token"
-#         )
-
-#     response = flask.jsonify(delete(logged_user_id, search_id))
-#     return response
 

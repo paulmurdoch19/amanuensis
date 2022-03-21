@@ -3,7 +3,6 @@ Blueprints for administation of the userdatamodel database and the storage
 solutions. Operations here assume the underlying operations in the interface
 will maintain coherence between both systems.
 """
-
 import functools
 
 from flask import request, jsonify, Blueprint, current_app
@@ -43,39 +42,6 @@ def debug_log(function):
 
     return write_log
 
-@blueprint.route("/update_user_authz", methods=["POST"])
-# @admin_login_required
-@debug_log
-def update_user_authz():
-    """
-    run user sync to update amanuensis anf arborist DB
-
-    Receive a JSON object with the list of resources, policies, roles, and user auth
-
-    Returns a json object
-    """
-
-    logger.warning("IN UPDATE")
-    logger.warning(request.get_json())
-
-    sync_users(
-            dbGaP=[{'info': {'host': '', 'username': '', 'password': '', 'port': 22, 'proxy': '', 'proxy_user': ''}, 'protocol': 'sftp', 'decrypt_key': '', 'parse_consent_code': True}], # dbGap
-            STORAGE_CREDENTIALS={}, # storage_credential
-            DB=config["DB"], # flask.current_app.db, # postgresql://fence_user:fence_pass@postgres:5432/fence_db DB
-            projects=None, #project_mapping
-            is_sync_from_dbgap_server=False,
-            sync_from_local_csv_dir=None,
-            sync_from_local_yaml_file=None, #'user.yaml',
-            json_from_api=request.get_json(),
-            arborist=flask.current_app.arborist,
-            folder=None,
-        )
-
-    # username = request.get_json().get("name", None)
-    # role = request.get_json().get("role", None)
-    # email = request.get_json().get("email", None)
-    # return jsonify(admin.create_user(current_session, username, role, email))
-    return jsonify("test")
 
 @blueprint.route("/states", methods=["POST"])
 @check_arborist_auth(resource="/services/amanuensis", method="*")
@@ -93,6 +59,7 @@ def add_state():
     state_schema = StateSchema()
     return jsonify(state_schema.dump(admin.create_state(name, code)))
 
+
 @blueprint.route("/consortiums", methods=["POST"])
 @check_arborist_auth(resource="/services/amanuensis", method="*")
 # @debug_log
@@ -108,6 +75,7 @@ def add_consortium():
 
     consortium_schema = ConsortiumDataContributorSchema()
     return jsonify(consortium_schema.dump(admin.create_consortium(name, code)))
+
 
 @blueprint.route("/states", methods=["GET"])
 def get_states():
@@ -130,7 +98,6 @@ def create_search():
 
     Returns a json object
     """
-
     user_id = request.get_json().get("user_id", None)
     if not user_id:
         raise UserError("user does not have privileges to access this endpoint")
@@ -152,11 +119,9 @@ def create_project():
 
     Returns a json object
     """
-
     user_id = request.get_json().get("user_id", None)
     if not user_id:
-        raise UserError("user does not have privileges to access this endpoint")
-
+        raise UserError("You can't create a Project without specifying the user the project will be assigned to.")
 
     name = request.get_json().get("name", None)
     description = request.get_json().get("description", None)
@@ -168,6 +133,26 @@ def create_project():
     return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution)))
 
 
+@blueprint.route("/projects", methods=["PUT"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def update_project():
+    """
+    Update a project attributes
+
+    Returns a json object
+    """
+    project_id = request.get_json().get("project_id", None)
+    if not project_id:
+        raise UserError("A project_id is required for this endpoint.")
+    
+    appoved_url = request.get_json().get("appoved_url", None)
+    filter_set_ids = request.get_json().get("filter_set_ids", None)
+
+    project_schema = ProjectSchema()
+    return jsonify(project_schema.dump(admin.update_project(project_id, appoved_url, filter_set_ids)))
+
+
 @blueprint.route("/projects/state", methods=["POST"])
 @check_arborist_auth(resource="/services/amanuensis", method="*")
 # @debug_log
@@ -177,11 +162,13 @@ def update_project_state():
 
     Returns a json object
     """
-
     project_id = request.get_json().get("project_id", None)
     state_id = request.get_json().get("state_id", None)
 
     request_schema = RequestSchema(many=True)
     return jsonify(request_schema.dump(admin.update_project_state(project_id, state_id)))
+
+
+
 
 

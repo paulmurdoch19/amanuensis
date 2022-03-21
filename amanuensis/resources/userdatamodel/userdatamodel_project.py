@@ -11,6 +11,7 @@ from amanuensis.models import (
 
 __all__ = [
     "create_project",
+    "update_project",
     "get_project_by_consortium",
     "get_project_by_user",
     "get_project_by_id"
@@ -24,11 +25,13 @@ def get_project_by_consortium(current_session, consortium, logged_user_id):
 def get_project_by_user(current_session, logged_user_id):
     return current_session.query(Project).filter_by(user_id=logged_user_id).all()
 
+
 def get_project_by_id(current_session, logged_user_id, project_id):
     return current_session.query(Project).filter(
             Project.user_id == logged_user_id,
             Project.id == project_id
         ).first()
+
 
 def create_project(current_session, user_id, description, name, institution, searches, requests):
     """
@@ -56,6 +59,28 @@ def create_project(current_session, user_id, description, name, institution, sea
     current_session.commit()
     
     return new_project
+
+
+def update_project(current_session, project_id, appoved_url=None, searches=None):
+    if not appoved_url and not searches:
+        return {"code": 200, "error": "Nothing has been updated, no new values have been received by the function."}
+
+    data = {}
+    if url:
+        data['approved_url'] = appoved_url
+    if searches and isinstance(searches, list) and len(searches) > 0:
+        data["searches"] = searches
+
+    #TODO check that at least one has changed
+    num_updated = current_session.query(Project).filter(
+        Project.id == project_id
+    ).update(data)
+    if  num_updated > 0:
+        return  {"code": 200, "updated": int(project_id)}
+    else:
+        return {"code": 500, "error": "Nothing has been updated, check the logs to see what happened during the transaction."}
+
+
  
 
 
