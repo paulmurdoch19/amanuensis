@@ -66,7 +66,7 @@ def update_project(current_session, project_id, approved_url=None, searches=None
         return {"code": 200, "error": "Nothing has been updated, no new values have been received by the function."}
 
     data = {}
-    if url:
+    if approved_url:
         data['approved_url'] = approved_url
     if searches and isinstance(searches, list) and len(searches) > 0:
         data["searches"] = searches
