@@ -93,41 +93,56 @@ def app_register_blueprints(app):
     app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/requests")
     app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
     
-    app.register_blueprint(oauth2_blueprint.blueprint, url_prefix="/oauth2")
-
     amanuensis.blueprints.misc.register_misc(app)
 
-    @app.route("/")
-    def root():
-        """
-        Register the root URL.
-        """
-        endpoints = {
-            "oauth2 endpoint": "/oauth2",
-            "user endpoint": "/user",
-            "keypair endpoint": "/credentials",
-        }
-        return flask.jsonify(endpoints)
 
-    
 
-    @app.route("/jwt/keys")
-    def public_keys():
-        """
-        Return the public keys which can be used to verify JWTs signed by amanuensis.
+def app_config(
+    app, settings="amanuensis.settings", root_dir=None, config_path=None, file_name=None
+):
+    """
+    Set up the config for the Flask app.
+    """
+    if root_dir is None:
+        root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-        The return value should look like this:
-            {
-                "keys": [
-                    {
-                        "key-01": " ... [public key here] ... "
-                    }
-                ]
-            }
-        """
-        return flask.jsonify(
-            {"keys": [(keypair.kid, keypair.public_key) for keypair in app.keypairs]}
-        )
+    logger.info("Loading settings...")
+    # not using app.config.from_object because we don't want all the extra flask cfg
+    # vars inside our singleton when we pass these through in the next step
+    settings_cfg = flask.Config(app.config.root_path)
+    settings_cfg.from_object(settings)
+
+    # dump the settings into the config singleton before loading a configuration file
+    config.update(dict(settings_cfg))
+
+    # load the configuration file, this overwrites anything from settings/local_settings
+    config.load(
+        config_path=config_path,
+        search_folders=CONFIG_SEARCH_FOLDERS,
+        file_name=file_name,
+    )
+
+    # load all config back into flask app config for now, we should PREFER getting config
+    # directly from the amanuensis config singleton in the code though.
+    app.config.update(**config._configs)
+
+    _setup_hubspot_key(app)
+    _setup_arborist_client(app)
+    _setup_data_endpoint_and_boto(app)
+
+    # app.storage_manager = StorageManager(config["STORAGE_CREDENTIALS"], logger=logger)
+
+    app.debug = config["DEBUG"]
+    # Following will update logger level, propagate, and handlers
+    get_logger(__name__, log_level="debug" if config["DEBUG"] == True else "info")
+
+    # load private key for cross-service access
+    key_path = config.get("PRIVATE_KEY_PATH", None)
+    config["RSA_PRIVATE_KEY"] = SignatureManager(key_path=key_path).get_key()
+
+    # _check_s3_buckets(app)
+
+
 
 
 
@@ -185,60 +200,11 @@ def app_register_blueprints(app):
 #             region = app.boto.get_bucket_region(bucket_name, credential)
 #             config["S3_BUCKETS"][bucket_name]["region"] = region
 
-
-def app_config(
-    app, settings="amanuensis.settings", root_dir=None, config_path=None, file_name=None
-):
-    """
-    Set up the config for the Flask app.
-    """
-    if root_dir is None:
-        root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-    logger.info("Loading settings...")
-    # not using app.config.from_object because we don't want all the extra flask cfg
-    # vars inside our singleton when we pass these through in the next step
-    settings_cfg = flask.Config(app.config.root_path)
-    settings_cfg.from_object(settings)
-
-    # dump the settings into the config singleton before loading a configuration file
-    config.update(dict(settings_cfg))
-
-    # load the configuration file, this overwrites anything from settings/local_settings
-    config.load(
-        config_path=config_path,
-        search_folders=CONFIG_SEARCH_FOLDERS,
-        file_name=file_name,
-    )
-
-    # load all config back into flask app config for now, we should PREFER getting config
-    # directly from the amanuensis config singleton in the code though.
-    app.config.update(**config._configs)
-
-    _setup_hubspot_key(app)
-    _setup_arborist_client(app)
-    # _setup_data_endpoint_and_boto(app)
-
-    # app.storage_manager = StorageManager(config["STORAGE_CREDENTIALS"], logger=logger)
-
-    app.debug = config["DEBUG"]
-    # Following will update logger level, propagate, and handlers
-    get_logger(__name__, log_level="debug" if config["DEBUG"] == True else "info")
-
-    # load private key for cross-service access
-    key_path = config.get("PRIVATE_KEY_PATH", None)
-    config["RSA_PRIVATE_KEY"] = SignatureManager(key_path=key_path).get_key()
-
-    # _check_s3_buckets(app)
-
-
-# def _setup_data_endpoint_and_boto(app):
-#     if "AWS_CREDENTIALS" in config and len(config["AWS_CREDENTIALS"]) > 0:
-#         value = list(config["AWS_CREDENTIALS"].values())[0]
-#         app.boto = BotoManager(value, logger=logger)
-#         app.register_blueprint(amanuensis.blueprints.data.blueprint, url_prefix="/data")
-
-
+def _setup_data_endpoint_and_boto(app):
+    if "AWS_CREDENTIALS" in config and len(config["AWS_CREDENTIALS"]) > 0:
+        #TODO why does it need to be the first one? (use the key value in the object instead of making it a list)
+        value = list(config["AWS_CREDENTIALS"].values())[0]
+        app.boto = BotoManager(value, logger=logger)
 
 def _setup_arborist_client(app):
     if app.config.get("ARBORIST"):
@@ -257,3 +223,7 @@ def handle_error(error):
     Register an error handler for general exceptions.
     """
     return get_error_response(error)
+
+
+
+

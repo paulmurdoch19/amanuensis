@@ -8,7 +8,8 @@ from gen3authz.client.arborist.errors import ArboristError
 from amanuensis.resources.userdatamodel import (
     create_project,
     get_project_by_consortium,
-    get_project_by_user
+    get_project_by_user,
+    get_project_by_id
 )
 from amanuensis.resources import filterset, consortium_data_contributor
 
@@ -59,6 +60,10 @@ def get_all(logged_user_id, approver):
         projects = get_project_by_user(session, logged_user_id)
         project_schema.dump(projects)
         return projects
+
+def get_by_id(logged_user_id, project_id):
+    with flask.current_app.db.session as session:
+        return get_project_by_id(session, logged_user_id, project_id)
 
 
 def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id, institution):
