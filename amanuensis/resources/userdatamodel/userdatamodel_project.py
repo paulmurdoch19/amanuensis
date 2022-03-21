@@ -62,7 +62,7 @@ def create_project(current_session, user_id, description, name, institution, sea
 
 
 def update_project(current_session, project_id, approved_url=None, searches=None):
-    if not appoved_url and not searches:
+    if not approved_url and not searches:
         return {"code": 200, "error": "Nothing has been updated, no new values have been received by the function."}
 
     data = {}
