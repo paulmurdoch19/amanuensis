@@ -97,14 +97,14 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         return project
 
 
-def update_project(project_id, appoved_url, filter_set_ids):
+def update_project(project_id, approved_url, filter_set_ids):
     # TODO retrieve all the filter_sets associated with this project
     # NOT SUPPORTED YET
 
-    if not appoved_url:
+    if not approved_url:
         return None
 
     with flask.current_app.db.session as session:
-        return update_project(session, project_id, appoved_url)
+        return update_project(session, project_id, approved_url)
 
 

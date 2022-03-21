@@ -61,13 +61,13 @@ def create_project(current_session, user_id, description, name, institution, sea
     return new_project
 
 
-def update_project(current_session, project_id, appoved_url=None, searches=None):
+def update_project(current_session, project_id, approved_url=None, searches=None):
     if not appoved_url and not searches:
         return {"code": 200, "error": "Nothing has been updated, no new values have been received by the function."}
 
     data = {}
     if url:
-        data['approved_url'] = appoved_url
+        data['approved_url'] = approved_url
     if searches and isinstance(searches, list) and len(searches) > 0:
         data["searches"] = searches
 

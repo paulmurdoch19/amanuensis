@@ -146,11 +146,11 @@ def update_project():
     if not project_id:
         raise UserError("A project_id is required for this endpoint.")
     
-    appoved_url = request.get_json().get("appoved_url", None)
+    approved_url = request.get_json().get("approved_url", None)
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(admin.update_project(project_id, appoved_url, filter_set_ids)))
+    return jsonify(project_schema.dump(project.update_project(project_id, approved_url, filter_set_ids)))
 
 
 @blueprint.route("/projects/state", methods=["POST"])
