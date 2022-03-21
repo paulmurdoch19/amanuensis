@@ -28,7 +28,7 @@ def download_data(project_id):
             "Unable to load or find the user, check your token"
         )
 
-    if not app.boto:
+    if not flask.current_app.boto:
         raise InternalError("BotoManager not found. Check the AWS credentials are set in the config and have the correct permissions.")
 
     # Check param is present
