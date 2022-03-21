@@ -21,7 +21,6 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.sql import func
-from userdatamodel.user import User
 from userportaldatamodel import Base
 from userportaldatamodel.models import (AttributeList, AttributeListValue,
                                         Attributes, ConsortiumDataContributor,
