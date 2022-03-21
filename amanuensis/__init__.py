@@ -1,13 +1,10 @@
 from collections import OrderedDict
 import os
 
-from authutils.oauth2.client import blueprint as oauth2_blueprint
-# from authutils.oauth2.client import OAuthClient
 import flask
 from flask_cors import CORS
 from flask_sqlalchemy_session import flask_scoped_session, current_session
 from userportaldatamodel.driver import SQLAlchemyDriver
-from userportaldatamodel.models import Search
 
 from amanuensis.errors import UserError
 from amanuensis.models import migrate
@@ -21,6 +18,8 @@ import amanuensis.blueprints.filterset
 import amanuensis.blueprints.project
 import amanuensis.blueprints.request
 import amanuensis.blueprints.message
+import amanuensis.blueprints.admin
+import amanuensis.blueprints.download_urls
 
 from pcdcutils.signature import SignatureManager
 
@@ -69,7 +68,6 @@ def app_init(
 def app_sessions(app):
     app.url_map.strict_slashes = False
     app.db = SQLAlchemyDriver(config["DB"])
-    # app.db = SQLAlchemyDriver('postgresql://amanuensis_user:amanuensis_pass@postgres:5432/amanuensis_db')
     logger.warning("DB connected")
     # TODO: we will make a more robust migration system external from the application
     #       initialization soon
@@ -84,63 +82,60 @@ def app_sessions(app):
 
 
 def app_register_blueprints(app):
-    # app.register_blueprint(amanuensis.blueprints.oauth2.blueprint, url_prefix="/oauth2")
-
-    # creds_blueprint = amanuensis.blueprints.storage_creds.make_creds_blueprint()
-    # app.register_blueprint(creds_blueprint, url_prefix="/credentials")
-
-    # app.register_blueprint(amanuensis.blueprints.admin.blueprint, url_prefix="/admin")
-    # app.register_blueprint(
-    #     amanuensis.blueprints.well_known.blueprint, url_prefix="/.well-known"
-    # )
-
-    # link_blueprint = amanuensis.blueprints.link.make_link_blueprint()
-    # app.register_blueprint(link_blueprint, url_prefix="/link")
-
-    # google_blueprint = amanuensis.blueprints.google.make_google_blueprint()
-    # app.register_blueprint(google_blueprint, url_prefix="/google")
-
+    app.register_blueprint(amanuensis.blueprints.admin.blueprint, url_prefix="/admin")
+    app.register_blueprint(amanuensis.blueprints.download_urls.blueprint, url_prefix="/download-urls")
     app.register_blueprint(amanuensis.blueprints.filterset.blueprint, url_prefix="/filter-sets")
     app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/projects")
     app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/requests")
     app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
     
-    app.register_blueprint(oauth2_blueprint.blueprint, url_prefix="/oauth2")
-
     amanuensis.blueprints.misc.register_misc(app)
 
-    @app.route("/")
-    def root():
-        """
-        Register the root URL.
-        """
-        endpoints = {
-            "oauth2 endpoint": "/oauth2",
-            "user endpoint": "/user",
-            "keypair endpoint": "/credentials",
-        }
-        return flask.jsonify(endpoints)
 
-    
+def app_config(
+    app, settings="amanuensis.settings", root_dir=None, config_path=None, file_name=None
+):
+    """
+    Set up the config for the Flask app.
+    """
+    if root_dir is None:
+        root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    @app.route("/jwt/keys")
-    def public_keys():
-        """
-        Return the public keys which can be used to verify JWTs signed by amanuensis.
+    logger.info("Loading settings...")
+    # not using app.config.from_object because we don't want all the extra flask cfg
+    # vars inside our singleton when we pass these through in the next step
+    settings_cfg = flask.Config(app.config.root_path)
+    settings_cfg.from_object(settings)
 
-        The return value should look like this:
-            {
-                "keys": [
-                    {
-                        "key-01": " ... [public key here] ... "
-                    }
-                ]
-            }
-        """
-        return flask.jsonify(
-            {"keys": [(keypair.kid, keypair.public_key) for keypair in app.keypairs]}
-        )
+    # dump the settings into the config singleton before loading a configuration file
+    config.update(dict(settings_cfg))
 
+    # load the configuration file, this overwrites anything from settings/local_settings
+    config.load(
+        config_path=config_path,
+        search_folders=CONFIG_SEARCH_FOLDERS,
+        file_name=file_name,
+    )
+
+    # load all config back into flask app config for now, we should PREFER getting config
+    # directly from the amanuensis config singleton in the code though.
+    app.config.update(**config._configs)
+
+    _setup_hubspot_key(app)
+    _setup_arborist_client(app)
+    _setup_data_endpoint_and_boto(app)
+
+    # app.storage_manager = StorageManager(config["STORAGE_CREDENTIALS"], logger=logger)
+
+    app.debug = config["DEBUG"]
+    # Following will update logger level, propagate, and handlers
+    get_logger(__name__, log_level="debug" if config["DEBUG"] == True else "info")
+
+    # load private key for cross-service access
+    key_path = config.get("PRIVATE_KEY_PATH", None)
+    config["RSA_PRIVATE_KEY"] = SignatureManager(key_path=key_path).get_key()
+
+    # _check_s3_buckets(app)
 
 
 # def _check_s3_buckets(app):
@@ -197,60 +192,14 @@ def app_register_blueprints(app):
 #             region = app.boto.get_bucket_region(bucket_name, credential)
 #             config["S3_BUCKETS"][bucket_name]["region"] = region
 
-
-def app_config(
-    app, settings="amanuensis.settings", root_dir=None, config_path=None, file_name=None
-):
-    """
-    Set up the config for the Flask app.
-    """
-    if root_dir is None:
-        root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-    logger.info("Loading settings...")
-    # not using app.config.from_object because we don't want all the extra flask cfg
-    # vars inside our singleton when we pass these through in the next step
-    settings_cfg = flask.Config(app.config.root_path)
-    settings_cfg.from_object(settings)
-
-    # dump the settings into the config singleton before loading a configuration file
-    config.update(dict(settings_cfg))
-
-    # load the configuration file, this overwrites anything from settings/local_settings
-    config.load(
-        config_path=config_path,
-        search_folders=CONFIG_SEARCH_FOLDERS,
-        file_name=file_name,
-    )
-
-    # load all config back into flask app config for now, we should PREFER getting config
-    # directly from the amanuensis config singleton in the code though.
-    app.config.update(**config._configs)
-
-    _setup_hubspot_key(app)
-    _setup_arborist_client(app)
-    # _setup_data_endpoint_and_boto(app)
-
-    # app.storage_manager = StorageManager(config["STORAGE_CREDENTIALS"], logger=logger)
-
-    app.debug = config["DEBUG"]
-    # Following will update logger level, propagate, and handlers
-    get_logger(__name__, log_level="debug" if config["DEBUG"] == True else "info")
-
-    # load private key for cross-service access
-    key_path = config.get("PRIVATE_KEY_PATH", None)
-    config["RSA_PRIVATE_KEY"] = SignatureManager(key_path=key_path).get_key()
-
-    # _check_s3_buckets(app)
-
-
-# def _setup_data_endpoint_and_boto(app):
-#     if "AWS_CREDENTIALS" in config and len(config["AWS_CREDENTIALS"]) > 0:
-#         value = list(config["AWS_CREDENTIALS"].values())[0]
-#         app.boto = BotoManager(value, logger=logger)
-#         app.register_blueprint(amanuensis.blueprints.data.blueprint, url_prefix="/data")
-
-
+def _setup_data_endpoint_and_boto(app):
+    if "AWS_CREDENTIALS" in config and len(config["AWS_CREDENTIALS"]) > 0:
+        #TODO why does it need to be the first one? (use the key value in the object instead of making it a list)
+        value = list(config["AWS_CREDENTIALS"].values())[0]
+        app.boto = BotoManager(value, logger=logger)
+        logger.info("BotoManager initialized")
+    else:
+        logger.warning("Missing credentials for BotoManager, delivery of data will fail.")
 
 def _setup_arborist_client(app):
     if app.config.get("ARBORIST"):
@@ -269,3 +218,7 @@ def handle_error(error):
     Register an error handler for general exceptions.
     """
     return get_error_response(error)
+
+
+
+

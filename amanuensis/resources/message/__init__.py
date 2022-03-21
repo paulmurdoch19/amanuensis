@@ -18,7 +18,6 @@ from amanuensis.models import (
     Receiver
     # Request
 )
-# from userdatamodel.user import User
 from hubspotclient.client.hubspot.client import HubspotClient
 
 

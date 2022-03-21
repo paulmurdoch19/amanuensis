@@ -17,8 +17,6 @@ logger = get_logger(__name__)
 
 
 @blueprint.route("/", methods=["GET"])
-# @admin_login_required
-# @debug_log
 def get_request():
     """
 
@@ -32,8 +30,6 @@ def get_request():
 
     #TODO check if user is EC consortium member or not
     consortium = flask.request.args.get('consortium', None)
-    print(consortium)
-    print(current_user)
 
     request_schema = RequestSchema(many=True)
     return flask.jsonify(request_schema.dump(get(logged_user_id, consortium)))
