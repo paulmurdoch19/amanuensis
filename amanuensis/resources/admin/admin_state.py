@@ -42,7 +42,7 @@ def update_project_state(project_id, state_id):
         if not requests:
             raise NotFound("There are no requests associated to this project or there is no project. id: {}".format(project_id))
 
-        state = udm.get_state_by_id(session.state_id)
+        state = udm.get_state_by_id(session, state_id)
         if not state:
             raise NotFound("The state with id {} has not been found".format(state_id))
 
