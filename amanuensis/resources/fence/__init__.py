@@ -13,15 +13,30 @@ from pcdcutils.helpers import encode_str
 logger = get_logger(__name__)
 
 
-def fence_get_users(usernames, config):
+
+def fence_get_users(config, usernames=None, ids=None):
     '''
     amanuensis sends a request to fence for a list of user ids 
     matching the supplied list of user email addresses
     '''
-    queryBody = {
-        'usernames': usernames
-    }
+    if (ids and usernames):
+        logger.error("fence_get_users: Wrong params, only one among `ids` and `usernames` should be set.")
+        return {}
 
+
+    if usernames:
+        queryBody = {
+            'usernames': usernames
+        }
+    elif ids:
+        queryBody = {
+            'ids': ids
+        }
+    else:
+        logger.error("fence_get_users: Wrong params, at least one among `ids` and `usernames` should be set.")
+        return {}
+
+    
     try:
         # sending request to Fence
         url = config['FENCE'] + "/admin/users/selected"  
@@ -50,4 +65,4 @@ def fence_get_users(usernames, config):
     except requests.HTTPError as e:
         logger.error(e.message)
 
-    return[]
+    return{}

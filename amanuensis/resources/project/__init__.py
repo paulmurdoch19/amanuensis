@@ -17,20 +17,23 @@ from amanuensis.resources import filterset, consortium_data_contributor, admin
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
 from amanuensis.utils import get_consortium_list
+from amanuensis.resources.fence import fence_get_users
 
 from amanuensis.models import (
     Search,
     Request,
     ConsortiumDataContributor,
+    Statistician
 )
 
 from amanuensis.schema import ProjectSchema
 
 
+
 logger = get_logger(__name__)
 
 
-def get_all(logged_user_id, approver):
+def get_all(logged_user_id, logged_user_email, approver):
     project_schema = ProjectSchema(many=True)
     with flask.current_app.db.session as session:
         if approver:
@@ -50,17 +53,20 @@ def get_all(logged_user_id, approver):
                         )
                     )
 
-        projects = get_project_by_user(session, logged_user_id)
+        projects = get_project_by_user(session, logged_user_id, logged_user_email)
         project_schema.dump(projects)
         return projects
 
 
 def get_by_id(logged_user_id, project_id):
+    project_schema = ProjectSchema()
     with flask.current_app.db.session as session:
-        return get_project_by_id(session, logged_user_id, project_id)
+        project = get_project_by_id(session, logged_user_id, project_id)
+        project_schema.dump(project)
+        return project
 
 
-def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id, institution):
+def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id, institution, statistician_emails):
     # retrieve all the filter_sets associated with this project
     filter_sets = filterset.get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
     # example filter_sets - [{"id": 4, "user_id": 1, "name": "INRG_1", "description": "", "filter_object": {"race": {"selectedValues": ["Black or African American"]}, "consortium": {"selectedValues": ["INRG"]}, "data_contributor_id": {"selectedValues": ["COG"]}}}]
@@ -93,10 +99,29 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         req.consortium_data_contributor = consortium
         req.states.append(default_state)
         requests.append(req)
-  
+
+    # Check if statistician exists in fence. If so assign user_id, otherwise use the submitted email.
+    fence_users = fence_get_users(config=config, usernames=statistician_emails)
+    fence_users = fence_users['users'] if 'users' in fence_users else []
+    
+    if len(statistician_emails) != len(fence_users):
+        users_email = [user["name"] for user in fence_users]
+        missing_users_email = [email for email in statistician_emails if email not in users_email]
+
+    statisticians = []
+    for user in fence_users:
+        statistician = Statistician(user_id=user["id"],
+                        email=user["name"])
+        statisticians.append(statistician)
+
+    for user_email in missing_users_email:
+        statistician = Statistician(email=user_email)
+        statisticians.append(statistician)
+
+
     with flask.current_app.db.session as session:
         project_schema = ProjectSchema()
-        project = create_project(session, logged_user_id, description, name, institution, filter_sets, requests)
+        project = create_project(session, logged_user_id, description, name, institution, filter_sets, requests, statisticians)
         project_schema.dump(project)
         return project
 

@@ -64,7 +64,7 @@ def send_message(logged_user_id, request_id, subject, body):
 
             # make one request for all users to be messaged
             logger.debug(f"send_message hubspot: {usernames}")
-            ec_users_results = fence_get_users(usernames, config)
+            ec_users_results = fence_get_users(config=config, usernames=usernames)
             logger.debug(f"fence_get_users, ec_users_results: {ec_users_results}")
             ec_users = ec_users_results['users'] if 'users' in ec_users_results else None
             # logger.debug(f"fence_get_users, ec_users: {ec_users}")

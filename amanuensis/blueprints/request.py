@@ -16,22 +16,23 @@ blueprint = flask.Blueprint("requests", __name__)
 logger = get_logger(__name__)
 
 
-@blueprint.route("/", methods=["GET"])
-def get_request():
-    """
+# DISABLE FOR NOW SINCE ONLY ADMIN CAN CREATE A PROJECT
+# @blueprint.route("/", methods=["GET"])
+# def get_request():
+#     """
 
-    """
-    try:
-        logged_user_id = current_user.id
-    except AuthError:
-        logger.warning(
-            "Unable to load or find the user, check your token"
-        )
+#     """
+#     try:
+#         logged_user_id = current_user.id
+#     except AuthError:
+#         logger.warning(
+#             "Unable to load or find the user, check your token"
+#         )
 
-    #TODO check if user is EC consortium member or not
-    consortium = flask.request.args.get('consortium', None)
+#     #TODO check if user is EC consortium member or not
+#     consortium = flask.request.args.get('consortium', None)
 
-    request_schema = RequestSchema(many=True)
-    return flask.jsonify(request_schema.dump(get(logged_user_id, consortium)))
+#     request_schema = RequestSchema(many=True)
+#     return flask.jsonify(request_schema.dump(get(logged_user_id, consortium)))
 
 

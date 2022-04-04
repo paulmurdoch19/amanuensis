@@ -3,7 +3,7 @@ import flask
 from cdislogging import get_logger
 
 from amanuensis.auth.auth import current_user
-from amanuensis.errors import AuthError, UserError, NotFound, InternalError
+from amanuensis.errors import AuthError, UserError, NotFound, InternalError, Forbidden
 from amanuensis.resources.project import get_by_id
 from amanuensis.resources.aws.utils import get_s3_key_and_bucket
 
@@ -23,6 +23,7 @@ def download_data(project_id):
 
     try:
         logged_user_id = current_user.id
+        logged_user_email = current_user.username
     except AuthError:
         logger.warning(
             "Unable to load or find the user, check your token"
@@ -38,6 +39,17 @@ def download_data(project_id):
     project = get_by_id(logged_user_id, project_id)
     if not project:
         raise NotFound("The project with id {} has not been found.".format(project_id))
+
+    statisticians_ids = []
+    statisticians_emails = []
+    for statistician in project.statisticians:
+        if statistician.user_id:
+            statisticians_ids.append(statistician.user_id)
+        if statistician.email:
+            statisticians_emails.append(statistician.email)
+
+    if logged_user_id not in statisticians_ids and logged_user_email not in statisticians_emails:
+        raise Forbidden("The user is not in the list of statistician that signed the DUA")
 
     # Get download url from project table
     storage_url = project.approved_url

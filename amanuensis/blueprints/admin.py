@@ -123,6 +123,11 @@ def create_project():
     if not user_id:
         raise UserError("You can't create a Project without specifying the user the project will be assigned to.")
 
+    statistician_emails = request.get_json().get("statistician_emails", None)
+    if not statistician_emails:
+        raise UserError("You can't create a Project without specifying the statisticians that will access the data")
+
+
     name = request.get_json().get("name", None)
     description = request.get_json().get("description", None)
     institution = request.get_json().get("institution", None)
@@ -130,7 +135,7 @@ def create_project():
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution)))
+    return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution, statistician_emails)))
 
 
 @blueprint.route("/projects", methods=["PUT"])
