@@ -1,12 +1,11 @@
-from sqlalchemy import func
-
-
+from sqlalchemy import func, or_
 
 
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Project,
-    Search
+    Search,
+    Statistician
 )
 
 __all__ = [
@@ -22,18 +21,18 @@ def get_project_by_consortium(current_session, consortium, logged_user_id):
     return current_session.query(Project).join(Project.requests).join(Request.consortium_data_contributor).filter_by(code=consortium).all()
 
 
-def get_project_by_user(current_session, logged_user_id):
-    return current_session.query(Project).filter_by(user_id=logged_user_id).all()
+def get_project_by_user(current_session, logged_user_id, logged_user_email):
+    return current_session.query(Project).join(Project.statisticians).filter(or_(Project.user_id == logged_user_id, Statistician.user_id == logged_user_id, Statistician.email == logged_user_email)).all()
 
 
 def get_project_by_id(current_session, logged_user_id, project_id):
     return current_session.query(Project).filter(
-            Project.user_id == logged_user_id,
+            # Project.user_id == logged_user_id,
             Project.id == project_id
-        ).first()
+        ).join(Project.statisticians).first()
 
 
-def create_project(current_session, user_id, description, name, institution, searches, requests):
+def create_project(current_session, user_id, description, name, institution, searches, requests, statisticians):
     """
     Creates a project with an associated auth_id and storage access
     """
@@ -49,6 +48,7 @@ def create_project(current_session, user_id, description, name, institution, sea
     current_session.flush()
     new_project.searches.extend(searches)
     new_project.requests.extend(requests)
+    new_project.statisticians.extend(statisticians)
 
     # current_session.flush()
     # current_session.add(new_project)

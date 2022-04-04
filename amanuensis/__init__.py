@@ -17,7 +17,7 @@ import amanuensis.blueprints.misc
 import amanuensis.blueprints.filterset
 import amanuensis.blueprints.project
 import amanuensis.blueprints.request
-import amanuensis.blueprints.message
+# import amanuensis.blueprints.message
 import amanuensis.blueprints.admin
 import amanuensis.blueprints.download_urls
 
@@ -87,7 +87,9 @@ def app_register_blueprints(app):
     app.register_blueprint(amanuensis.blueprints.filterset.blueprint, url_prefix="/filter-sets")
     app.register_blueprint(amanuensis.blueprints.project.blueprint, url_prefix="/projects")
     app.register_blueprint(amanuensis.blueprints.request.blueprint, url_prefix="/requests")
-    app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
+
+    # Disable for now since they are not used yet
+    # app.register_blueprint(amanuensis.blueprints.message.blueprint, url_prefix="/message")
     
     amanuensis.blueprints.misc.register_misc(app)
 
