@@ -1131,7 +1131,7 @@ python-versions = ">=2.6"
 
 [[package]]
 name = "pcdcutils"
-version = "0.1.3"
+version = "0.1.2"
 description = "PCDC Utilities for Python"
 category = "main"
 optional = false
@@ -1145,8 +1145,8 @@ pycryptodome = "3.9.8"
 [package.source]
 type = "git"
 url = "https://github.com/chicagopcdc/pcdcutils.git"
-reference = "pcdc_dev"
-resolved_reference = "ad9030eedd72bf84d62aefb31e2e949532b9c4e5"
+reference = "0.1.2"
+resolved_reference = "6ad948acc21e34ce420fdde927679bd7e1276951"
 
 [[package]]
 name = "pluggy"
@@ -1569,8 +1569,8 @@ sqlalchemy = ">=1.3.3,<1.4.0"
 [package.source]
 type = "git"
 url = "https://github.com/chicagopcdc/userPortalDataModel.git"
-reference = "handle-manual-data-request"
-resolved_reference = "1b7a73511dfc30eb471ea921b66fcfc1393e345f"
+reference = "1.2.3"
+resolved_reference = "58a36d49617582e4d3fce35264565e23d6519fe1"
 
 [[package]]
 name = "werkzeug"
@@ -1616,7 +1616,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "bb0529c6798bf91bca31eb1c5a923ae8bb8e3a1b61e565c37faf740584dfbcad"
+content-hash = "87557aadf44312178280fba29dd36ed29d255decbda6088abbb362bf28f2c47a"
 
 [metadata.files]
 addict = [
