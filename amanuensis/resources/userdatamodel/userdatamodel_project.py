@@ -13,7 +13,8 @@ __all__ = [
     "update_project",
     "get_project_by_consortium",
     "get_project_by_user",
-    "get_project_by_id"
+    "get_project_by_id",
+    "get_statisticians"
 ]
 
 
@@ -81,8 +82,10 @@ def update_project(current_session, project_id, approved_url=None, searches=None
         return {"code": 500, "error": "Nothing has been updated, check the logs to see what happened during the transaction."}
 
 
- 
-
+def get_statisticians(current_session, emails):
+    if not emails:
+        return []
+    return current_session.query(Statistician).filter(Statistician.email.in_(emails)).all()
 
 
 # def delete_project(current_session, project_name):

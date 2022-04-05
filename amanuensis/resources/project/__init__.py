@@ -10,7 +10,8 @@ from amanuensis.resources.userdatamodel import (
     get_project_by_consortium,
     get_project_by_user,
     get_project_by_id,
-    update_project
+    update_project,
+    get_statisticians
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
 
@@ -65,6 +66,11 @@ def get_by_id(logged_user_id, project_id):
         project_schema.dump(project)
         return project
 
+def get_all_statisticians(emails):
+    with flask.current_app.db.session as session:
+        statisticians = get_statisticians(session, emails)
+        return statisticians
+
 
 def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id, institution, statistician_emails):
     # retrieve all the filter_sets associated with this project
@@ -100,20 +106,32 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         req.states.append(default_state)
         requests.append(req)
 
-    # Check if statistician exists in fence. If so assign user_id, otherwise use the submitted email.
-    fence_users = fence_get_users(config=config, usernames=statistician_emails)
-    fence_users = fence_users['users'] if 'users' in fence_users else []
+    # Check if statistician exists in amanuensis
+    # 1. get statisticians from amanuensis
+    amanuensis_statisticians = get_all_statisticians(statistician_emails) 
+
+    # # 1. check if statisticians are already in amanuensis
+    # for statistician in amanuensis_statisticians:
+    #     if statistician.ema
+    # registered_stat = 
+    # missing_users_email = 
+
+    # # 2. Check if statistician exists in fence. If so assign user_id, otherwise use the submitted email.
+    # fence_users = fence_get_users(config=config, usernames=statistician_emails)
+    # fence_users = fence_users['users'] if 'users' in fence_users else []
     
-    if len(statistician_emails) != len(fence_users):
-        users_email = [user["name"] for user in fence_users]
+    # 2. Check if any statistician is not in the DB yet
+    if len(statistician_emails) != len(amanuensis_statisticians):
+        users_email = [user.email for user in amanuensis_statisticians]
         missing_users_email = [email for email in statistician_emails if email not in users_email]
 
+    # 3. link the existing statician to the project
     statisticians = []
-    for user in fence_users:
-        statistician = Statistician(user_id=user["id"],
-                        email=user["name"])
+    for user in amanuensis_statisticians:
+        statistician = user
         statisticians.append(statistician)
 
+    # 4 or create them if they have not been previously
     for user_email in missing_users_email:
         statistician = Statistician(email=user_email)
         statisticians.append(statistician)
