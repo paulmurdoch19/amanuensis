@@ -3,7 +3,6 @@ Blueprints for administation of the userdatamodel database and the storage
 solutions. Operations here assume the underlying operations in the interface
 will maintain coherence between both systems.
 """
-
 import functools
 
 from flask import request, jsonify, Blueprint, current_app
@@ -11,15 +10,18 @@ from flask_sqlalchemy_session import current_session
 
 from cdislogging import get_logger
 
-from amanuensis.auth import admin_login_required
-from amanuensis.resources import admin
-from amanuensis.scripting.fence_create import sync_users
+from amanuensis.auth.auth import check_arborist_auth
 from amanuensis.config import config
+from amanuensis.errors import UserError
 
+from amanuensis.resources import filterset
+from amanuensis.resources import project
+from amanuensis.resources import admin
+
+from amanuensis.schema import ProjectSchema, StateSchema, RequestSchema, ConsortiumDataContributorSchema
 
 
 logger = get_logger(__name__)
-
 
 blueprint = Blueprint("admin", __name__)
 
@@ -41,464 +43,140 @@ def debug_log(function):
     return write_log
 
 
-#### USERS ####
-
-
-# @blueprint.route("/users/<username>", methods=["GET"])
-# @blueprint.route("/user/<username>", methods=["GET"])
-# @admin_login_required
+@blueprint.route("/states", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
 # @debug_log
-# def get_user(username):
-#     """
-#     Get the information of a user from our userdatamodel database
-
-#     Returns a json object
-#     """
-#     return jsonify(admin.get_user_info(current_session, username))
-
-
-# @blueprint.route("/users", methods=["GET"])
-# @blueprint.route("/user", methods=["GET"])
-# @admin_login_required
-# @debug_log
-# def get_all_users():
-#     """
-#     Retrieve the information regarding the buckets created within a project.
-#     Returns a json object.
-#     """
-#     return jsonify(admin.get_all_users(current_session))
-
-
-# @blueprint.route("/users", methods=["POST"])
-# @blueprint.route("/user", methods=["POST"])
-# @admin_login_required
-# @debug_log
-# def create_user():
-#     """
-#     Create a user on the userdatamodel database
-
-#     Returns a json object
-#     """
-#     username = request.get_json().get("name", None)
-#     role = request.get_json().get("role", None)
-#     email = request.get_json().get("email", None)
-#     return jsonify(admin.create_user(current_session, username, role, email))
-
-
-# @blueprint.route("/users/<username>", methods=["PUT"])
-# @blueprint.route("/user/<username>", methods=["PUT"])
-# @admin_login_required
-# @debug_log
-# def update_user(username):
-#     """
-#     Create a user on the userdatamodel database
-
-#     Returns a json object
-#     """
-#     name = request.get_json().get("name", None)
-#     role = request.get_json().get("role", None)
-#     email = request.get_json().get("email", None)
-#     return jsonify(admin.update_user(current_session, username, role, email, name))
-
-
-# @blueprint.route("/users/<username>", methods=["DELETE"])
-# @blueprint.route("/user/<username>", methods=["DELETE"])
-# @admin_login_required
-# @debug_log
-# def delete_user(username):
-#     """
-#     Remove the user from the userdatamodel database and all associated storage
-#     solutions.
-
-#     Returns json object
-#     """
-#     response = jsonify(admin.delete_user(current_session, username))
-#     return response
-
-
-# @blueprint.route("/users/<username>/groups", methods=["GET"])
-# @blueprint.route("/user/<username>/groups", methods=["GET"])
-# @admin_login_required
-# @debug_log
-# def get_user_groups(username):
-#     """
-#     Get the information of a user from our userdatamodel database.
-
-#     Returns a json object
-#     """
-#     return jsonify(admin.get_user_groups(current_session, username))
-
-
-# @blueprint.route("/users/<username>/groups", methods=["PUT"])
-# @blueprint.route("/user/<username>/groups", methods=["PUT"])
-# @admin_login_required
-# @debug_log
-# def add_user_to_groups(username):
-#     """
-#     Create a user to group relationship in the database
-
-#     Returns a json object
-#     """
-#     groups = request.get_json().get("groups", [])
-#     return jsonify(admin.add_user_to_groups(current_session, username, groups=groups))
-
-
-# @blueprint.route("/users/<username>/groups", methods=["DELETE"])
-# @blueprint.route("/user/<username>/groups", methods=["DELETE"])
-# @admin_login_required
-# @debug_log
-# def remove_user_from_groups(username):
-#     """
-#     Create a user to group relationship in the database
-
-#     Returns a json object
-#     """
-#     groups = request.get_json().get("groups", [])
-#     return jsonify(
-#         admin.remove_user_from_groups(current_session, username, groups=groups)
-#     )
-
-
-# @blueprint.route("/users/<username>/projects", methods=["DELETE"])
-# @blueprint.route("/user/<username>/projects", methods=["DELETE"])
-# @admin_login_required
-# @debug_log
-# def remove_user_from_projects(username):
-#     """
-#     Create a user to group relationship in the database
-
-#     Returns a json object
-#     """
-#     projects = request.get_json().get("projects", [])
-#     return jsonify(admin.remove_user_from_projects(current_session, username, projects))
-
-
-@blueprint.route("/users/<username>/projects", methods=["PUT"])
-@blueprint.route("/user/<username>/projects", methods=["PUT"])
-@admin_login_required
-@debug_log
-def add_user_to_projects(username):
+def add_state():
     """
-    Create a user to project relationship on the database and add the access to
-    the the object store associated with it
-
-    Returns a json object
-    """
-    projects = request.get_json().get("projects", [])
-    return jsonify(
-        admin.add_user_to_projects(current_session, username, projects=projects)
-    )
-
-
-@blueprint.route("/update_user_authz", methods=["POST"])
-# @admin_login_required
-@debug_log
-def update_user_authz():
-    """
-    run user sync to update amanuensis anf arborist DB
-
-    Receive a JSON object with the list of resources, policies, roles, and user auth
+    Create a new state
 
     Returns a json object
     """
 
-    logger.warning("IN UPDATE")
-    logger.warning(request.get_json())
+    name = request.get_json().get("name", None)
+    code = request.get_json().get("code", None)
 
-    sync_users(
-            dbGaP=[{'info': {'host': '', 'username': '', 'password': '', 'port': 22, 'proxy': '', 'proxy_user': ''}, 'protocol': 'sftp', 'decrypt_key': '', 'parse_consent_code': True}], # dbGap
-            STORAGE_CREDENTIALS={}, # storage_credential
-            DB=config["DB"], # flask.current_app.db, # postgresql://fence_user:fence_pass@postgres:5432/fence_db DB
-            projects=None, #project_mapping
-            is_sync_from_dbgap_server=False,
-            sync_from_local_csv_dir=None,
-            sync_from_local_yaml_file=None, #'user.yaml',
-            json_from_api=request.get_json(),
-            arborist=flask.current_app.arborist,
-            folder=None,
-        )
-
-    # username = request.get_json().get("name", None)
-    # role = request.get_json().get("role", None)
-    # email = request.get_json().get("email", None)
-    # return jsonify(admin.create_user(current_session, username, role, email))
-    return jsonify("test")
-
-#### PROJECTS ####
+    state_schema = StateSchema()
+    return jsonify(state_schema.dump(admin.create_state(name, code)))
 
 
-@blueprint.route("/projects/<projectname>", methods=["GET"])
-@admin_login_required
-@debug_log
-def get_project(projectname):
+@blueprint.route("/consortiums", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def add_consortium():
     """
-    Get the information related to a project
-    from the userdatamodel database
+    Create a new state
+
     Returns a json object
     """
-    return jsonify(admin.get_project_info(current_session, projectname))
+
+    name = request.get_json().get("name", None)
+    code = request.get_json().get("code", None)
+
+    consortium_schema = ConsortiumDataContributorSchema()
+    return jsonify(consortium_schema.dump(admin.create_consortium(name, code)))
 
 
-@blueprint.route("/projects", methods=["GET"])
-@admin_login_required
-@debug_log
-def get_all_projects():
+@blueprint.route("/states", methods=["GET"])
+def get_states():
     """
-    Get the information related to a project
-    from the userdatamodel database
+    Create a new state
+
     Returns a json object
     """
-    return jsonify(admin.get_all_projects(current_session))
+
+    state_schema = StateSchema(many=True)
+    return jsonify(state_schema.dump(admin.get_all_states()))
 
 
-@blueprint.route("/projects/<projectname>", methods=["POST"])
-@admin_login_required
-@debug_log
-def create_project(projectname):
+@blueprint.route("/filter-sets", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def create_search():
     """
-    Create a new project on the specified storage
+    Create a search on the userportaldatamodel database
+
     Returns a json object
     """
-    auth_id = request.get_json().get("auth_id")
-    storage_accesses = request.get_json().get("storage_accesses", [])
-    response = jsonify(
-        admin.create_project(current_session, projectname, auth_id, storage_accesses)
-    )
-    return response
+    user_id = request.get_json().get("user_id", None)
+    if not user_id:
+        raise UserError("user does not have privileges to access this endpoint")
+
+    name = request.get_json().get("name", None)
+    filter_object = request.get_json().get("filters", None)
+    description = request.get_json().get("description", None)
+    ids_list = request.get_json().get("ids_list", None)
+    
+    return jsonify(filterset.create(user_id, True, None, name, description, filter_object, ids_list))
 
 
-@blueprint.route("/projects/<projectname>", methods=["DELETE"])
-@admin_login_required
-@debug_log
-def delete_project(projectname):
+@blueprint.route("/projects", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def create_project():
     """
-    Remove project. No Buckets should be associated with it.
-    Returns a json object.
-    """
-    response = jsonify(admin.delete_project(current_session, projectname))
-    return response
+    Create a search on the userportaldatamodel database
 
-
-@blueprint.route("/groups/<groupname>/projects", methods=["DELETE"])
-@admin_login_required
-@debug_log
-def remove_projects_from_group(groupname):
-    """
-    Create a user to group relationship in the database
     Returns a json object
     """
-    projects = request.get_json().get("projects", [])
-    return jsonify(
-        admin.remove_projects_from_group(current_session, groupname, projects)
-    )
+    user_id = request.get_json().get("user_id", None)
+    if not user_id:
+        raise UserError("You can't create a Project without specifying the user the project will be assigned to.")
+
+    statistician_emails = request.get_json().get("statistician_emails", None)
+    if not statistician_emails:
+        raise UserError("You can't create a Project without specifying the statisticians that will access the data")
 
 
-@blueprint.route("/projects/<projectname>/groups", methods=["PUT"])
-@admin_login_required
-def add_project_to_groups(projectname):
-    """
-    Create a user to group relationship in the database
-    Returns a json object
-    """
-    groups = request.get_json().get("groups", [])
-    return jsonify(
-        admin.add_project_to_groups(current_session, username, groups=groups)
-    )
-
-
-@blueprint.route("/projects/<projectname>/bucket/<bucketname>", methods=["POST"])
-@admin_login_required
-def create_bucket_in_project(projectname, bucketname):
-    """
-    Create a bucket in the selected project.
-    Returns a json object.
-    """
-    providername = request.get_json().get("provider")
-    response = jsonify(
-        admin.create_bucket_on_project(
-            current_session, projectname, bucketname, providername
-        )
-    )
-    return response
-
-
-@blueprint.route("/projects/<projectname>/bucket/<bucketname>", methods=["DELETE"])
-@admin_login_required
-def delete_bucket_from_project(projectname, bucketname):
-    """
-    Delete a bucket from the selected project, both
-    in the userdatamodel database and in the storage client
-    associated with that bucket.
-    Returns a json object.
-    """
-    return jsonify(
-        admin.delete_bucket_on_project(current_session, projectname, bucketname)
-    )
-
-
-@blueprint.route("/projects/<projectname>/bucket", methods=["GET"])
-@admin_login_required
-def list_buckets_from_project(projectname):
-    """
-    Retrieve the information regarding the buckets created within a project.
-
-    Returns a json object.
-    """
-    response = jsonify(
-        admin.list_buckets_on_project_by_name(current_session, projectname)
-    )
-    return response
-
-
-#### GROUPS ####
-
-
-@blueprint.route("/groups/<groupname>", methods=["GET"])
-@admin_login_required
-def get_group_info(groupname):
-    """
-    Retrieve the information regarding the
-    buckets created within a project.
-    Returns a json object.
-    """
-    return jsonify(admin.get_group_info(current_session, groupname))
-
-
-@blueprint.route("/groups", methods=["GET"])
-@admin_login_required
-def get_all_groups():
-    """
-    Retrieve the information regarding the
-    buckets created within a project.
-    Returns a json object.
-    """
-    return jsonify(admin.get_all_groups(current_session))
-
-
-@blueprint.route("/groups/<groupname>/users", methods=["GET"])
-@admin_login_required
-def get_group_users(groupname):
-    """
-    Retrieve the information regarding the
-    buckets created within a project.
-    Returns a json object.
-    """
-    return jsonify(admin.get_group_users(current_session, groupname))
-
-
-@blueprint.route("/groups", methods=["POST"])
-@admin_login_required
-def create_group():
-    """
-    Retrieve the information regarding the
-    buckets created within a project.
-    Returns a json object.
-    """
-    groupname = request.get_json().get("name")
-    description = request.get_json().get("description")
-    grp = admin.create_group(current_session, groupname, description)
-    if grp:
-        response = admin.get_group_info(current_session, groupname)
-    else:
-        response = {"result": "group creation failed"}
-    response = jsonify(response)
-    return response
-
-
-@blueprint.route("/groups/<groupname>", methods=["PUT"])
-@admin_login_required
-def update_group(groupname):
-    """
-    Retrieve the information regarding the
-    buckets created within a project.
-    Returns a json object.
-    """
     name = request.get_json().get("name", None)
     description = request.get_json().get("description", None)
-    response = jsonify(
-        admin.update_group(current_session, groupname, description, name)
-    )
-    return response
+    institution = request.get_json().get("institution", None)
+    
+    filter_set_ids = request.get_json().get("filter_set_ids", None)
+
+    project_schema = ProjectSchema()
+    return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution, statistician_emails)))
 
 
-@blueprint.route("/groups/<groupname>", methods=["DELETE"])
-@admin_login_required
-def delete_group(groupname):
+@blueprint.route("/projects", methods=["PUT"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def update_project():
     """
-    Retrieve the information regarding the
-    buckets created within a project.
-    Returns a json object.
-    """
-    response = jsonify(admin.delete_group(current_session, groupname))
-    return response
+    Update a project attributes
 
-
-@blueprint.route("/groups/<groupname>/projects", methods=["PUT"])
-@admin_login_required
-def add_projects_to_group(groupname):
-    """
-    Create a user to group relationship in the database
     Returns a json object
     """
-    projects = request.get_json().get("projects", [])
-    response = jsonify(
-        admin.add_projects_to_group(current_session, groupname, projects)
-    )
-    return response
+    project_id = request.get_json().get("project_id", None)
+    if not project_id:
+        raise UserError("A project_id is required for this endpoint.")
+    
+    approved_url = request.get_json().get("approved_url", None)
+    filter_set_ids = request.get_json().get("filter_set_ids", None)
+
+    project_schema = ProjectSchema()
+    return jsonify(project_schema.dump(project.update(project_id, approved_url, filter_set_ids)))
 
 
-@blueprint.route("/groups/<groupname>/projects", methods=["GET"])
-@admin_login_required
-def get_group_projects(groupname):
+@blueprint.route("/projects/state", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def update_project_state():
     """
-    Create a user to group relationship in the database
+    Create a new state
+
     Returns a json object
     """
-    values = admin.get_group_projects(current_session, groupname)
-    return jsonify({"projects": values})
+    project_id = request.get_json().get("project_id", None)
+    state_id = request.get_json().get("state_id", None)
+
+    if not state_id or not project_id:
+        return UserError("There are missing params.")
+
+    request_schema = RequestSchema(many=True)
+    return jsonify(request_schema.dump(admin.update_project_state(project_id, state_id)))
 
 
-#### CLOUD PROVIDER ####
 
 
-@blueprint.route("/cloud_providers/<providername>", methods=["GET"])
-@blueprint.route("/cloud_provider/<providername>", methods=["GET"])
-@admin_login_required
-def get_cloud_provider(providername):
-    """
-    Retriev the information related to a cloud provider
-    Returns a json object.
-    """
-    return jsonify(admin.get_provider(current_session, providername))
 
-
-@blueprint.route("/cloud_providers/<providername>", methods=["POST"])
-@blueprint.route("/cloud_provider/<providername>", methods=["POST"])
-@admin_login_required
-def create_cloud_provider(providername):
-    """
-    Create a cloud provider.
-    Returns a json object
-    """
-    backend_name = request.get_json().get("backend")
-    service_name = request.get_json().get("service")
-    response = jsonify(
-        admin.create_provider(
-            current_session, providername, backend=backend_name, service=service_name
-        )
-    )
-    return response
-
-
-@blueprint.route("/cloud_providers/<providername>", methods=["DELETE"])
-@blueprint.route("/cloud_provider/<providername>", methods=["DELETE"])
-@admin_login_required
-def delete_cloud_provider(providername):
-    """
-    Deletes a cloud provider from the userdatamodel
-    All projects associated with it should be deassociated
-    or removed.
-    Returns a json object.
-    """
-    response = jsonify(admin.delete_provider(current_session, providername))
-    return response

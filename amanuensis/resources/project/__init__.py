@@ -8,27 +8,24 @@ from gen3authz.client.arborist.errors import ArboristError
 from amanuensis.resources.userdatamodel import (
     create_project,
     get_project_by_consortium,
-    get_project_by_user
+    get_project_by_user,
+    get_project_by_id,
+    update_project,
+    get_statisticians
 )
-from amanuensis.resources import filterset, consortium_data_contributor
-
-from amanuensis.auth.auth import current_user
-
+from amanuensis.resources import filterset, consortium_data_contributor, admin
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
 from amanuensis.utils import get_consortium_list
-# from amanuensis.jwt.utils import get_jwt_header
-# from amanuensis.models import query_for_user
-# from amanuensis.auth.auth import register_arborist_user
-
+from amanuensis.resources.fence import fence_get_users
 
 from amanuensis.models import (
     Search,
     Request,
     ConsortiumDataContributor,
+    Statistician
 )
-
 
 from amanuensis.schema import ProjectSchema
 
@@ -37,7 +34,7 @@ from amanuensis.schema import ProjectSchema
 logger = get_logger(__name__)
 
 
-def get_all(logged_user_id, approver):
+def get_all(logged_user_id, logged_user_email, approver):
     project_schema = ProjectSchema(many=True)
     with flask.current_app.db.session as session:
         if approver:
@@ -57,31 +54,47 @@ def get_all(logged_user_id, approver):
                         )
                     )
 
-        projects = get_project_by_user(session, logged_user_id)
+        projects = get_project_by_user(session, logged_user_id, logged_user_email)
         project_schema.dump(projects)
         return projects
 
 
-def create(logged_user_id, name, description, filter_set_ids, explorer_id):
+def get_by_id(logged_user_id, project_id):
+    project_schema = ProjectSchema()
+    with flask.current_app.db.session as session:
+        project = get_project_by_id(session, logged_user_id, project_id)
+        project_schema.dump(project)
+        return project
+
+def get_all_statisticians(emails):
+    with flask.current_app.db.session as session:
+        statisticians = get_statisticians(session, emails)
+        return statisticians
+
+
+def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id, institution, statistician_emails):
     # retrieve all the filter_sets associated with this project
-    filter_sets = filterset.get_by_ids(logged_user_id, filter_set_ids, explorer_id)
+    filter_sets = filterset.get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
     # example filter_sets - [{"id": 4, "user_id": 1, "name": "INRG_1", "description": "", "filter_object": {"race": {"selectedValues": ["Black or African American"]}, "consortium": {"selectedValues": ["INRG"]}, "data_contributor_id": {"selectedValues": ["COG"]}}}]
-    
+
     path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
     consortiums = []
     for s in filter_sets:
         # Get a list of consortiums the cohort of data is from
         # example or retuned values - consoritums = ['INRG']
         # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
-        consortiums.extend(get_consortium_list(path, s.filter_object))    
+        consortiums.extend(get_consortium_list(is_amanuensis_admin, path, s.filter_object, s.ids_list))    
+    consortiums = list(set(consortiums))
 
+    # Defaulst state is SUBMITTED
+    default_state = admin.get_by_code("IN_REVIEW")
 
     #TODO make sure to populate the consortium table
     # insert into consortium_data_contributor ("code", "name") values ('INRG','INRG'), ('INSTRUCT', 'INSTRuCT');
     requests = []
     for consortia in consortiums:
         # get consortium's ID
-        consortium = consortium_data_contributor.get(code=consortia)
+        consortium = consortium_data_contributor.get(code=consortia.upper())
         if consortium is None:
             raise NotFound(
                 "Consortium with code {} not found.".format(
@@ -90,25 +103,55 @@ def create(logged_user_id, name, description, filter_set_ids, explorer_id):
             )
         req = Request()
         req.consortium_data_contributor = consortium
+        req.states.append(default_state)
         requests.append(req)
-  
+
+    # Check if statistician exists in amanuensis
+    # 1. get statisticians from amanuensis
+    amanuensis_statisticians = get_all_statisticians(statistician_emails) 
+
+    # # 1. check if statisticians are already in amanuensis
+    # for statistician in amanuensis_statisticians:
+    #     if statistician.ema
+    # registered_stat = 
+    # missing_users_email = 
+
+    # # 2. Check if statistician exists in fence. If so assign user_id, otherwise use the submitted email.
+    # fence_users = fence_get_users(config=config, usernames=statistician_emails)
+    # fence_users = fence_users['users'] if 'users' in fence_users else []
+    
+    # 2. Check if any statistician is not in the DB yet
+    if len(statistician_emails) != len(amanuensis_statisticians):
+        users_email = [user.email for user in amanuensis_statisticians]
+        missing_users_email = [email for email in statistician_emails if email not in users_email]
+
+    # 3. link the existing statician to the project
+    statisticians = []
+    for user in amanuensis_statisticians:
+        statistician = user
+        statisticians.append(statistician)
+
+    # 4 or create them if they have not been previously
+    for user_email in missing_users_email:
+        statistician = Statistician(email=user_email)
+        statisticians.append(statistician)
+
+
     with flask.current_app.db.session as session:
         project_schema = ProjectSchema()
-        project = create_project(session, logged_user_id, description, filter_sets, requests)
+        project = create_project(session, logged_user_id, description, name, institution, filter_sets, requests, statisticians)
         project_schema.dump(project)
         return project
 
-# def get_by_id(logged_user_id, filter_set_id, explorer_id):
-#     with flask.current_app.db.session as session:
-#         return get_filter_set(session, logged_user_id, filter_set_id, explorer_id)
+
+def update(project_id, approved_url, filter_set_ids):
+    # TODO retrieve all the filter_sets associated with this project
+    # NOT SUPPORTED YET
+
+    if not approved_url:
+        return None
+
+    with flask.current_app.db.session as session:
+        return update_project(session, project_id, approved_url)
 
 
-
-# def update(logged_user_id, filter_set_id, explorer_id, name, description, filter_object):
-#     with flask.current_app.db.session as session:
-#         return update_filter_set(session, logged_user_id, filter_set_id, explorer_id, name, description, filter_object)
-
-
-# def delete(logged_user_id, filter_set_id, explorer_id):
-#     with flask.current_app.db.session as session:
-#         return delete_filter_set(session, logged_user_id, filter_set_id, explorer_id)

@@ -10,7 +10,7 @@ __all__ = [
     "update_filter_set",
 ]
 
-def get_filter_sets(current_session, logged_user_id, filter_set_ids, explorer_id):
+def get_filter_sets(current_session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id):
     '''
     Returns all, one, or multiple by id
     filter_set_id may be id(int), ids(array), or None
@@ -18,40 +18,56 @@ def get_filter_sets(current_session, logged_user_id, filter_set_ids, explorer_id
 	#TODO make class Search serializable
     query = current_session.query(Search).filter(
         Search.active == True, 
-        Search.user_id == logged_user_id,
-        Search.filter_source_internal_id == explorer_id,
-        Search.filter_source == FilterSourceType.explorer
+        Search.user_id == logged_user_id
     )
+
+    if is_amanuensis_admin:
+        query = query.filter(Search.filter_source == FilterSourceType.manual)
+    else:
+        query = query.filter(
+            Search.filter_source_internal_id == explorer_id,
+            Search.filter_source == FilterSourceType.explorer
+        )   
+
     if filter_set_ids:
         if not isinstance(filter_set_ids, list):
             filter_set_ids = [filter_set_ids]
         query = query.filter(Search.id.in_(filter_set_ids))
 
-    filter_sets = [{"name": s.name, "id": s.id, "description": s.description, "filters": s.filter_object} for s in query.all()]
-
-    return {"filter_sets": filter_sets}
+    return query.all()
 
 
-def create_filter_set(current_session, logged_user_id, explorer_id, name, description, filter_object):
+def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list):
     new_filter_set = Search(
         user_id=logged_user_id, 
         filter_source_internal_id=explorer_id,
-        filter_source=FilterSourceType.explorer,
+        filter_source=FilterSourceType.manual if is_amanuensis_admin else FilterSourceType.explorer,
         user_source="fence", 
         name=name, 
         description=description, 
-        filter_object=filter_object
+        filter_object=filter_object,
+        ids_list=ids_list
     )
     #TODO add es_index, add dataset_version
     current_session.add(new_filter_set)
     current_session.flush()
-    return {
-        "name": new_filter_set.name, 
-        "id": new_filter_set.id,
-        "explorer_id": new_filter_set.filter_source_internal_id,
-        "description": new_filter_set.description, 
-        "filters": new_filter_set.filter_object
-    }
+
+    if is_amanuensis_admin:
+        return {
+            "name": new_filter_set.name, 
+            "id": new_filter_set.id,
+            "filter_source": new_filter_set.filter_source,
+            "description": new_filter_set.description, 
+            "ids_list": new_filter_set.ids_list
+        }
+    else: 
+        return {
+            "name": new_filter_set.name, 
+            "id": new_filter_set.id,
+            "explorer_id": new_filter_set.filter_source_internal_id,
+            "description": new_filter_set.description, 
+            "filters": new_filter_set.filter_object
+        }
 
 
 def update_filter_set(current_session, logged_user_id, filter_set_id, explorer_id, name, description, filter_object):

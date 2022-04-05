@@ -464,27 +464,6 @@ CIRRUS_CFG:
 GOOGLE_GROUP_PREFIX: 'test'
 
 # //////////////////////////////////////////////////////////////////////////////////////
-# EMAIL
-#   - Support for sending emails from fence. Used for user certificates
-#     and `/google/service_accounts` endpoints
-# //////////////////////////////////////////////////////////////////////////////////////
-# Gun Mail Service (for sending emails from fence)
-#
-# NOTE: Example in comments below
-GUN_MAIL:
-  'datacommons.io':
-    smtp_hostname: 'smtp.mailgun.org'
-    api_key: ''
-    default_login: 'postmaster@mailgun.example.com'
-    api_url: 'https://api.mailgun.net/v3/mailgun.example.com'
-    smtp_password: ''
-
-# For emails regarding users certificates
-EMAIL_SERVER: 'localhost'
-SEND_FROM: 'example@gmail.com'
-SEND_TO: 'example@gmail.com'
-
-# //////////////////////////////////////////////////////////////////////////////////////
 # DATA ACCESS: GOOGLE LINKING & SERVICE ACCOUNT REGISTRATION
 #   - Support `/google/service_accounts` endpoints
 # //////////////////////////////////////////////////////////////////////////////////////
@@ -509,25 +488,6 @@ WHITE_LISTED_SERVICE_ACCOUNT_EMAILS:
   - 'test@123'
   - 'test@456'
 
-# when service accounts or google projects are determined invalid, an email is sent
-# to the project owners. These settings are for that email
-REMOVE_SERVICE_ACCOUNT_EMAIL_NOTIFICATION:
-  enable: true
-  # this domain MUST exist in GUN_MAIL config
-  domain: 'example.com'
-  from: 'do-not-reply@example.com'
-  subject: 'User service account removal notification'
-  # the {} gets replaced dynamically in the Python code to be the Project ID
-  content: >
-    Service accounts were removed from access control data because some users or
-    service accounts of GCP Project {} are not authorized to access the data sets
-    associated to the service accounts, or do not adhere to the security policies.
-  # this admin email will be included as a recipient to *any* email to anyone about
-  # service account removal.
-  #
-  # WARNING: This is NOT a bcc so the email is visible to the end-user
-  admin:
-    - 'admin@example.edu'
 
 # Service account email domains that represent a service account that Google owns.
 # These are usually created when a sepcific GCP service is enabled.

@@ -18,11 +18,6 @@ ROOT_DIR = "/amanuensis"
 # amanuensis (i.e. ``BASE_URL`` in the provider amanuensis config).
 # OIDC_ISSUER = 'http://localhost:8080/user
 
-EMAIL_SERVER = "localhost"
-
-SEND_FROM = "phillis.tt@gmail.com"
-
-SEND_TO = "phillis.tt@gmail.com"
 
 HMAC_ENCRYPTION_KEY = ""
 
@@ -71,22 +66,6 @@ dir_path = "/secrets"
 fence_creds = os.path.join(dir_path, "fence_credentials.json")
 
 
-
-REMOVE_SERVICE_ACCOUNT_EMAIL_NOTIFICATION = {
-    "enable": False,
-    "domain": "smtp domain",
-    "subject": "User service account removal notification",
-    "from": "do-not-reply@planx-pla.net",
-    "admin": [],
-    "contact number": "123456789",
-    "content": """
-    The service accounts were removed from access control data because some \
-users or service accounts of GCP project {} are not authorized to access \
-the data sets associated to the service accounts, or do not \
-adhere to the security policies.
-    """,
-}
-
 SUPPORT_EMAIL_FOR_ERRORS = None
 dbGaP = {}
 if os.path.exists(fence_creds):
@@ -98,5 +77,3 @@ if os.path.exists(fence_creds):
         APP_NAME = data["APP_NAME"]
         HTTP_PROXY = data["HTTP_PROXY"]
         dbGaP = data["dbGaP"]
-
-        GUN_MAIL = data.get("GUN_MAIL")
