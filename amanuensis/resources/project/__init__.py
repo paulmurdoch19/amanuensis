@@ -121,6 +121,7 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
     # fence_users = fence_users['users'] if 'users' in fence_users else []
     
     # 2. Check if any statistician is not in the DB yet
+    missing_users_email = []
     if len(statistician_emails) != len(amanuensis_statisticians):
         users_email = [user.email for user in amanuensis_statisticians]
         missing_users_email = [email for email in statistician_emails if email not in users_email]
