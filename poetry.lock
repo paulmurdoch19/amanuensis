@@ -1553,7 +1553,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
 name = "userportaldatamodel"
-version = "1.2.3"
+version = "1.2.4"
 description = ""
 category = "main"
 optional = false
@@ -1569,8 +1569,8 @@ sqlalchemy = ">=1.3.3,<1.4.0"
 [package.source]
 type = "git"
 url = "https://github.com/chicagopcdc/userPortalDataModel.git"
-reference = "1.2.3"
-resolved_reference = "58a36d49617582e4d3fce35264565e23d6519fe1"
+reference = "1.2.4"
+resolved_reference = "f1b74e8dfcaf7628189cf57d2bd8dafeab2332c8"
 
 [[package]]
 name = "werkzeug"
@@ -1616,7 +1616,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "87557aadf44312178280fba29dd36ed29d255decbda6088abbb362bf28f2c47a"
+content-hash = "ac9dcbd29ae5cf4a90742fc6b957bd0bbe14a56eb0c5789ba19fd894c847b4aa"
 
 [metadata.files]
 addict = [
