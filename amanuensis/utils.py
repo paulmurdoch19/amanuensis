@@ -163,8 +163,12 @@ def getGQLFilterIdsList(ids_list):
 
     return { "AND": [{"IN":{"subject_submitter_id":ids_list}}]} 
 
-def get_consortium_list(is_amanuensis_admin, path, src_filter, ids_list):
-    transformed_filter = getGQLFilterIdsList(ids_list) if is_amanuensis_admin else getGQLFilter(src_filter)
+def get_consortium_list(path, src_filter, ids_list):
+    if src_filter is None and ids_list is None:
+        raise NotFound("There is no filter specified and associated with the project you are trying to create")
+
+    isFilter = True if src_filter else False
+    transformed_filter = getGQLFilter(src_filter) if isFilter else getGQLFilterIdsList(ids_list)
     target_filter = {}
     target_filter["filter"] = transformed_filter
 
