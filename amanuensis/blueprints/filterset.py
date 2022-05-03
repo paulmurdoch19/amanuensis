@@ -66,7 +66,7 @@ def create_search():
     explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
     name = flask.request.get_json().get("name", None)
-    filter_object = flask.request.get_json().get("filters", None)
+    filter_object = flask.request.get_json().get("filters", {})
     description = flask.request.get_json().get("description", None)
     ids_list = flask.request.get_json().get("ids_list", None)
     
