@@ -1,12 +1,10 @@
 import uuid
+import logging
 
 from boto3 import client
-from boto3.exceptions import Boto3Error #, ClientError
+from boto3.exceptions import Boto3Error, ClientError
 
 from amanuensis.errors import UserError, InternalError, UnavailableError, NotFound
-
-
-
 
 class BotoManager(object):
     """
@@ -229,3 +227,87 @@ class BotoManager(object):
             self.logger.exception(ex)
             raise UserError("Fail to create policy: {}".format(ex))
         return policy
+
+    def send_email_ses(body, to_emails, subject):
+        """
+        Send email to group of emails using AWS SES api.
+
+        Args:
+            body: html or text message
+            to_emails(list): list of emails to receive the messages
+            subject(str): email subject
+            smtp_domain(dict): smtp domain server
+
+        Returns:
+            Http response
+
+        Exceptions:
+            KeyError
+
+        """
+
+        #TODO add import for boto
+
+        if not config["AWS_SES"]:
+            raise NotFound("AWS SES '{}' does not exist in configuration. Cannot send email.")
+        if "SENDER" not in config["AWS_SES"]:
+            raise NotFound("AWS SES sender does not exist in configuration. Cannot send email.")
+        if "AWS_ACCESS_KEY" not in config["AWS_SES"] or "AWS_SECRET_KEY" not in config["AWS_SES"]:
+            raise NotFound("AWS SES credentials are missing in configuration. Cannot send email.")
+
+        #TODO retrieve body from template (pass as external param above)
+        if not body:
+            raise Exception('You must provide a text or html body.')
+        if not subject:
+            raise Exception('You must provide a text subject for the email.')
+
+        sender = config["AWS_SES"]["SENDER"]
+        region = config["AWS_SES"]["AWS_REGION"] if config["AWS_SES"]["AWS_REGION"] is not None else "us-east-1"
+        AWS_ACCESS_KEY = config["AWS_SES"]["AWS_ACCESS_KEY"]
+        AWS_SECRET_KEY = config["AWS_SES"]["AWS_SECRET_KEY"]
+        
+        # if body is in html format, strip out html markup
+        # otherwise body and body_text could have the same values
+        body_text = html2text.html2text(body)
+        
+            
+            # if not self._html:
+            #     self._format = 'text'
+            #     body = self._text
+
+        client = boto3.client(
+            'ses',
+            region_name=region,
+            aws_access_key_id=AWS_ACCESS_KEY,
+            aws_secret_access_key=AWS_SECRET_KEY
+        )
+        try:
+            response = client.send_email(
+                Destination={
+                    'ToAddresses': to_emails,
+                },
+                Message={
+                    'Body': {
+                        'Text': {
+                            'Charset': 'UTF-8',
+                            'Data': body_text,
+                        },
+                        'Html': {
+                            'Charset': 'UTF-8',
+                            'Data': body,
+                        },
+                    },
+                    'Subject': {
+                        'Charset': 'UTF-8',
+                        'Data': subject,
+                    },
+                },
+                Source=sender,
+            )
+        except ClientError as e:
+            print(e.response['Error']['Message'])
+        else:
+            print("Email sent! Message ID:"),
+            print(response['MessageId'])
+        logging.debug(json.dumps(response))
+        return response
