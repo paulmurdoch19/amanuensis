@@ -2,7 +2,8 @@ import uuid
 import logging
 
 from boto3 import client
-from boto3.exceptions import Boto3Error, ClientError
+from boto3.exceptions import Boto3Error
+from botocore.exceptions import ClientError
 
 from amanuensis.errors import UserError, InternalError, UnavailableError, NotFound
 
