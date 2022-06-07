@@ -62,7 +62,7 @@ def get_projetcs():
                     status = state["name"]
 
 
-                if status_code == "APPROVED" or status_code == "REJECTED":
+                if status_code == "DATA_DELIVERED" or status_code == "REJECTED":
                     if not completed_at:
                         completed_at = request["update_date"]
                     break 
