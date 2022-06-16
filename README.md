@@ -1,4 +1,4 @@
-## Development Workflow
+# Development Workflow
 
 To speed up the local development workflow for amanuensis, alongside the gen3 stack, follow these steps.
 
@@ -19,3 +19,11 @@ docker build -f Dockerfile.dev -t amanuensis:test .
 3) Inside compose-services run ```docker compose up``` to start all services of the gen3 stack.
 
 4) Open a shell to the amanuensis:test container. Navigate to /amanuensis/amanuensis and run ```bash watch-files.sh```. This will watch for files changes in this directory and re-run the uwsgi command every time there is a file change, which will ensure that changes are reflected in the container almost immediatelly.
+
+## Debugging
+
+Once you run ```bash watch-files.sh``` most of the output will show in that same terminal window. Information about HTTP requests--method, URL, etc.--will continue to show up in the Docker logs.
+
+## Development Tools
+
+The Docker.dev file installs inotify-tools to allow the watch-files.sh script to check for file changes. In addtition, it will run bash, instead of the container default, sh, and install vim.
