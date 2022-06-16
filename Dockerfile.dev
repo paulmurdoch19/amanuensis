@@ -6,6 +6,9 @@ FROM quay.io/cdis/python:python3.6-buster-pybase3-3.0.2
 
 ENV appname=amanuensis
 
+RUN apt-get update && apt-get install -y inotify-tools \
+    vim
+
 RUN pip install --upgrade pip
 # RUN apk add --update \
 #    postgresql-libs postgresql-dev libffi-dev libressl-dev \
@@ -56,8 +59,6 @@ RUN poetry config virtualenvs.create false \
 
 # RUN COMMIT=`git rev-parse HEAD` && echo "COMMIT=\"${COMMIT}\"" >$appname/version_data.py \
 #    && VERSION=`git describe --always --tags` && echo "VERSION=\"${VERSION}\"" >>$appname/version_data.py
-
-RUN apt-get update && apt-get install -y inotify-tools
 
 WORKDIR /var/www/$appname
 

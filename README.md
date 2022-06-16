@@ -26,4 +26,8 @@ Once you run ```bash watch-files.sh``` most of the output will show in that same
 
 ## Development Tools
 
-The Docker.dev file installs inotify-tools to allow the watch-files.sh script to check for file changes. In addtition, it will run bash, instead of the container default, sh, and install vim.
+The Docker.dev file installs inotify-tools to allow the watch-files.sh script to check for file changes. In addtition, it will install vim.
+
+To use bash instead of the default, sh, run ```exec /bin/bash``` in the container or if starting from the host terminal run: 
+
+    docker exec -it amanuensis-service /bin/bash
