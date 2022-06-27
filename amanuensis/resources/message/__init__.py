@@ -20,7 +20,6 @@ from amanuensis.models import (
 )
 from hubspotclient.client.hubspot.client import HubspotClient
 
-
 logger = get_logger(__name__)
 
 
@@ -38,7 +37,7 @@ def send_message(logged_user_id, request_id, subject, body):
     with flask.current_app.db.session as session:    
 
         # Get consortium and check that the request exists
-        request = get_by_id(logged_user_id, request_id)
+        request = udm.get_request_by_id(session, logged_user_id, request_id)
         # logger.debug("Request: " + str(request))
         consortium_code = request.consortium_data_contributor.code
         # logger.debug(f"Consortium Code: {consortium_code}")
@@ -51,13 +50,13 @@ def send_message(logged_user_id, request_id, subject, body):
         # returns [ email, disease_group_executive_committee ]
         committee = f"{consortium_code} Executive Committee Member"
         hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
-
         # logger.debug('Hubspot Response: ' + str(hubspot_response))
 
         # Connect to fence to get the user.id from the username(email)
         usernames = []
         receivers = []
         if hubspot_response and ('total' in hubspot_response) and int(hubspot_response.get("total", '0')):
+            logger.info(hubspot_response)
             for member in hubspot_response["results"]:
                 email = member['properties']['email']
                 usernames.append(email)

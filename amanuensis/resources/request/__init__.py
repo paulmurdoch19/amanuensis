@@ -10,19 +10,28 @@ from userportaldatamodel.consortium_data_contributor import ConsortiumDataContri
 
 # from amanuensis.resources.consortium_data_contributor import consortium_data_contributor
 from amanuensis.config import config
-from amanuensis.errors import (Forbidden, InternalError, NotFound, Unauthorized,
-                               UserError)
+from amanuensis.errors import (
+    Forbidden,
+    InternalError,
+    NotFound,
+    Unauthorized,
+    UserError,
+)
 from amanuensis.models import Request, Project
-from amanuensis.resources.userdatamodel import (get_request_by_consortium,
-                                                get_request_by_id, get_requests)
+from amanuensis.resources.userdatamodel.userdatamodel_request import (
+    get_request_by_consortium,
+    get_request_by_id,
+    get_requests,
+)
 from amanuensis.schema import RequestSchema
+
 # from pcdcutils.environment import is_env_enabled
 
 logger = get_logger(__name__)
 
 
 def get(logged_user_id, consortium=None):
-    #TODO
+    # TODO
     # Get from hubspot if User is an EC member for this specific consortium or not
     isEcMember = False
     requests = []
@@ -31,14 +40,14 @@ def get(logged_user_id, consortium=None):
             requests = get_request_by_consortium(session, logged_user_id, consortium)
         else:
             requests = get_requests(session, logged_user_id)
-            
+
         request_schema = RequestSchema(many=True)
         request_schema.dump(requests)
         return requests
 
 
-def get_by_id(logged_user_id, request_id):
-    
+def get_by_id(logged_user_id, request_id, current_session):
+
     # if is_env_enabled('GEN3_DEBUG') and int(request_id) == 12345:
     #     request = Request()
     #     request.id = 12345

@@ -1,11 +1,15 @@
+import json
 import uuid
 import logging
+import html2text
 
 from boto3 import client
 from boto3.exceptions import Boto3Error
 from botocore.exceptions import ClientError
 
+from amanuensis.config import config as amanuensis_config
 from amanuensis.errors import UserError, InternalError, UnavailableError, NotFound
+
 
 class BotoManager(object):
     """
@@ -88,7 +92,7 @@ class BotoManager(object):
             config (dict): additional parameters if necessary (e.g. updating access key)
             method (str): "get_object" or "put_object" (ClientMethod argument to boto)
         """
-        if method not in ["get_object"]: #, "put_object"]:
+        if method not in ["get_object"]:  # , "put_object"]:
             raise UserError("method {} not allowed".format(method))
         if "aws_access_key_id" in config:
             self.s3_client = client("s3", **config)
@@ -98,7 +102,7 @@ class BotoManager(object):
         params = {"Bucket": bucket, "Key": key}
         if method == "put_object":
             params["ServerSideEncryption"] = "AES256"
-        
+
         try:
             return self.s3_client.generate_presigned_url(
                 ClientMethod=method, Params=params, ExpiresIn=expires
@@ -106,7 +110,6 @@ class BotoManager(object):
         except Exception as ex:
             self.logger.exception(ex)
             raise InternalError("Failed to get pre-signed url")
-
 
         # import boto3
         # AWS_S3_REGION = 'ap-south-1'
@@ -117,8 +120,6 @@ class BotoManager(object):
         # presigned_url = s3_client.generate_presigned_url('get_object',    Params={"Bucket": AWS_S3_BUCKET_NAME, "Key": AWS_S3_FILE_NAME}, ExpiresIn=PRESIGNED_URL_EXPIRY)
         # s3_client = boto3.client('s3',region_name="ap-south-1",config=boto3.session.Config(signature_version='s3v4',))
         # s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': object_name}, ExpiresIn=expiration)
-
-
 
     def get_bucket_region(self, bucket, config):
         try:
@@ -229,7 +230,7 @@ class BotoManager(object):
             raise UserError("Fail to create policy: {}".format(ex))
         return policy
 
-    def send_email_ses(body, to_emails, subject):
+    def send_email_ses(self, body, to_emails, subject):
         """
         Send email to group of emails using AWS SES api.
 
@@ -247,68 +248,82 @@ class BotoManager(object):
 
         """
 
-        #TODO add import for boto
+        # TODO add import for boto
 
-        if not config["AWS_SES"]:
-            raise NotFound("AWS SES '{}' does not exist in configuration. Cannot send email.")
-        if "SENDER" not in config["AWS_SES"]:
-            raise NotFound("AWS SES sender does not exist in configuration. Cannot send email.")
-        if "AWS_ACCESS_KEY" not in config["AWS_SES"] or "AWS_SECRET_KEY" not in config["AWS_SES"]:
-            raise NotFound("AWS SES credentials are missing in configuration. Cannot send email.")
+        if not amanuensis_config["AWS_SES"]:
+            raise NotFound(
+                "AWS SES '{}' does not exist in configuration. Cannot send email."
+            )
+        if "SENDER" not in amanuensis_config["AWS_SES"]:
+            raise NotFound(
+                "AWS SES sender does not exist in configuration. Cannot send email."
+            )
+        if (
+            "AWS_ACCESS_KEY" not in amanuensis_config["AWS_SES"]
+            or "AWS_SECRET_KEY" not in amanuensis_config["AWS_SES"]
+        ):
+            raise NotFound(
+                "AWS SES credentials are missing in configuration. Cannot send email."
+            )
 
-        #TODO retrieve body from template (pass as external param above)
+        # TODO retrieve body from template (pass as external param above)
         if not body:
-            raise Exception('You must provide a text or html body.')
+            raise Exception("You must provide a text or html body.")
         if not subject:
-            raise Exception('You must provide a text subject for the email.')
+            raise Exception("You must provide a text subject for the email.")
 
-        sender = config["AWS_SES"]["SENDER"]
-        region = config["AWS_SES"]["AWS_REGION"] if config["AWS_SES"]["AWS_REGION"] is not None else "us-east-1"
-        AWS_ACCESS_KEY = config["AWS_SES"]["AWS_ACCESS_KEY"]
-        AWS_SECRET_KEY = config["AWS_SES"]["AWS_SECRET_KEY"]
-        
+        sender = amanuensis_config["AWS_SES"]["SENDER"]
+        region = (
+            amanuensis_config["AWS_SES"]["AWS_REGION"]
+            if amanuensis_config["AWS_SES"]["AWS_REGION"] is not None
+            else "us-east-1"
+        )
+        AWS_ACCESS_KEY = amanuensis_config["AWS_SES"]["AWS_ACCESS_KEY"]
+        AWS_SECRET_KEY = amanuensis_config["AWS_SES"]["AWS_SECRET_KEY"]
+
         # if body is in html format, strip out html markup
         # otherwise body and body_text could have the same values
         body_text = html2text.html2text(body)
-        
-            
-            # if not self._html:
-            #     self._format = 'text'
-            #     body = self._text
 
-        client = boto3.client(
-            'ses',
+        # if not self._html:
+        #     self._format = 'text'
+        #     body = self._text
+
+        logging.info("Config: {}".format(amanuensis_config))
+
+        boto3_client = client(
+            "ses",
             region_name=region,
             aws_access_key_id=AWS_ACCESS_KEY,
-            aws_secret_access_key=AWS_SECRET_KEY
+            aws_secret_access_key=AWS_SECRET_KEY,
         )
+        response = "Failed to send email."
         try:
-            response = client.send_email(
+            response = boto3_client.send_email(
                 Destination={
-                    'ToAddresses': to_emails,
+                    "ToAddresses": to_emails,
                 },
                 Message={
-                    'Body': {
-                        'Text': {
-                            'Charset': 'UTF-8',
-                            'Data': body_text,
+                    "Body": {
+                        "Text": {
+                            "Charset": "UTF-8",
+                            "Data": body_text,
                         },
-                        'Html': {
-                            'Charset': 'UTF-8',
-                            'Data': body,
+                        "Html": {
+                            "Charset": "UTF-8",
+                            "Data": body,
                         },
                     },
-                    'Subject': {
-                        'Charset': 'UTF-8',
-                        'Data': subject,
+                    "Subject": {
+                        "Charset": "UTF-8",
+                        "Data": subject,
                     },
                 },
                 Source=sender,
             )
         except ClientError as e:
-            print(e.response['Error']['Message'])
+            print(e.response["Error"]["Message"])
         else:
             print("Email sent! Message ID:"),
-            print(response['MessageId'])
-        logging.debug(json.dumps(response))
+            print(response["MessageId"])
         return response
