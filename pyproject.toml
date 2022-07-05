@@ -45,10 +45,10 @@ marshmallow-sqlalchemy = "0.24.2"
 werkzeug = "^0.16.0"
 html2text = "^2020.1.16"
 pycryptodome = "3.9.8"
-pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.1.1"}
-userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "1.2.4"}
+pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.1.2"}
+userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "1.2.5"}
 # pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "pcdc_dev"}
-hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "0.1.0"}
+hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "1.0.1"}
 # userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "handle-manual-data-request"}
 
 [tool.poetry.dev-dependencies]
