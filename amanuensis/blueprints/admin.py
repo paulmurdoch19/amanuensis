@@ -13,7 +13,7 @@ from flask_sqlalchemy_session import current_session
 from cdislogging import get_logger
 
 from amanuensis.auth.auth import check_arborist_auth
-from amanuensis.config import AmanuensisConfig, config
+from amanuensis.config import config
 from amanuensis.errors import UserError
 
 from amanuensis.resources import filterset
