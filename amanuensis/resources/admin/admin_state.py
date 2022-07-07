@@ -2,6 +2,7 @@ import flask
 import json
 from cdislogging import get_logger
 
+from amanuensis.auth.auth import current_user
 from amanuensis.resources import userdatamodel as udm
 from amanuensis.config import config
 from amanuensis.schema import (
@@ -56,7 +57,11 @@ def update_project_state(project_id, state_id):
             raise NotFound("The state with id {} has not been found".format(state_id))
 
         request_schema = RequestSchema(many=True)
-        requests = udm.update_project_state(session, requests, state)
+        consortium = requests[0].consortium_data_contributor.code
+        consortium_statuses = config["CONSORTIUM_STATUS"][consortium]
+        requests = udm.update_project_state(
+            current_user.id, session, requests, state, consortium_statuses
+        )
         request_schema.dump(requests)
         return requests
 
