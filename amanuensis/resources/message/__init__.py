@@ -56,7 +56,6 @@ def send_message(logged_user_id, request_id, subject, body):
         usernames = []
         receivers = []
         if hubspot_response and ('total' in hubspot_response) and int(hubspot_response.get("total", '0')):
-            logger.info(hubspot_response)
             for member in hubspot_response["results"]:
                 email = member['properties']['email']
                 usernames.append(email)
