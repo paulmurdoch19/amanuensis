@@ -11,18 +11,18 @@ from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 
 import bcrypt
-import boto3
 import flask
 import requests
 from cdislogging import get_logger
 import html2text
-from botocore.exceptions import ClientError
 from userportaldatamodel.driver import SQLAlchemyDriver
 from werkzeug.datastructures import ImmutableMultiDict
 
 from amanuensis.auth.auth import get_jwt_from_header
 from amanuensis.config import config
 from amanuensis.errors import NotFound, UserError
+
+from aws_client.boto import BotoManager
 
 rng = SystemRandom()
 alphanumeric = string.ascii_uppercase + string.ascii_lowercase + string.digits
@@ -295,40 +295,10 @@ def send_email_ses(body, to_emails, subject):
         # if not self._html:
         #     self._format = 'text'
         #     body = self._text
-
-    client = boto3.client(
-        'ses',
-        region_name=region,
-        aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_SECRET_KEY
-    )
-    try:
-        response = client.send_email(
-            Destination={
-                'ToAddresses': to_emails,
-            },
-            Message={
-                'Body': {
-                    'Text': {
-                        'Charset': 'UTF-8',
-                        'Data': body_text,
-                    },
-                    'Html': {
-                        'Charset': 'UTF-8',
-                        'Data': body,
-                    },
-                },
-                'Subject': {
-                    'Charset': 'UTF-8',
-                    'Data': subject,
-                },
-            },
-            Source=sender,
-        )
-    except ClientError as e:
-        print(e.response['Error']['Message'])
-    else:
-        print("Email sent! Message ID:"),
-        print(response['MessageId'])
-    logging.debug(json.dumps(response))
-    return response
+    
+    botomanager = BotoManager({'region_name': region,
+							   'aws_access_key_id': AWS_ACCESS_KEY,
+							   'aws_secret_access_key': AWS_SECRET_ACCESS_KEY, logger)
+	botomanager.send_email(sender, to_emails, subject, body, body_text, 'UTF-8')
+    # logging.debug(json.dumps(response))
+    # return response

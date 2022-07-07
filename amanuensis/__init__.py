@@ -8,7 +8,6 @@ from userportaldatamodel.driver import SQLAlchemyDriver
 
 from amanuensis.errors import UserError
 from amanuensis.models import migrate
-from amanuensis.resources.aws.boto_manager import BotoManager
 
 from amanuensis.error_handler import get_error_response
 from amanuensis.config import config
@@ -29,6 +28,7 @@ from cdispyutils.config import get_value
 
 from gen3authz.client.arborist.client import ArboristClient
 
+from aws_client.boto import BotoManager
 # Can't read config yet. Just set to debug for now, else no handlers.
 # Later, in app_config(), will actually set level based on config
 logger = get_logger(__name__)
