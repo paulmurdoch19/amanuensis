@@ -4,8 +4,6 @@ solutions. Operations here assume the underlying operations in the interface
 will maintain coherence between both systems.
 """
 import functools
-import os
-import amanuensis
 
 from flask import request, jsonify, Blueprint, current_app
 from flask_sqlalchemy_session import current_session
