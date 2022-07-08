@@ -1,5 +1,4 @@
-import os
-import yaml
+from flask import current_app
 from sqlalchemy import func
 from cdislogging import get_logger
 from amanuensis.errors import NotFound, UserError
@@ -8,7 +7,6 @@ from amanuensis.models import (
 )
 
 # do this until AWS-related requests is handled by it's own project
-from amanuensis.resources.aws.boto_manager import BotoManager
 from pcdcutils.environment import is_env_enabled
 from amanuensis.config import AmanuensisConfig, config
 
@@ -54,7 +52,6 @@ def send_message(
         logger.debug(f"send_message emails (debug mode): {str(emails)}")
     elif emails:
         # Send the Message via AWS SES
-        boto_manager_instance = BotoManager(config, logger)
-        return boto_manager_instance.send_email_ses(body, emails, subject)
+        return current_app.boto.send_email_ses(body, emails, subject)
 
     return new_message
