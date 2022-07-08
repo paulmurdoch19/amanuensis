@@ -215,6 +215,23 @@ AWS_SES:
 HUBSPOT:
   API_KEY: ""
   
-
-
-
+CONSORTIUM_STATUS:
+  INSTRUCT:
+    Code:
+    #The order matters.
+      - "REJECTED"
+      - "DATA_DELIVERED"
+      - "IN_REVIEW"
+      - "APPROVED"
+    Name:
+    #Order correspondes to codes.
+      - "Rejected"
+      - "Data Delivered"
+      - "In Review"
+      - "Approved"
+    Final:
+      - "REJECTED"
+      - "DATA_DELIVERED"
+    Notify:
+      - "DATA_DELIVERED"
+  # Add consortia
