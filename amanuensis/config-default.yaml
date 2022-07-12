@@ -217,18 +217,12 @@ HUBSPOT:
   
 CONSORTIUM_STATUS:
   INSTRUCT:
-    Code:
-    #The order matters.
-      - "REJECTED"
-      - "DATA_DELIVERED"
-      - "IN_REVIEW"
-      - "APPROVED"
-    Name:
-    #Order correspondes to codes.
-      - "Rejected"
-      - "Data Delivered"
-      - "In Review"
-      - "Approved"
+  # In order of precedence.
+    Codes:
+      - REJECTED: "Rejected"
+      - DATA_DELIVERED: "Data Delivered"
+      - IN_REVIEW: "In Review"
+      - APPROVED: "Approved"
     Final:
       - "REJECTED"
       - "DATA_DELIVERED"

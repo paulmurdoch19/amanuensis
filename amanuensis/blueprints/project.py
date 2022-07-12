@@ -28,8 +28,8 @@ def determine_status_code(codes, consortium="Default"):
     then the status code will be "PENDING".
     """
     try:
-        status_codes = config["CONSORTIUM_STATUS"][consortium]["Code"]
-        status_names = config["CONSORTIUM_STATUS"][consortium]["Name"]
+        status_codes = list(config["CONSORTIUM_STATUS"][consortium]["Codes"].keys())
+        status_names = list(config["CONSORTIUM_STATUS"][consortium]["Codes"].values())
     except KeyError:
         logger.error(
             "Unable to load or find the consortium status, check your config file"

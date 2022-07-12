@@ -79,6 +79,7 @@ def update_project_state(
     """
     updated = False
     for request in requests:
+        consortium = request.consortium_data_contributor.code
         state_code = request.request_has_state[-1].state.code
 
         if state_code == state.code:
@@ -87,19 +88,19 @@ def update_project_state(
                     request.id, state.code
                 )
             )
-        elif state_code in consortium_statuses["Final"]:
+        elif state_code in consortium_statuses[consortium]["Final"]:
             raise UserError(
                 "Cannot change state of request {} from {} because it's a final state".format(
                     request.id, state.code
                 )
             )
         else:
-            request.request_has_state.append(
-                RequestState(state_id=state.id, request_id=request.id)
+            request.states.append(
+                state
             )
             updated = True
 
-    if state.code in consortium_statuses["Notify"] and updated:
+    if state.code in consortium_statuses[consortium]["Notify"] and updated:
         message = notify_user_project_status_update(
             current_user_id, request, current_session
         )
