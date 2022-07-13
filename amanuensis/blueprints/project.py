@@ -91,6 +91,7 @@ def get_projetcs():
                 submitted_at = request["create_date"]
 
             request_state = get_request_state(request["id"])
+            status_code = request_state.code
             requests_status_codes.append(request_state.code)
 
             if status_code == "DATA_DELIVERED" or status_code == "REJECTED":
