@@ -1,3 +1,4 @@
+from wsgiref.util import request_uri
 import flask
 from flask_sqlalchemy_session import current_session
 
@@ -9,6 +10,7 @@ from amanuensis.config import config
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError, InternalError
 from amanuensis.schema import ProjectSchema
+from amanuensis.resources.request import get_request_state
 from cdislogging import get_logger
 
 
@@ -77,6 +79,7 @@ def get_projetcs():
         project_status = None
         requests_status_codes = []
         consortium = None
+        request_state = None
         for request in project["requests"]:
             # get status
             # "status": "", // string ("IN REVIEW" | "APPROVED" | "REJECTED")
@@ -87,9 +90,8 @@ def get_projetcs():
             if not submitted_at:
                 submitted_at = request["create_date"]
 
-            state = request["states"][-1]
-            status_code = state["code"]
-            requests_status_codes.append(status_code)
+            request_state = get_request_state(request["id"])
+            requests_status_codes.append(request_state.code)
 
             if status_code == "DATA_DELIVERED" or status_code == "REJECTED":
                 if not completed_at:
