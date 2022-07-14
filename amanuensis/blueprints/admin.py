@@ -7,7 +7,7 @@ import functools
 
 from flask import request, jsonify, Blueprint, current_app
 from flask_sqlalchemy_session import current_session
-
+from datetime import datetime
 from cdislogging import get_logger
 
 from amanuensis.auth.auth import check_arborist_auth
@@ -203,4 +203,33 @@ def update_project_state():
 
     return jsonify(
         request_schema.dump(admin.update_project_state(project_id, state_id))
+    )
+
+
+@blueprint.route("/projects/date", methods=["PATCH"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def override_project_date():
+    """
+    Updates the update_date of a project.
+    """
+
+    project_id = request.get_json().get("project_id", None)
+    year = request.get_json().get("year", 0)
+    month = request.get_json().get("month", 0)
+    day = request.get_json().get("day", 0)
+    hour = request.get_json().get("hour", 0)
+    minute = request.get_json().get("minute", 0)
+    second = request.get_json().get("second", 0)
+    microsecond = request.get_json().get("microsecond", 1)
+
+    new_date = datetime(year, month, day, hour, minute, second, microsecond)
+
+    if not project_id or not new_date:
+        return UserError("There are missing params.")
+
+    request_schema = RequestSchema(many=True)
+
+    return jsonify(
+        request_schema.dump(admin.override_project_date(project_id, new_date))
     )
