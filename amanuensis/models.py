@@ -26,6 +26,7 @@ from userportaldatamodel.models import (AttributeList, AttributeListValue,
                                         Attributes, ConsortiumDataContributor,
                                         InputType, Message, Project, Receiver,
                                         Request, Search, FilterSourceType, State, Statistician)
+# from amanuensis.schema import StateSchema
 
 from amanuensis.config import config
 
@@ -78,9 +79,11 @@ def migrate(driver):
         )
 
     with driver.session as session:
+        # state_schema = StateSchema(many=True) 
+        # db_states = state_schema.dump(session.query(State).all()) 
         db_states = session.query(State).all()
         db_codes = [db_state.code for db_state in db_states]
-        states = list(filter(lambda x: x["code"] not in db_codes, states))
+        states = list(filter(lambda x: x.code not in db_codes, states))
         session.add(states)
 
 
