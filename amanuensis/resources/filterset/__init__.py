@@ -35,6 +35,8 @@ def get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
 #         return get_filter_sets_by_name(session, user_id, None, name, explorer_id)
 
 def get_by_user_id(user_id, is_admin):
+    if not isinstance(user_id, int):
+        user_id = int(user_id)
     with flask.current_app.db.session as session:
         return get_filter_sets_by_user_id(session, user_id, is_admin)
 

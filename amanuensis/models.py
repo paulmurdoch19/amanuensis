@@ -50,6 +50,36 @@ def migrate(driver):
 
     md = MetaData()
 
+    
+    states =  []
+    states.append(
+            State(
+                name="In Review"
+                code= "IN_REVIEW"
+                )
+        )
+    states.append(
+            State(
+                name="Rejected"
+                code= "REJECTED"
+                )
+        )
+    states.append(
+            State(
+                name="Approved"
+                code= "APPROVED"
+                )
+        )
+    states.append(
+            State(
+                name="Data Delivered"
+                code= "DATA_DELIVERED"
+                )
+        )
+
+    with driver.session as session:
+        session.add(states)
+
 
 
 def add_foreign_key_column_if_not_exist(

@@ -66,7 +66,7 @@ def get_filter_sets(current_session, logged_user_id, is_amanuensis_admin, filter
 
 
 def get_filter_sets_by_user_id(session, user_id, is_admin):
-    query = current_session.query(Search).filter(
+    query = session.query(Search).filter(
         Search.active == True, 
         Search.user_id == user_id
     )
