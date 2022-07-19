@@ -54,25 +54,25 @@ def migrate(driver):
     states =  []
     states.append(
             State(
-                name="In Review"
+                name="In Review",
                 code= "IN_REVIEW"
                 )
         )
     states.append(
             State(
-                name="Rejected"
+                name="Rejected",
                 code= "REJECTED"
                 )
         )
     states.append(
             State(
-                name="Approved"
+                name="Approved",
                 code= "APPROVED"
                 )
         )
     states.append(
             State(
-                name="Data Delivered"
+                name="Data Delivered",
                 code= "DATA_DELIVERED"
                 )
         )
