@@ -30,6 +30,13 @@ def get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
         return get_filter_sets(session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
         # return filterset_schema.dump(get_filter_sets(session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)) 
 
+# def get_by_name(user_id, name, explorer_id):
+#     with flask.current_app.db.session as session:
+#         return get_filter_sets_by_name(session, user_id, None, name, explorer_id)
+
+def get_by_user_id(user_id, is_admin):
+    with flask.current_app.db.session as session:
+        return get_filter_sets_by_user_id(session, user_id, is_admin)
 
 def create(logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list):
     with flask.current_app.db.session as session:    
