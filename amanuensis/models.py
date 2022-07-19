@@ -84,7 +84,8 @@ def migrate(driver):
         db_states = session.query(State).all()
         db_codes = [db_state.code for db_state in db_states]
         states = list(filter(lambda x: x.code not in db_codes, states))
-        session.add(states)
+        # session.add(states)
+        session.bulk_save_objects(states)
 
 
 
