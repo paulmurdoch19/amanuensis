@@ -286,6 +286,10 @@ def send_email_ses(body, to_emails, subject):
     region = config["AWS_SES"]["AWS_REGION"] if config["AWS_SES"]["AWS_REGION"] is not None else "us-east-1"
     AWS_ACCESS_KEY = config["AWS_SES"]["AWS_ACCESS_KEY"]
     AWS_SECRET_KEY = config["AWS_SES"]["AWS_SECRET_KEY"]
+
+    config = {'aws_access_key_id': AWS_ACCESS_KEY,
+              'aws_secret_access_key': AWS_SECRET_KEY,
+              'region_name': region}
     
     # if body is in html format, strip out html markup
     # otherwise body and body_text could have the same values
@@ -296,9 +300,7 @@ def send_email_ses(body, to_emails, subject):
         #     self._format = 'text'
         #     body = self._text
     
-    botomanager = BotoManager({'region_name': region,
-							   'aws_access_key_id': AWS_ACCESS_KEY,
-							   'aws_secret_access_key': AWS_SECRET_ACCESS_KEY, logger)
-	botomanager.send_email(sender, to_emails, subject, body, body_text, 'UTF-8')
+
+	flask.current_app.boto.send_email(sender, to_emails, subject, body, body_text, 'UTF-8', config)
     # logging.debug(json.dumps(response))
     # return response
