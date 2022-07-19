@@ -80,7 +80,7 @@ def migrate(driver):
     with driver.session as session:
         db_states = session.query(State).all()
         db_codes = [db_state.code for db_state in db_states]
-        states = filter(lambda x: x["code"] not in db_codes, states)
+        states = list(filter(lambda x: x["code"] not in db_codes, states))
         session.add(states)
 
 
