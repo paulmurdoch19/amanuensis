@@ -5,11 +5,11 @@ from amanuensis.models import Search, FilterSourceType
 
 __all__ = [
     "get_filter_sets",
-    # "get_filter_sets_by_name",
     "get_filter_sets_by_user_id",
     "create_filter_set",
     "delete_filter_set",
     "update_filter_set",
+    # "get_filter_sets_by_name",
 ]
 
 def get_filter_sets(current_session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id):

@@ -5,8 +5,7 @@ import json
 from cdislogging import get_logger
 
 from amanuensis.resources import userdatamodel as udm
-from amanuensis.resources.userdatamodel import get_filter_sets, create_filter_set, delete_filter_set, update_filter_set
-
+from amanuensis.resources.userdatamodel import get_filter_sets, create_filter_set, delete_filter_set, update_filter_set, get_filter_sets_by_user_id
 from amanuensis.schema import SearchSchema
 
 from amanuensis.config import config
