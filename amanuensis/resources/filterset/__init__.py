@@ -5,8 +5,7 @@ import json
 from cdislogging import get_logger
 
 from amanuensis.resources import userdatamodel as udm
-from amanuensis.resources.userdatamodel import get_filter_sets, create_filter_set, delete_filter_set, update_filter_set
-
+from amanuensis.resources.userdatamodel import get_filter_sets, create_filter_set, delete_filter_set, update_filter_set, get_filter_sets_by_user_id
 from amanuensis.schema import SearchSchema
 
 from amanuensis.config import config
@@ -30,6 +29,15 @@ def get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
         return get_filter_sets(session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
         # return filterset_schema.dump(get_filter_sets(session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)) 
 
+# def get_by_name(user_id, name, explorer_id):
+#     with flask.current_app.db.session as session:
+#         return get_filter_sets_by_name(session, user_id, None, name, explorer_id)
+
+def get_by_user_id(user_id, is_admin):
+    if not isinstance(user_id, int):
+        user_id = int(user_id)
+    with flask.current_app.db.session as session:
+        return get_filter_sets_by_user_id(session, user_id, is_admin)
 
 def create(logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list):
     with flask.current_app.db.session as session:    

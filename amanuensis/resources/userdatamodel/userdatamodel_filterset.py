@@ -5,9 +5,11 @@ from amanuensis.models import Search, FilterSourceType
 
 __all__ = [
     "get_filter_sets",
+    "get_filter_sets_by_user_id",
     "create_filter_set",
     "delete_filter_set",
     "update_filter_set",
+    # "get_filter_sets_by_name",
 ]
 
 def get_filter_sets(current_session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id):
@@ -33,6 +35,46 @@ def get_filter_sets(current_session, logged_user_id, is_amanuensis_admin, filter
         if not isinstance(filter_set_ids, list):
             filter_set_ids = [filter_set_ids]
         query = query.filter(Search.id.in_(filter_set_ids))
+
+    return query.all()
+
+# def get_filter_sets_by_name(current_session, user_id, is_amanuensis_admin, names, explorer_id):
+#     '''
+#     Returns all, one, or multiple by id
+#     filter_set_id may be id(int), ids(array), or None
+#     '''
+#     #TODO make class Search serializable
+#     query = current_session.query(Search).filter(
+#         Search.active == True, 
+#         Search.user_id == user_id
+#     )
+
+#     if is_amanuensis_admin:
+#         query = query.filter(Search.filter_source == FilterSourceType.manual)
+#     else:
+#         query = query.filter(
+#             Search.filter_source_internal_id == explorer_id,
+#             Search.filter_source == FilterSourceType.explorer
+#         )   
+
+#     if names:
+#         if not isinstance(names, list):
+#             names = [names]
+#         query = query.filter(Search.name.in_(names))
+
+#     return query.all()
+
+
+def get_filter_sets_by_user_id(session, user_id, is_admin):
+    query = session.query(Search).filter(
+        Search.active == True, 
+        Search.user_id == user_id
+    )
+
+    if not is_admin:
+        query = query.filter(
+            Search.filter_source == FilterSourceType.explorer
+        )   
 
     return query.all()
 
