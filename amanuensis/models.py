@@ -98,10 +98,10 @@ def migrate(driver):
         states = list(filter(lambda x: x.code not in db_codes, states))
         session.bulk_save_objects(states)
 
-        db_consortums = session.query(ConsortiumDataContributor).all()
-        db_consortum_codes = [db_consortum.code for db_consortum in db_consortums]
-        consortums = list(filter(lambda x: x.code not in db_consortum_codes, consortums))
-        session.bulk_save_objects(consortums)
+        db_consortiums = session.query(ConsortiumDataContributor).all()
+        db_consortium_codes = [db_consortium.code for db_consortium in db_consortiums]
+        consortiums = list(filter(lambda x: x.code not in db_consortium_codes, consortiums))
+        session.bulk_save_objects(consortiums)
 
 
 
