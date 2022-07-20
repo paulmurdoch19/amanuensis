@@ -26,7 +26,6 @@ from userportaldatamodel.models import (AttributeList, AttributeListValue,
                                         Attributes, ConsortiumDataContributor,
                                         InputType, Message, Project, Receiver,
                                         Request, Search, FilterSourceType, State, Statistician)
-# from amanuensis.schema import StateSchema
 
 from amanuensis.config import config
 
@@ -51,7 +50,7 @@ def migrate(driver):
 
     md = MetaData()
 
-    
+
     states =  []
     states.append(
             State(
@@ -78,14 +77,31 @@ def migrate(driver):
                 )
         )
 
+    consortiums = []
+    consortiums.append(
+            ConsortiumDataContributor(
+                name="INRG", 
+                code ="INRG"
+                )
+        )
+    consortiums.append(
+            ConsortiumDataContributor(
+                name="INSTRUCT", 
+                code ="INSTRUCT"
+                )
+        )
+
+
     with driver.session as session:
-        # state_schema = StateSchema(many=True) 
-        # db_states = state_schema.dump(session.query(State).all()) 
         db_states = session.query(State).all()
         db_codes = [db_state.code for db_state in db_states]
         states = list(filter(lambda x: x.code not in db_codes, states))
-        # session.add(states)
         session.bulk_save_objects(states)
+
+        db_consortums = session.query(ConsortiumDataContributor).all()
+        db_consortum_codes = [db_consortum.code for db_consortum in db_consortums]
+        consortums = list(filter(lambda x: x.code not in db_consortum_codes, consortums))
+        session.bulk_save_objects(consortums)
 
 
 
