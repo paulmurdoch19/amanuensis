@@ -3,9 +3,10 @@ import os
 
 import flask
 from flask_cors import CORS
+from sqlalchemy import SQLAlchemy
 from flask_sqlalchemy_session import flask_scoped_session, current_session
 from userportaldatamodel.driver import SQLAlchemyDriver
-
+from flask_migrate import Migrate
 from amanuensis.errors import UserError
 from amanuensis.models import migrate
 from amanuensis.resources.aws.boto_manager import BotoManager
@@ -34,6 +35,8 @@ from gen3authz.client.arborist.client import ArboristClient
 logger = get_logger(__name__)
 
 app = flask.Flask(__name__)
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 CORS(app=app, headers=["content-type", "accept"], expose_headers="*")
 
 
