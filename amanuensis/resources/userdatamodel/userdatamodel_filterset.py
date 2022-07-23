@@ -23,9 +23,7 @@ def get_filter_sets(current_session, logged_user_id, is_amanuensis_admin, filter
         Search.user_id == logged_user_id
     )
 
-    if is_amanuensis_admin:
-        query = query.filter(Search.filter_source == FilterSourceType.manual)
-    else:
+    if not is_amanuensis_admin:
         query = query.filter(
             Search.filter_source_internal_id == explorer_id,
             Search.filter_source == FilterSourceType.explorer
