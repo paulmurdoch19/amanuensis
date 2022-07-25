@@ -99,14 +99,19 @@ def create_search():
     Returns a json object
     """
     user_id = request.get_json().get("user_id", None)
+
+    #TODO check it is present in fence
+
     if not user_id:
         raise UserError("Missing user_id in the payload")
+
+
 
     # get the explorer_id from the querystring
     # explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
     name = request.get_json().get("name", None)
-    graphql_object = request.get_json().get("filters", None)
+    graphql_object = request.get_json().get("filters", {})
     description = request.get_json().get("description", None)
     ids_list = request.get_json().get("ids_list", None)
     
@@ -234,6 +239,10 @@ def update_project_state():
     return jsonify(request_schema.dump(admin.update_project_state(project_id, state_id)))
 
 
-
-
+@blueprint.route("/projects_by_users/<user_id>/<user_email>", methods=["GET"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+def get_projetcs_by_user_id(user_id, user_email):
+    project_schema = ProjectSchema(many=True)
+    projects = project_schema.dump(project.get_all(user_id, user_email, None))
+    return flask.jsonify(projects)
 
