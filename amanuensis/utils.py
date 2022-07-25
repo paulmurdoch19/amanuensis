@@ -168,7 +168,7 @@ def get_consortium_list(path, src_filter, ids_list):
         raise NotFound("There is no filter specified and associated with the project you are trying to create")
 
     isFilter = True if src_filter else False
-    transformed_filter = getGQLFilter(src_filter) if isFilter else getGQLFilterIdsList(ids_list)
+    transformed_filter = src_filter if isFilter else getGQLFilterIdsList(ids_list)
     target_filter = {}
     target_filter["filter"] = transformed_filter
 

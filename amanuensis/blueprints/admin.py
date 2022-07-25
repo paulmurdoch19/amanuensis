@@ -106,11 +106,11 @@ def create_search():
     # explorer_id = flask.request.args.get('explorerId', default=1, type=int)
 
     name = request.get_json().get("name", None)
-    filter_object = request.get_json().get("filters", None)
+    graphql_object = request.get_json().get("filters", None)
     description = request.get_json().get("description", None)
     ids_list = request.get_json().get("ids_list", None)
     
-    return jsonify(filterset.create(user_id, True, None, name, description, filter_object, ids_list))
+    return jsonify(filterset.create(user_id, True, None, name, description, None, ids_list, graphql_object))
 
    
 # @blueprint.route("/filter-sets", methods=["GET"])
