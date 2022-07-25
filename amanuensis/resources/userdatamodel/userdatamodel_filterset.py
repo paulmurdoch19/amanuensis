@@ -77,7 +77,7 @@ def get_filter_sets_by_user_id(session, user_id, is_admin):
     return query.all()
 
 
-def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list):
+def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list, graphql_object):
     new_filter_set = Search(
         user_id=logged_user_id, 
         filter_source_internal_id=explorer_id,
@@ -86,7 +86,8 @@ def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, expl
         name=name, 
         description=description, 
         filter_object=filter_object,
-        ids_list=ids_list
+        ids_list=ids_list,
+        graphql_object=graphql_object
     )
     #TODO add es_index, add dataset_version
     current_session.add(new_filter_set)
@@ -98,7 +99,8 @@ def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, expl
             "id": new_filter_set.id,
             "filter_source": new_filter_set.filter_source,
             "description": new_filter_set.description, 
-            "ids_list": new_filter_set.ids_list
+            "ids_list": new_filter_set.ids_list,
+            "graphql_object": new_filter_set.graphql_object
         }
     else: 
         return {
