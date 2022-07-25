@@ -244,5 +244,5 @@ def update_project_state():
 def get_projetcs_by_user_id(user_id, user_email):
     project_schema = ProjectSchema(many=True)
     projects = project_schema.dump(project.get_all(user_id, user_email, None))
-    return flask.jsonify(projects)
+    return jsonify(projects)
 
