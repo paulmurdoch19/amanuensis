@@ -67,7 +67,7 @@ def create_search():
 
     name = flask.request.get_json().get("name", None)
     filter_object = flask.request.get_json().get("filters", {})
-    graphql_object = flask.request.get_json().get("graphql_object", {})
+    graphql_object = flask.request.get_json().get("gqlFilter", {})
     description = flask.request.get_json().get("description", None)
     ids_list = flask.request.get_json().get("ids_list", None)
     
