@@ -1,9 +1,7 @@
 from collections import OrderedDict
 import os
-
 import flask
 from flask_cors import CORS
-from sqlalchemy import SQLAlchemy
 from flask_sqlalchemy_session import flask_scoped_session, current_session
 from userportaldatamodel.driver import SQLAlchemyDriver
 from flask_migrate import Migrate
@@ -21,6 +19,7 @@ import amanuensis.blueprints.request
 # import amanuensis.blueprints.message
 import amanuensis.blueprints.admin
 import amanuensis.blueprints.download_urls
+from flask_migrate import Migrate
 
 from pcdcutils.signature import SignatureManager
 
@@ -35,8 +34,6 @@ from gen3authz.client.arborist.client import ArboristClient
 logger = get_logger(__name__)
 
 app = flask.Flask(__name__)
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 CORS(app=app, headers=["content-type", "accept"], expose_headers="*")
 
 
@@ -76,7 +73,7 @@ def app_sessions(app):
     #       initialization soon
     if config["ENABLE_DB_MIGRATION"]:
         logger.info("Running database migration...")
-        migrate(app.db)
+
         logger.info("Done running database migration.")
     else:
         logger.info("NOT running database migration.")
@@ -223,7 +220,6 @@ def handle_error(error):
     Register an error handler for general exceptions.
     """
     return get_error_response(error)
-
 
 
 
