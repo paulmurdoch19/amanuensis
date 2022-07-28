@@ -21,34 +21,43 @@ logger = get_logger(__name__)
 
 # cache = SimpleCache()
 
-
-def determine_status_code(codes, consortium="Default"):
+def determine_status_code(statuses_by_consortium):
     """
-    Takes status codes and returns the status name based on their precedence.
+    Takes status codes from all the requests within a project and returns the project status based on their precedence.
     Example: if all request status are "APPROVED", then the status code will be "APPROVED".
     However, if one of the request status is "PENDING", and "PENDING" has higher precedence
     then the status code will be "PENDING".
     """
     try:
-        status_codes = list(config["CONSORTIUM_STATUS"][consortium]["Codes"].keys())
-        status_names = list(config["CONSORTIUM_STATUS"][consortium]["Codes"].values())
+        overall_status = None
+        overall_consortium = None
+        overall_dist_to_end = None
+        for status in statuses_by_consortium:
+            ordered_statuses_by_consortium = list(config["CONSORTIUM_STATUS"][status["consortium"]]["CODES"])
+            final_statuses = list(config["CONSORTIUM_STATUS"][status["consortium"]]["FINAL"])
+            
+            if status["status_code"] not in ordered_statuses_by_consortium:
+                raise InternalError("{} not found in the config".format(status["status_code"]))
+
+            approved_index = ordered_statuses_by_consortium.index("DATA_DELIVERED")
+            index = ordered_statuses_by_consortium.index(status["status_code"])
+            dist_to_end = approved_index - index
+
+            if status["status_code"] in final_statuses:
+                return {"status": status["status_code"], "completed_at": status["update_date"]} 
+
+            if not overall_status or dist_to_end > overall_dist_to_end:
+                overall_dist_to_end = dist_to_end
+                overall_consortium = status["consortium"]
+                overall_status = status["status_code"]
+
+        return {"status": overall_status}
+
     except KeyError:
         logger.error(
             "Unable to load or find the consortium status, check your config file"
         )
-        return "UNKNOWN"
-    index = None
-
-    for code in codes:
-        try:
-            if not index:
-                index = status_codes.index(code)
-
-            index = min(index, status_codes.index(code))
-        except ValueError as err:
-            print(err)
-
-    return status_names[index]
+        raise InternalError("Unable to load or find the consortium status, check your config file")
 
 
 @blueprint.route("/", methods=["GET"])
@@ -72,34 +81,20 @@ def get_projetcs():
         tmp_project["id"] = project["id"]
         tmp_project["name"] = project["name"]
 
-        status_code = None
-        status_date = None
         submitted_at = None
         completed_at = None
         project_status = None
-        requests_status_codes = []
-        consortium = None
-        request_state = None
+        statuses_by_consortium = []
         for request in project["requests"]:
-            # get status
-            # "status": "", // string ("IN REVIEW" | "APPROVED" | "REJECTED")
-            # "submitted_at": "", // string (timestamp) or null
-            # "completed_at": "" // string (timestamp) or null
-            if not consortium:
-                consortium = request["consortium_data_contributor"]["code"]
+            #TODO this should come from the get_all above and not make extra queries to the DB. 
+            request_state = get_request_state(request["id"])
+            statuses_by_consortium.append({"status_code": request_state.code, "consortium": request["consortium_data_contributor"]["code"], "update_date": request_state.update_date})
+
             if not submitted_at:
                 submitted_at = request["create_date"]
 
-            request_state = get_request_state(request["id"])
-            status_code = request_state.code
-            requests_status_codes.append(request_state.code)
-
-            if status_code == "DATA_DELIVERED" or status_code == "REJECTED":
-                if not completed_at:
-                    completed_at = request["update_date"]
-
         project_status = determine_status_code(
-            requests_status_codes, consortium=consortium
+            statuses_by_consortium
         )
 
         fence_users = fence_get_users(config=config, ids=[project["user_id"]])
@@ -115,9 +110,9 @@ def get_projetcs():
         tmp_project["researcher"]["last_name"] = fence_users[0]["last_name"]
         tmp_project["researcher"]["institution"] = fence_users[0]["institution"]
 
-        tmp_project["status"] = project_status
+        tmp_project["status"] = project_status["status"]
         tmp_project["submitted_at"] = submitted_at
-        tmp_project["completed_at"] = completed_at
+        tmp_project["completed_at"] = project_status["completed_at"] if "completed_at" in project_status else None
 
         tmp_project["has_access"] = False
         if "statisticians" in project:

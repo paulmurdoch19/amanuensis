@@ -221,14 +221,28 @@ HUBSPOT:
 CONSORTIUM_STATUS:
   INSTRUCT:
   # In order of precedence.
-    Codes:
-      - REJECTED: "Rejected"
-      - DATA_DELIVERED: "Data Delivered"
-      - IN_REVIEW: "In Review"
-      - APPROVED: "Approved"
-    Final:
+    CODES:
+      - "IN_REVIEW"
+      - "REJECTED"
+      - "APPROVED"
+      - "DATA_DELIVERED"
+    FINAL:
       - "REJECTED"
       - "DATA_DELIVERED"
-    Notify:
+    NOTIFY:
+      - "DATA_DELIVERED"
+  INRG:
+  # In order of precedence.
+    CODES:
+      - "IN_REVIEW"
+      - "REJECTED"
+      - "APPROVED"
+      - "DATA_DELIVERED"
+    FINAL:
+      - "REJECTED"
+      - "DATA_DELIVERED"
+    NOTIFY:
       - "DATA_DELIVERED"
   # Add consortia
+
+

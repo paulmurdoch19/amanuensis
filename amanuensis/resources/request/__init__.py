@@ -46,7 +46,7 @@ def get(logged_user_id, consortium=None):
         return requests
 
 
-def get_by_id(logged_user_id, request_id, current_session):
+def get_by_id(logged_user_id, request_id):
 
     # if is_env_enabled('GEN3_DEBUG') and int(request_id) == 12345:
     #     request = Request()
@@ -76,3 +76,5 @@ def get_request_state(request_id):
             .first()
             .state
         )
+
+        
