@@ -1,4 +1,5 @@
 from sqlalchemy import func, or_
+import amanuensis
 
 
 from amanuensis.errors import NotFound, UserError
@@ -25,8 +26,7 @@ def get_project_by_consortium(current_session, consortium, logged_user_id):
 def get_project_by_user(current_session, logged_user_id, logged_user_email):
     return current_session.query(Project).join(Project.statisticians).filter(or_(Project.user_id == logged_user_id, Statistician.user_id == logged_user_id, Statistician.email == logged_user_email)).all()
 
-
-def get_project_by_id(current_session, logged_user_id, project_id):
+def get_project_by_id(current_session, project_id):
     return current_session.query(Project).filter(
             # Project.user_id == logged_user_id,
             Project.id == project_id

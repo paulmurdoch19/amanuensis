@@ -21,10 +21,8 @@ from amanuensis.utils import get_consortium_list
 from amanuensis.resources.fence import fence_get_users
 
 from amanuensis.models import (
-    Search,
     Request,
-    ConsortiumDataContributor,
-    Statistician
+    Statistician,
 )
 
 from amanuensis.schema import ProjectSchema
@@ -154,5 +152,4 @@ def update(project_id, approved_url, filter_set_ids):
 
     with flask.current_app.db.session as session:
         return update_project(session, project_id, approved_url)
-
 
