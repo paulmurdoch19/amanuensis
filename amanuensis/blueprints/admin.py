@@ -218,10 +218,6 @@ def override_project_date():
     year = request.get_json().get("year", 0)
     month = request.get_json().get("month", 0)
     day = request.get_json().get("day", 0)
-    hour = request.get_json().get("hour", 0)
-    minute = request.get_json().get("minute", 0)
-    second = request.get_json().get("second", 0)
-    microsecond = request.get_json().get("microsecond", 1)
 
     new_date = datetime(year, month, day, hour, minute, second, microsecond)
 
