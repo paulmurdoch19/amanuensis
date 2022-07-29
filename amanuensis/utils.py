@@ -24,6 +24,7 @@ from amanuensis.errors import NotFound, UserError
 
 from aws_client.boto import BotoManager
 
+
 rng = SystemRandom()
 alphanumeric = string.ascii_uppercase + string.ascii_lowercase + string.digits
 logger = get_logger(__name__)
