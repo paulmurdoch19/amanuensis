@@ -8,7 +8,6 @@ from amanuensis.models import (
 
 # do this until AWS-related requests is handled by it's own project
 from pcdcutils.environment import is_env_enabled
-from amanuensis.config import AmanuensisConfig, config
 
 logger = get_logger(__name__)
 
@@ -55,3 +54,4 @@ def send_message(
         return current_app.boto.send_email_ses(body, emails, subject)
 
     return new_message
+

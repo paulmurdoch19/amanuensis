@@ -81,7 +81,7 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         # Get a list of consortiums the cohort of data is from
         # example or retuned values - consoritums = ['INRG']
         # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
-        consortiums.extend(get_consortium_list(path, s.filter_object, s.ids_list))    
+        consortiums.extend(get_consortium_list(path, s.graphql_object, s.ids_list))    
     consortiums = list(set(consortiums))
 
     # Defaulst state is SUBMITTED
