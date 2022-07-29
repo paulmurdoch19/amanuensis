@@ -51,6 +51,59 @@ def migrate(driver):
     md = MetaData()
 
 
+    states =  []
+    states.append(
+            State(
+                name="In Review",
+                code= "IN_REVIEW"
+                )
+        )
+    states.append(
+            State(
+                name="Rejected",
+                code= "REJECTED"
+                )
+        )
+    states.append(
+            State(
+                name="Approved",
+                code= "APPROVED"
+                )
+        )
+    states.append(
+            State(
+                name="Data Delivered",
+                code= "DATA_DELIVERED"
+                )
+        )
+
+    consortiums = []
+    consortiums.append(
+            ConsortiumDataContributor(
+                name="INRG", 
+                code ="INRG"
+                )
+        )
+    consortiums.append(
+            ConsortiumDataContributor(
+                name="INSTRUCT", 
+                code ="INSTRUCT"
+                )
+        )
+
+
+    with driver.session as session:
+        db_states = session.query(State).all()
+        db_codes = [db_state.code for db_state in db_states]
+        states = list(filter(lambda x: x.code not in db_codes, states))
+        session.bulk_save_objects(states)
+
+        db_consortiums = session.query(ConsortiumDataContributor).all()
+        db_consortium_codes = [db_consortium.code for db_consortium in db_consortiums]
+        consortiums = list(filter(lambda x: x.code not in db_consortium_codes, consortiums))
+        session.bulk_save_objects(consortiums)
+
+
 
 def add_foreign_key_column_if_not_exist(
     table_name,

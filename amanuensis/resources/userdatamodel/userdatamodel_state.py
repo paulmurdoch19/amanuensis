@@ -1,6 +1,6 @@
 from logging import getLogger
 from sqlalchemy import func, desc
-from amanuensis.resources.message import send_message
+from amanuensis.resources.message import send_admin_message
 from amanuensis.resources.userdatamodel.userdatamodel_project import get_project_by_id
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
@@ -57,25 +57,30 @@ def get_all_states(current_session):
     return current_session.query(State).all()
 
 
-def notify_user_project_status_update(current_user_id, request, current_session):
+# TODO move these 2 functions in the resources, there is logic here, the userdatamodel folder should contain mostly DB operation
+def notify_user_project_status_update(current_session, project_id, consortiums):
     """
     Notify the users when project state changes.
     """
-    project = get_project_by_id(current_session, request.project_id)
+    project = get_project_by_id(current_session, project_id)
     email_subject = f"Project {project.name}: Data Delivered"
     email_body = f"The project f{project.name} data was delivered."
 
-    return send_message(current_user_id, request.id, email_subject, email_body)
+    return send_admin_message(project, consortiums, email_subject, email_body)
 
 
 def update_project_state(
-    current_user_id, current_session, requests, state, consortium_statuses
+    current_session, requests, state, consortium_statuses, project_id
 ):
     """
     Updates the state for a project, including all requests in the project. Notifies users when the state changes to DATA_DELIVERED.
     """
     updated = False
+    consortiums = []
     for request in requests:
+        consortium = request.consortium_data_contributor.code
+        consortiums.append(consortium)
+        # TODO We have no certaintes for this to be ordered, look at the date
         state_code = request.request_has_state[-1].state.code
 
         if state_code == state.code:
@@ -84,23 +89,25 @@ def update_project_state(
                     request.id, state.code
                 )
             )
-        elif state_code in consortium_statuses["Final"]:
+        elif state_code in consortium_statuses[consortium]["FINAL"]:
             raise UserError(
                 "Cannot change state of request {} from {} because it's a final state".format(
                     request.id, state.code
                 )
             )
         else:
-            request.request_has_state.append(
-                RequestState(state_id=state.id, request_id=request.id)
+            request.states.append(
+                state
             )
             updated = True
 
-    if state.code in consortium_statuses["Notify"] and updated:
-        message = notify_user_project_status_update(
-            current_user_id, request, current_session
+    if state.code in consortium_statuses[consortium]["NOTIFY"] and updated:
+        notify_user_project_status_update(
+            current_session,
+            project_id,
+            consortiums
         )
-        logger.info(message)
 
     current_session.flush()
     return requests
+#END TODO

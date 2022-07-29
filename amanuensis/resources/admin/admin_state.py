@@ -58,10 +58,9 @@ def update_project_state(project_id, state_id):
             raise NotFound("The state with id {} has not been found".format(state_id))
 
         request_schema = RequestSchema(many=True)
-        consortium = requests[0].consortium_data_contributor.code
-        consortium_statuses = config["CONSORTIUM_STATUS"][consortium]
+        consortium_statuses = config["CONSORTIUM_STATUS"]
         requests = udm.update_project_state(
-            current_user.id, session, requests, state, consortium_statuses
+            session, requests, state, consortium_statuses, project_id
         )
         request_schema.dump(requests)
         return requests
