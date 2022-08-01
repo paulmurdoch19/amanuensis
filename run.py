@@ -1,5 +1,7 @@
 from amanuensis import app, app_config, app_register_blueprints, app_sessions, config
 import argparse
+from alembic.config import main as alembic_main
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -28,6 +30,11 @@ if config.get("MOCK_STORAGE"):
     patcher = patch("amanuensis.resources.storage.get_client", get_client)
     patcher.start()
 
+
+if config.get("ENABLE_DB_MIGRATION"):
+    alembic_main(["--raiseerr", "upgrade", "head"])
+
+    
 app_sessions(app)
 app_register_blueprints(app)
 app.run(debug=True, port=8000)

@@ -5,7 +5,7 @@ import os
 from sqlalchemy import engine_from_config, pool
 
 from cdislogging import get_logger
-from userdatamodel import Base
+from userportaldatamodel import Base
 
 from amanuensis.config import config as amanuensis_config
 from amanuensis.settings import CONFIG_SEARCH_FOLDERS
@@ -25,12 +25,17 @@ logger = logging.getLogger("amanuensis.alembic")
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+amanuensis_config.load(
+    config_path=os.environ.get("DEFAULT_CFG_PATH"), 
+    search_folders=CONFIG_SEARCH_FOLDERS,  # for deployments
+)
 
 config.set_main_option("sqlalchemy.url", str(amanuensis_config["DB"]))
 
@@ -86,7 +91,8 @@ def run_migrations_online() -> None:
                 # Solution based on https://github.com/sqlalchemy/alembic/issues/633
                 # TODO lock the DB for all processes during migrations
                 connection.execute(
-                    f"SELECT pg_advisory_xact_lock({amanuensis_config['DB_MIGRATION_POSTGRES_LOCK_KEY']});"
+                    # f"SELECT pg_advisory_xact_lock({amanuensis_config['DB_MIGRATION_POSTGRES_LOCK_KEY']});"
+                    f"SELECT pg_advisory_xact_lock(100);"
                 )
             context.run_migrations()
             if connection.dialect.name == "postgresql":

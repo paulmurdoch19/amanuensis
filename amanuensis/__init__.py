@@ -4,7 +4,6 @@ import flask
 from flask_cors import CORS
 from flask_sqlalchemy_session import flask_scoped_session, current_session
 from userportaldatamodel.driver import SQLAlchemyDriver
-from flask_migrate import Migrate
 from amanuensis.errors import UserError
 from amanuensis.models import migrate
 from amanuensis.resources.aws.boto_manager import BotoManager
@@ -19,7 +18,6 @@ import amanuensis.blueprints.request
 # import amanuensis.blueprints.message
 import amanuensis.blueprints.admin
 import amanuensis.blueprints.download_urls
-from flask_migrate import Migrate
 
 from pcdcutils.signature import SignatureManager
 
@@ -66,17 +64,10 @@ def app_init(
 
 
 def app_sessions(app):
+    ''' Override userdatamodel's `setup_db` since Alembic handles the migrations now. '''
     app.url_map.strict_slashes = False
+    SQLAlchemyDriver.setup_db = lambda _: None
     app.db = SQLAlchemyDriver(config["DB"])
-    logger.warning("DB connected")
-    # TODO: we will make a more robust migration system external from the application
-    #       initialization soon
-    if config["ENABLE_DB_MIGRATION"]:
-        logger.info("Running database migration...")
-
-        logger.info("Done running database migration.")
-    else:
-        logger.info("NOT running database migration.")
 
     session = flask_scoped_session(app.db.Session, app)  # noqa
 
