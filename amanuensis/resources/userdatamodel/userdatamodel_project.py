@@ -1,11 +1,15 @@
 from sqlalchemy import func, or_
 
+from sqlalchemy.orm import aliased
+
 
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Project,
     Search,
-    Statistician
+    AssociatedUser,
+    ProjectAssociatedUser,
+    ASSOCIATED_USER_ROLES
 )
 
 __all__ = [
@@ -14,7 +18,8 @@ __all__ = [
     "get_project_by_consortium",
     "get_project_by_user",
     "get_project_by_id",
-    "get_statisticians"
+    "get_associated_users",
+    "update_associated_users",
 ]
 
 
@@ -23,17 +28,29 @@ def get_project_by_consortium(current_session, consortium, logged_user_id):
 
 
 def get_project_by_user(current_session, logged_user_id, logged_user_email):
-    return current_session.query(Project).join(Project.statisticians).filter(or_(Project.user_id == logged_user_id, Statistician.user_id == logged_user_id, Statistician.email == logged_user_email)).all()
+    return current_session.query(Project).filter(Project.active == True).join(Project.associated_users).filter(or_(Project.user_id == logged_user_id, AssociatedUser.user_id == logged_user_id, AssociatedUser.email == logged_user_email)).all()
 
 
 def get_project_by_id(current_session, logged_user_id, project_id):
+    # assoc_users = aliased(AssociatedUser, name='associated_user_2')
+
+          # .join(dict_code_type, dict_code_type.codeValue == Device.deviceType) \
+
+    # return current_session.query(Project).filter(
+    #         # Project.user_id == logged_user_id,
+    #         Project.id == project_id
+    #     ).join(Project.associated_users).join(ProjectAssociatedUser, Project.associated_users_roles).join(assoc_users, assoc_users.id == ProjectAssociatedUser.associated_user_id).first()
+
     return current_session.query(Project).filter(
-            # Project.user_id == logged_user_id,
             Project.id == project_id
-        ).join(Project.statisticians).first()
+        ).join(
+            ProjectAssociatedUser, Project.associated_users_roles
+        ).join(
+            AssociatedUser, ProjectAssociatedUser.associated_user).first()
 
 
-def create_project(current_session, user_id, description, name, institution, searches, requests, statisticians):
+
+def create_project(current_session, user_id, description, name, institution, searches, requests, associated_users):
     """
     Creates a project with an associated auth_id and storage access
     """
@@ -49,7 +66,7 @@ def create_project(current_session, user_id, description, name, institution, sea
     current_session.flush()
     new_project.searches.extend(searches)
     new_project.requests.extend(requests)
-    new_project.statisticians.extend(statisticians)
+    new_project.associated_users.extend(associated_users)
 
     # current_session.flush()
     # current_session.add(new_project)
@@ -82,10 +99,42 @@ def update_project(current_session, project_id, approved_url=None, searches=None
         return {"code": 500, "error": "Nothing has been updated, check the logs to see what happened during the transaction."}
 
 
-def get_statisticians(current_session, emails):
+def get_associated_users(current_session, emails):
     if not emails:
         return []
-    return current_session.query(Statistician).filter(Statistician.email.in_(emails)).all()
+    return current_session.query(AssociatedUser).filter(AssociatedUser.email.in_(emails)).all()
+
+
+def update_associated_users(current_session, project_id, id, email, role):
+    user_by_id = None
+    user_by_email = None
+
+    if id:
+        user_by_id = current_session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.user_id == id).first()
+        # q = s.query(Parent).join(Child, Parent.child).filter(Child.value > 20)
+
+    if email:
+        user_by_email = current_session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.email == email).first()
+        # user_by_email = ccurrent_session.query(AssociatedUser).filter(
+        #     AssociatedUser.id == id
+        # ).join(Project, AssociatedUser.projects).filter(
+        #     Project.id == project_id
+        # ).first()
+
+    # print(user_by_id)
+    # print(user_by_email)
+    # print(email)
+    # print(id)
+    if user_by_id:
+        user_by_id.role = role
+    elif user_by_email:
+        user_by_email.role = role
+    else:
+        raise NotFound("No user associated with project {} found.".format(project_id))
+
+    # current_session.commit()
+    current_session.flush()
+    return "200"
 
 
 # def delete_project(current_session, project_name):

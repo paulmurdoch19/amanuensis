@@ -12,13 +12,14 @@ from cdislogging import get_logger
 
 from amanuensis.auth.auth import check_arborist_auth
 from amanuensis.config import config
-from amanuensis.errors import UserError
+from amanuensis.errors import UserError, NotFound
 
 from amanuensis.resources import filterset
 from amanuensis.resources import project
 from amanuensis.resources import admin
 
 from amanuensis.schema import ProjectSchema, StateSchema, RequestSchema, ConsortiumDataContributorSchema
+from amanuensis.models import ASSOCIATED_USER_ROLES
 
 
 logger = get_logger(__name__)
@@ -185,10 +186,9 @@ def create_project():
     if not user_id:
         raise UserError("You can't create a Project without specifying the user the project will be assigned to.")
 
-    statistician_emails = request.get_json().get("statistician_emails", None)
-    if not statistician_emails:
-        raise UserError("You can't create a Project without specifying the statisticians that will access the data")
-
+    associated_users_emails = request.get_json().get("associated_users_emails", None)
+    if not associated_users_emails:
+        raise UserError("You can't create a Project without specifying the associated_users that will access the data")
 
     name = request.get_json().get("name", None)
     description = request.get_json().get("description", None)
@@ -197,7 +197,7 @@ def create_project():
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution, statistician_emails)))
+    return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution, associated_users_emails)))
 
 
 @blueprint.route("/projects", methods=["PUT"])
@@ -237,6 +237,28 @@ def update_project_state():
 
     request_schema = RequestSchema(many=True)
     return jsonify(request_schema.dump(admin.update_project_state(project_id, state_id)))
+
+
+@blueprint.route("/associated_user_role", methods=["PUT"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def update_associated_user_role():
+    """
+    Update a project attributes
+
+    Returns a json object
+    """
+    associated_user_id = request.get_json().get("user_id", None)
+    associated_user_email = request.get_json().get("email", None)
+    if not associated_user_id and not associated_user_email:
+        raise UserError("A user_id and or an associated_user_email is required for this endpoint.")
+
+    project_id = request.get_json().get("project_id", None)
+    role = "DATA_ACCESS"
+    if role not in ASSOCIATED_USER_ROLES:
+        raise NotFound("The role {} is not in the allowed list, reach out to pcdc_help@lists.uchicago.edu".format(role))
+
+    return jsonify(admin.update_role(project_id, associated_user_id, associated_user_email, role))
 
 
 @blueprint.route("/projects_by_users/<user_id>/<user_email>", methods=["GET"])
