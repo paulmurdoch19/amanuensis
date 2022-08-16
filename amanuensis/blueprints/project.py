@@ -115,12 +115,9 @@ def get_projetcs():
         tmp_project["completed_at"] = project_status["completed_at"] if "completed_at" in project_status else None
 
         tmp_project["has_access"] = False
-        if "statisticians" in project:
-            for statistician in project["statisticians"]:
-                if (
-                    logged_user_id == statistician["user_id"]
-                    or logged_user_email == statistician["email"]
-                ):
+        if "associated_users" in project:
+            for associated_user in project["associated_users"]:
+                if logged_user_id == associated_user["user_id"] or logged_user_email == associated_user["email"]:
                     tmp_project["has_access"] = True
                     break
 
