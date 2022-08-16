@@ -6,9 +6,6 @@ from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     State,
     ConsortiumDataContributor,
-    RequestState,
-    Receiver,
-    Project,
 )
 
 __all__ = [

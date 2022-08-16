@@ -11,6 +11,10 @@ from amanuensis.models import (
     AssociatedUser,
     ProjectAssociatedUser,
     ASSOCIATED_USER_ROLES
+    RequestState,
+)
+from amanuensis.resources.userdatamodel.userdatamodel_request import (
+    get_requests_by_project_id,
 )
 
 __all__ = [
@@ -21,11 +25,18 @@ __all__ = [
     "get_project_by_id",
     "get_associated_users",
     "update_associated_users",
+    "update_project_date",
 ]
 
 
 def get_project_by_consortium(current_session, consortium, logged_user_id):
-    return current_session.query(Project).join(Project.requests).join(Request.consortium_data_contributor).filter_by(code=consortium).all()
+    return (
+        current_session.query(Project)
+        .join(Project.requests)
+        .join(Request.consortium_data_contributor)
+        .filter_by(code=consortium)
+        .all()
+    )
 
 
 def get_project_by_user(current_session, logged_user_id, logged_user_email):
@@ -55,13 +66,13 @@ def create_project(current_session, user_id, description, name, institution, sea
     """
     Creates a project with an associated auth_id and storage access
     """
-    new_project = Project(user_id=user_id,
-                        user_source="fence",
-                        description=description,
-                        institution=institution,
-                        name=name
-                    )
-
+    new_project = Project(
+        user_id=user_id,
+        user_source="fence",
+        description=description,
+        institution=institution,
+        name=name,
+    )
 
     current_session.add(new_project)
     current_session.flush()
@@ -76,28 +87,34 @@ def create_project(current_session, user_id, description, name, institution, sea
     # current_session.flush()
     # current_session.refresh(new_project)
     current_session.commit()
-    
+
     return new_project
 
 
 def update_project(current_session, project_id, approved_url=None, searches=None):
     if not approved_url and not searches:
-        return {"code": 200, "error": "Nothing has been updated, no new values have been received by the function."}
+        return {
+            "code": 200,
+            "error": "Nothing has been updated, no new values have been received by the function.",
+        }
 
     data = {}
     if approved_url:
-        data['approved_url'] = approved_url
+        data["approved_url"] = approved_url
     if searches and isinstance(searches, list) and len(searches) > 0:
         data["searches"] = searches
 
-    #TODO check that at least one has changed
-    num_updated = current_session.query(Project).filter(
-        Project.id == project_id
-    ).update(data)
-    if  num_updated > 0:
-        return  {"code": 200, "updated": int(project_id)}
+    # TODO check that at least one has changed
+    num_updated = (
+        current_session.query(Project).filter(Project.id == project_id).update(data)
+    )
+    if num_updated > 0:
+        return {"code": 200, "updated": int(project_id)}
     else:
-        return {"code": 500, "error": "Nothing has been updated, check the logs to see what happened during the transaction."}
+        return {
+            "code": 500,
+            "error": "Nothing has been updated, check the logs to see what happened during the transaction.",
+        }
 
 
 def get_associated_users(current_session, emails):
@@ -136,6 +153,31 @@ def update_associated_users(current_session, project_id, id, email, role):
     # current_session.commit()
     current_session.flush()
     return "200"
+
+
+def update_project_date(session, project_id, new_update_date):
+    requests = get_requests_by_project_id(session, project_id)
+    if not requests:
+        raise NotFound(
+            "There are no requests associated to this project or there is no project. id: {}".format(
+                project_id
+            )
+        )
+
+    for request in requests:
+        create_date = request.request_has_state[-1].create_date
+        if create_date <= new_update_date:
+            request.update_date = new_update_date
+            request_state = request.request_has_state[-1]
+            session.query(RequestState).filter(
+                RequestState.request_id == request_state.request_id,
+                RequestState.create_date == create_date,
+                RequestState.state_id == request_state.state_id,
+            ).update({"update_date": new_update_date})
+            session.flush()
+        else:
+            raise UserError("The new update_date must be later than the create date.")
+    return requests
 
 
 # def delete_project(current_session, project_name):
@@ -197,4 +239,3 @@ def update_associated_users(current_session, project_id, id, email, role):
 #         current_session.delete(storage)
 #     current_session.delete(proj)
 #     return {"result": "success", "users_to_remove": users_to_remove}
-
