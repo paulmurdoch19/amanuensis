@@ -27,6 +27,7 @@ from userportaldatamodel.models import (AttributeList, AttributeListValue,
                                         InputType, Message, Project, Receiver,
                                         Request, Search, FilterSourceType, State, AssociatedUser, ProjectAssociatedUser, ASSOCIATED_USER_ROLES)
 
+
 from amanuensis.config import config
 
 

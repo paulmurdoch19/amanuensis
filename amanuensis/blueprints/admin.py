@@ -18,9 +18,13 @@ from amanuensis.resources import filterset
 from amanuensis.resources import project
 from amanuensis.resources import admin
 
-from amanuensis.schema import ProjectSchema, StateSchema, RequestSchema, ConsortiumDataContributorSchema
 from amanuensis.models import ASSOCIATED_USER_ROLES
-
+from amanuensis.schema import (
+    ProjectSchema,
+    StateSchema,
+    RequestSchema,
+    ConsortiumDataContributorSchema,
+)
 
 logger = get_logger(__name__)
 
@@ -115,8 +119,12 @@ def create_search():
     graphql_object = request.get_json().get("filters", {})
     description = request.get_json().get("description", None)
     ids_list = request.get_json().get("ids_list", None)
-    
-    return jsonify(filterset.create(user_id, True, None, name, description, None, ids_list, graphql_object))
+
+    return jsonify(
+        filterset.create(
+            user_id, True, None, name, description, None, ids_list, graphql_object
+        )
+    )
 
    
 # @blueprint.route("/filter-sets", methods=["GET"])
@@ -184,7 +192,9 @@ def create_project():
     """
     user_id = request.get_json().get("user_id", None)
     if not user_id:
-        raise UserError("You can't create a Project without specifying the user the project will be assigned to.")
+        raise UserError(
+            "You can't create a Project without specifying the user the project will be assigned to."
+        )
 
     associated_users_emails = request.get_json().get("associated_users_emails", None)
     if not associated_users_emails:
@@ -193,11 +203,24 @@ def create_project():
     name = request.get_json().get("name", None)
     description = request.get_json().get("description", None)
     institution = request.get_json().get("institution", None)
-    
+
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution, associated_users_emails)))
+    return jsonify(
+        project_schema.dump(
+            project.create(
+                user_id,
+                True,
+                name,
+                description,
+                filter_set_ids,
+                None,
+                institution,
+                associated_users_emails
+            )
+        )
+    )
 
 
 @blueprint.route("/projects", methods=["PUT"])
@@ -212,12 +235,14 @@ def update_project():
     project_id = request.get_json().get("project_id", None)
     if not project_id:
         raise UserError("A project_id is required for this endpoint.")
-    
+
     approved_url = request.get_json().get("approved_url", None)
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(project.update(project_id, approved_url, filter_set_ids)))
+    return jsonify(
+        project_schema.dump(project.update(project_id, approved_url, filter_set_ids))
+    )
 
 
 @blueprint.route("/projects/state", methods=["POST"])
@@ -236,7 +261,9 @@ def update_project_state():
         return UserError("There are missing params.")
 
     request_schema = RequestSchema(many=True)
-    return jsonify(request_schema.dump(admin.update_project_state(project_id, state_id)))
+    return jsonify(
+        request_schema.dump(admin.update_project_state(project_id, state_id))
+    )
 
 
 @blueprint.route("/associated_user_role", methods=["PUT"])
@@ -268,3 +295,4 @@ def get_projetcs_by_user_id(user_id, user_email):
     projects = project_schema.dump(project.get_all(user_id, user_email, None))
     return jsonify(projects)
 
+    

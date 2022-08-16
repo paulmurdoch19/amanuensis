@@ -23,6 +23,7 @@ cdislogging = "^1.0.0"
 cdispyutils = "^1.0.4"
 cryptography = "==2.8"
 flask = "^1.1.1"
+MarkupSafe = "<2.0"
 flask-cors = "^3.0.3"
 flask-restful = "^0.3.6"
 flask_sqlalchemy_session = "^1.1"
@@ -50,6 +51,7 @@ userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel
 # pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "pcdc_dev"}
 # hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "0.1.0"}
 # userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "pcdc_dev"}
+# hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "1.0.1"}
 
 
 [tool.poetry.dev-dependencies]

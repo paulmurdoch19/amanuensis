@@ -218,6 +218,31 @@ AWS_SES:
 HUBSPOT:
   API_KEY: "DEV_KEY"
   
-
+CONSORTIUM_STATUS:
+  INSTRUCT:
+  # In order of precedence.
+    CODES:
+      - "IN_REVIEW"
+      - "REJECTED"
+      - "APPROVED"
+      - "DATA_DELIVERED"
+    FINAL:
+      - "REJECTED"
+      - "DATA_DELIVERED"
+    NOTIFY:
+      - "DATA_DELIVERED"
+  INRG:
+  # In order of precedence.
+    CODES:
+      - "IN_REVIEW"
+      - "REJECTED"
+      - "APPROVED"
+      - "DATA_DELIVERED"
+    FINAL:
+      - "REJECTED"
+      - "DATA_DELIVERED"
+    NOTIFY:
+      - "DATA_DELIVERED"
+  # Add consortia
 
 
