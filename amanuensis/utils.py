@@ -11,18 +11,17 @@ from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 
 import bcrypt
-import boto3
 import flask
 import requests
 from cdislogging import get_logger
 import html2text
-from botocore.exceptions import ClientError
 from userportaldatamodel.driver import SQLAlchemyDriver
 from werkzeug.datastructures import ImmutableMultiDict
 
 from amanuensis.auth.auth import get_jwt_from_header
 from amanuensis.config import config
 from amanuensis.errors import NotFound, UserError
+
 
 rng = SystemRandom()
 alphanumeric = string.ascii_uppercase + string.ascii_lowercase + string.digits
@@ -245,3 +244,63 @@ DEFAULT_BACKOFF_SETTINGS = {
     "max_tries": 3,
     "giveup": exception_do_not_retry,
 }
+
+
+
+
+def send_email_ses(body, to_emails, subject):
+    """
+    Send email to group of emails using AWS SES api.
+
+    Args:
+        body: html or text message
+        to_emails(list): list of emails to receive the messages
+        subject(str): email subject
+        smtp_domain(dict): smtp domain server
+
+    Returns:
+        Http response
+
+    Exceptions:
+        KeyError
+
+    """
+
+    #TODO add import for boto
+
+    if not config["AWS_SES"]:
+        raise NotFound("AWS SES '{}' does not exist in configuration. Cannot send email.")
+    if "SENDER" not in config["AWS_SES"]:
+        raise NotFound("AWS SES sender does not exist in configuration. Cannot send email.")
+    if "AWS_ACCESS_KEY" not in config["AWS_SES"] or "AWS_SECRET_KEY" not in config["AWS_SES"]:
+        raise NotFound("AWS SES credentials are missing in configuration. Cannot send email.")
+
+    #TODO retrieve body from template (pass as external param above)
+    if not body:
+        raise Exception('You must provide a text or html body.')
+    if not subject:
+        raise Exception('You must provide a text subject for the email.')
+
+    sender = config["AWS_SES"]["SENDER"]
+    region = config["AWS_SES"]["AWS_REGION"] if config["AWS_SES"]["AWS_REGION"] is not None else "us-east-1"
+    AWS_ACCESS_KEY = config["AWS_SES"]["AWS_ACCESS_KEY"]
+    AWS_SECRET_KEY = config["AWS_SES"]["AWS_SECRET_KEY"]
+
+    config = {'aws_access_key_id': AWS_ACCESS_KEY,
+              'aws_secret_access_key': AWS_SECRET_KEY,
+              'region_name': region}
+    
+    # if body is in html format, strip out html markup
+    # otherwise body and body_text could have the same values
+    body_text = html2text.html2text(body)
+    
+        
+        # if not self._html:
+        #     self._format = 'text'
+        #     body = self._text
+    
+
+	flask.current_app.boto.send_email(sender, to_emails, subject, body, body_text, 'UTF-8', config)
+    # logging.debug(json.dumps(response))
+    # return response
+
