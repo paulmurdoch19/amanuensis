@@ -6,10 +6,12 @@ from secrets import token_urlsafe
 from amanuensis.models import Search, FilterSourceType, SearchIsShared
 
 __all__ = [
-    "get_filter_sets",      
+    "get_filter_sets",
+    "get_filter_sets_by_user_id",
     "create_filter_set",
     "delete_filter_set",
     "update_filter_set",
+    # "get_filter_sets_by_name",
     "create_filter_set_snapshot",
     "get_snapshot_by_token",
 ]
@@ -27,9 +29,7 @@ def get_filter_sets(
         Search.active == True, Search.user_id == logged_user_id
     )
 
-    if is_amanuensis_admin:
-        query = query.filter(Search.filter_source == FilterSourceType.manual)
-    else:
+    if not is_amanuensis_admin:
         query = query.filter(
             Search.filter_source_internal_id == explorer_id,
             Search.filter_source == FilterSourceType.explorer,
@@ -42,18 +42,48 @@ def get_filter_sets(
 
     return query.all()
 
+# def get_filter_sets_by_name(current_session, user_id, is_amanuensis_admin, names, explorer_id):
+#     '''
+#     Returns all, one, or multiple by id
+#     filter_set_id may be id(int), ids(array), or None
+#     '''
+#     #TODO make class Search serializable
+#     query = current_session.query(Search).filter(
+#         Search.active == True, 
+#         Search.user_id == user_id
+#     )
 
-def create_filter_set(
-    current_session,
-    logged_user_id,
-    is_amanuensis_admin,
-    explorer_id,
-    name,
-    description,
-    filter_object,
-    ids_list,
-    is_snapshot=False,
-):
+#     if is_amanuensis_admin:
+#         query = query.filter(Search.filter_source == FilterSourceType.manual)
+#     else:
+#         query = query.filter(
+#             Search.filter_source_internal_id == explorer_id,
+#             Search.filter_source == FilterSourceType.explorer
+#         )   
+
+#     if names:
+#         if not isinstance(names, list):
+#             names = [names]
+#         query = query.filter(Search.name.in_(names))
+
+#     return query.all()
+
+
+def get_filter_sets_by_user_id(session, user_id, is_admin):
+    query = session.query(Search).filter(
+        Search.active == True, 
+        Search.user_id == user_id
+    )
+
+    if not is_admin:
+        query = query.filter(
+            Search.filter_source == FilterSourceType.explorer
+        )   
+
+    return query.all()
+
+
+def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list, graphql_object, is_snapshot=False):
     new_filter_set = Search(
         user_id=logged_user_id,
         filter_source_internal_id=explorer_id,
@@ -66,6 +96,7 @@ def create_filter_set(
         filter_object=filter_object,
         ids_list=ids_list,
         is_snapshot=is_snapshot,
+        graphql_object=graphql_object
     )
     # TODO add es_index, add dataset_version
     current_session.add(new_filter_set)
@@ -76,17 +107,18 @@ def create_filter_set(
             "name": new_filter_set.name,
             "id": new_filter_set.id,
             "filter_source": new_filter_set.filter_source,
-            "description": new_filter_set.description,
+            "description": new_filter_set.description, 
             "ids_list": new_filter_set.ids_list,
+            "graphql_object": new_filter_set.graphql_object
         }
-
-    return {
-        "name": new_filter_set.name,
-        "id": new_filter_set.id,
-        "explorer_id": new_filter_set.filter_source_internal_id,
-        "description": new_filter_set.description,
-        "filters": new_filter_set.filter_object,
-    }
+    else: 
+        return {
+            "name": new_filter_set.name, 
+            "id": new_filter_set.id,
+            "explorer_id": new_filter_set.filter_source_internal_id,
+            "description": new_filter_set.description, 
+            "filters": new_filter_set.filter_object
+        }
 
 
 def update_filter_set(

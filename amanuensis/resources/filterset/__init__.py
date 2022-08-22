@@ -10,8 +10,9 @@ from amanuensis.resources.userdatamodel import (
     create_filter_set,
     delete_filter_set,
     update_filter_set,
-    create_filter_set_snapshot,
-    get_snapshot_by_token,
+    get_filter_sets_by_user_id, 
+    create_filter_set_snapshot, 
+    get_snapshot_by_token
 )
 
 from amanuensis.schema import SearchSchema
@@ -37,10 +38,19 @@ def get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
         return get_filter_sets(session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
         # return filterset_schema.dump(get_filter_sets(session, logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)) 
 
+# def get_by_name(user_id, name, explorer_id):
+#     with flask.current_app.db.session as session:
+#         return get_filter_sets_by_name(session, user_id, None, name, explorer_id)
 
-def create(logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list):
+def get_by_user_id(user_id, is_admin):
+    if not isinstance(user_id, int):
+        user_id = int(user_id)
+    with flask.current_app.db.session as session:
+        return get_filter_sets_by_user_id(session, user_id, is_admin)
+
+def create(logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list, graphql_object):
     with flask.current_app.db.session as session:    
-        return create_filter_set(session, logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list)
+        return create_filter_set(session, logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list, graphql_object)
 
 
 def update(logged_user_id, filter_set_id, explorer_id, name, description, filter_object):

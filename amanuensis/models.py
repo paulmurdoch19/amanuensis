@@ -25,7 +25,8 @@ from userportaldatamodel import Base
 from userportaldatamodel.models import (AttributeList, AttributeListValue,
                                         Attributes, ConsortiumDataContributor,
                                         InputType, Message, Project, Receiver,
-                                        Request, Search, FilterSourceType, State, Statistician, SearchIsShared)
+                                        Request, Search, FilterSourceType, State, AssociatedUser, ProjectAssociatedUser, ASSOCIATED_USER_ROLES, SearchIsShared)
+
 
 from amanuensis.config import config
 
@@ -49,6 +50,59 @@ def migrate(driver):
         return
 
     md = MetaData()
+
+
+    states =  []
+    states.append(
+            State(
+                name="In Review",
+                code= "IN_REVIEW"
+                )
+        )
+    states.append(
+            State(
+                name="Rejected",
+                code= "REJECTED"
+                )
+        )
+    states.append(
+            State(
+                name="Approved",
+                code= "APPROVED"
+                )
+        )
+    states.append(
+            State(
+                name="Data Delivered",
+                code= "DATA_DELIVERED"
+                )
+        )
+
+    consortiums = []
+    consortiums.append(
+            ConsortiumDataContributor(
+                name="INRG", 
+                code ="INRG"
+                )
+        )
+    consortiums.append(
+            ConsortiumDataContributor(
+                name="INSTRUCT", 
+                code ="INSTRUCT"
+                )
+        )
+
+
+    with driver.session as session:
+        db_states = session.query(State).all()
+        db_codes = [db_state.code for db_state in db_states]
+        states = list(filter(lambda x: x.code not in db_codes, states))
+        session.bulk_save_objects(states)
+
+        db_consortiums = session.query(ConsortiumDataContributor).all()
+        db_consortium_codes = [db_consortium.code for db_consortium in db_consortiums]
+        consortiums = list(filter(lambda x: x.code not in db_consortium_codes, consortiums))
+        session.bulk_save_objects(consortiums)
 
 
 

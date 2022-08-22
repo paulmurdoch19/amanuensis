@@ -11,18 +11,17 @@ from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 
 import bcrypt
-import boto3
 import flask
 import requests
 from cdislogging import get_logger
 import html2text
-from botocore.exceptions import ClientError
 from userportaldatamodel.driver import SQLAlchemyDriver
 from werkzeug.datastructures import ImmutableMultiDict
 
 from amanuensis.auth.auth import get_jwt_from_header
 from amanuensis.config import config
 from amanuensis.errors import NotFound, UserError
+
 
 rng = SystemRandom()
 alphanumeric = string.ascii_uppercase + string.ascii_lowercase + string.digits
@@ -168,7 +167,7 @@ def get_consortium_list(path, src_filter, ids_list):
         raise NotFound("There is no filter specified and associated with the project you are trying to create")
 
     isFilter = True if src_filter else False
-    transformed_filter = getGQLFilter(src_filter) if isFilter else getGQLFilterIdsList(ids_list)
+    transformed_filter = src_filter if isFilter else getGQLFilterIdsList(ids_list)
     target_filter = {}
     target_filter["filter"] = transformed_filter
 
@@ -286,6 +285,10 @@ def send_email_ses(body, to_emails, subject):
     region = config["AWS_SES"]["AWS_REGION"] if config["AWS_SES"]["AWS_REGION"] is not None else "us-east-1"
     AWS_ACCESS_KEY = config["AWS_SES"]["AWS_ACCESS_KEY"]
     AWS_SECRET_KEY = config["AWS_SES"]["AWS_SECRET_KEY"]
+
+    config = {'aws_access_key_id': AWS_ACCESS_KEY,
+              'aws_secret_access_key': AWS_SECRET_KEY,
+              'region_name': region}
     
     # if body is in html format, strip out html markup
     # otherwise body and body_text could have the same values
@@ -295,40 +298,9 @@ def send_email_ses(body, to_emails, subject):
         # if not self._html:
         #     self._format = 'text'
         #     body = self._text
+    
 
-    client = boto3.client(
-        'ses',
-        region_name=region,
-        aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_SECRET_KEY
-    )
-    try:
-        response = client.send_email(
-            Destination={
-                'ToAddresses': to_emails,
-            },
-            Message={
-                'Body': {
-                    'Text': {
-                        'Charset': 'UTF-8',
-                        'Data': body_text,
-                    },
-                    'Html': {
-                        'Charset': 'UTF-8',
-                        'Data': body,
-                    },
-                },
-                'Subject': {
-                    'Charset': 'UTF-8',
-                    'Data': subject,
-                },
-            },
-            Source=sender,
-        )
-    except ClientError as e:
-        print(e.response['Error']['Message'])
-    else:
-        print("Email sent! Message ID:"),
-        print(response['MessageId'])
-    logging.debug(json.dumps(response))
-    return response
+	flask.current_app.boto.send_email(sender, to_emails, subject, body, body_text, 'UTF-8', config)
+    # logging.debug(json.dumps(response))
+    # return response
+

@@ -87,22 +87,14 @@ def create_search():
 
     name = flask.request.get_json().get("name", None)
     filter_object = flask.request.get_json().get("filters", {})
+    graphql_object = flask.request.get_json().get("gqlFilter", {})
     description = flask.request.get_json().get("description", None)
     ids_list = flask.request.get_json().get("ids_list", None)
 
     # search_schema = SearchSchema()
     # return flask.jsonify(search_schema.dump(create(logged_user_id, explorer_id, name, description, filter_object)))
-    return flask.jsonify(
-        create(
-            logged_user_id,
-            False,
-            explorer_id,
-            name,
-            description,
-            filter_object,
-            ids_list,
-        )
-    )
+
+    return flask.jsonify(create(logged_user_id, False, explorer_id, name, description, filter_object, ids_list, graphql_object))
 
 
 @blueprint.route("/<filter_set_id>", methods=["PUT"])

@@ -40,16 +40,16 @@ def download_data(project_id):
     if not project:
         raise NotFound("The project with id {} has not been found.".format(project_id))
 
-    statisticians_ids = []
-    statisticians_emails = []
-    for statistician in project.statisticians:
-        if statistician.user_id:
-            statisticians_ids.append(statistician.user_id)
-        if statistician.email:
-            statisticians_emails.append(statistician.email)
+    associated_users_ids = []
+    associated_users_emails = []
+    for associated_user_role in project.associated_users_roles:
+        if associated_user_role.associated_user.user_id and associated_user_role.role == "DATA_ACCESS":
+            associated_users_ids.append(associated_user_role.associated_user.user_id)
+        if associated_user_role.associated_user.email and associated_user_role.role == "DATA_ACCESS":
+            associated_users_emails.append(associated_user_role.associated_user.email)
 
-    if logged_user_id not in statisticians_ids and logged_user_email not in statisticians_emails:
-        raise Forbidden("The user is not in the list of statistician that signed the DUA")
+    if logged_user_id not in associated_users_ids and logged_user_email not in associated_users_emails:
+        raise Forbidden("The user is not in the list of associated_users that signed the DUA. Please reach out to pcdc_help@lists.uchicago.edu")
 
     # Get download url from project table
     storage_url = project.approved_url
