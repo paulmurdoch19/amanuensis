@@ -21,6 +21,42 @@ depends_on = None
 
 def upgrade() -> None:
     op.create_table(
+        "associated_user",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=True),
+        sa.Column("user_source", sa.String(), nullable=True),
+        sa.Column("email", sa.Text(), nullable=True),
+        sa.Column("active", sa.Boolean(), nullable=True),
+        sa.Column(
+            "create_date", sa.DateTime(), server_default=sa.text("now()"), nullable=True
+        ),
+        sa.Column(
+            "update_date", sa.DateTime(), server_default=sa.text("now()"), nullable=True
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "project_has_associated_user",
+        sa.Column("project_id", sa.Integer(), nullable=False),
+        sa.Column("associated_user_id", sa.Integer(), nullable=False),
+        sa.Column("role", sa.Text(), nullable=False),
+        sa.Column(
+            "create_date", sa.DateTime(), server_default=sa.text("now()"), nullable=True
+        ),
+        sa.Column(
+            "update_date", sa.DateTime(), server_default=sa.text("now()"), nullable=True
+        ),
+        sa.ForeignKeyConstraint(
+            ["associated_user_id"],
+            ["associated_user.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["project_id"],
+            ["project.id"],
+        ),
+        sa.PrimaryKeyConstraint("project_id", "associated_user_id"),
+    )
+    op.create_table(
         "consortium_data_contributor",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("code", sa.String(), nullable=True),
@@ -320,6 +356,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_table("project_has_associated_user")
+    op.drop_table("associated_user")
     op.drop_table("receiver")
     op.drop_table("request_has_state")
     op.drop_table("message")
