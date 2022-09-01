@@ -10,7 +10,7 @@ from amanuensis.models import (
     Search,
     AssociatedUser,
     ProjectAssociatedUser,
-    ASSOCIATED_USER_ROLES
+    ASSOCIATED_USER_ROLES,
     RequestState,
 )
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
