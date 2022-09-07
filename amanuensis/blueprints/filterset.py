@@ -96,7 +96,8 @@ def update_search(filter_set_id):
     name = flask.request.get_json().get("name", None)
     description = flask.request.get_json().get("description", None)
     filter_object = flask.request.get_json().get("filters", None)
-    return flask.jsonify(update(logged_user_id, filter_set_id, explorer_id, name, description, filter_object))
+    graphql_object = flask.request.get_json().get("gqlFilter", {})
+    return flask.jsonify(update(logged_user_id, filter_set_id, explorer_id, name, description, filter_object, graphql_object))
 
 
 @blueprint.route("/<filter_set_id>", methods=["DELETE"])
