@@ -84,41 +84,45 @@ def send_message(logged_user_id, request_id, subject, body):
 def send_admin_message(project, consortiums, subject, body):
     # The hubspot oAuth implementation is on the way, but not supported yet.
     hapikey =  config['HUBSPOT']['API_KEY']
-    hubspot = HubspotClient(hubspot_auth_token=hapikey)
 
-    receivers = []
+    if hapikey == "" and hapikey == "DEV_KEY":
+        logger.info('missing Hubspot API Key, skipping sending emails update.')
+    else:
+        hubspot = HubspotClient(hubspot_auth_token=hapikey)
 
-    notify_users_id = []
-    notify_users_id.append(project.user_id)
-    notify_users_id.extend([stat.user_id for stat in project.statisticians if stat.user_id])
+        receivers = []
 
-    receivers.extend([stat.email for stat in project.statisticians if stat.email and not stat.user_id])
+        notify_users_id = []
+        notify_users_id.append(project.user_id)
+        notify_users_id.extend([stat.user_id for stat in project.statisticians if stat.user_id])
 
-    requesters_obj = fence_get_users(config, ids=notify_users_id)
-    requesters = requesters_obj['users'] if 'users' in requesters_obj else None
-    logger.info(requesters)
-    if requesters:
-        requesters_email = [req["name"] for req in requesters]
-        receivers.extend(requesters_email)
+        receivers.extend([stat.email for stat in project.statisticians if stat.email and not stat.user_id])
 
-    for consortium_code in consortiums:
-        # Get EC members emails
-        # returns [ email, disease_group_executive_committee ]
-        committee = f"{consortium_code} Executive Committee Member"
-        hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
-        # logger.debug('Hubspot Response: ' + str(hubspot_response))
-        if hubspot_response and ('total' in hubspot_response) and int(hubspot_response.get("total", '0')):
-            for member in hubspot_response["results"]:
-                email = member['properties']['email']
-                receivers.append(email)
+        requesters_obj = fence_get_users(config, ids=notify_users_id)
+        requesters = requesters_obj['users'] if 'users' in requesters_obj else None
+        logger.info(requesters)
+        if requesters:
+            requesters_email = [req["name"] for req in requesters]
+            receivers.extend(requesters_email)
 
-    receivers = list(set(receivers))
-    logger.info("Sending email to {}".format(receivers))
+        for consortium_code in consortiums:
+            # Get EC members emails
+            # returns [ email, disease_group_executive_committee ]
+            committee = f"{consortium_code} Executive Committee Member"
+            hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
+            # logger.debug('Hubspot Response: ' + str(hubspot_response))
+            if hubspot_response and ('total' in hubspot_response) and int(hubspot_response.get("total", '0')):
+                for member in hubspot_response["results"]:
+                    email = member['properties']['email']
+                    receivers.append(email)
 
-    if is_env_enabled("AWS_SES_DEBUG"):
-        logger.debug(f"send_message emails (debug mode): {str(receivers)}")
-    elif email:
-        # Send the Message via AWS SES
-        return flask.current_app.boto.send_email_ses(body, receivers, subject)
+        receivers = list(set(receivers))
+        logger.info("Sending email to {}".format(receivers))
+
+        if is_env_enabled("AWS_SES_DEBUG"):
+            logger.debug(f"send_message emails (debug mode): {str(receivers)}")
+        elif receivers:
+            # Send the Message via AWS SES
+            return flask.current_app.boto.send_email_ses(body, receivers, subject)
 
 
