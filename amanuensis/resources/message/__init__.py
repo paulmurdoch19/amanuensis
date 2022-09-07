@@ -85,7 +85,7 @@ def send_admin_message(project, consortiums, subject, body):
     # The hubspot oAuth implementation is on the way, but not supported yet.
     hapikey =  config['HUBSPOT']['API_KEY']
 
-    if hapikey == "" and hapikey == "DEV_KEY":
+    if hapikey == "" or hapikey == "DEV_KEY":
         logger.info('missing Hubspot API Key, skipping sending emails update.')
     else:
         #TODO initialize this on app domain and just use it here
