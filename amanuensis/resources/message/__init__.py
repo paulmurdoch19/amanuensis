@@ -88,23 +88,28 @@ def send_admin_message(project, consortiums, subject, body):
     if hapikey == "" and hapikey == "DEV_KEY":
         logger.info('missing Hubspot API Key, skipping sending emails update.')
     else:
+        #TODO initialize this on app domain and just use it here
         hubspot = HubspotClient(hubspot_auth_token=hapikey)
 
         receivers = []
+        requesters = []
 
         notify_users_id = []
+        # project request owner
         notify_users_id.append(project.user_id)
-        notify_users_id.extend([stat.user_id for stat in project.statisticians if stat.user_id])
-
-        receivers.extend([stat.email for stat in project.statisticians if stat.email and not stat.user_id])
+        # TODO users asssociate with the project request, it could be email or ID they are not both there
+        # TODO update user_id with emails and emails from user_Id with cron side job or at trigger
+        # notify_users_id.extend([a_user.user_id for a_user in project.associated_users if a_user.user_id])
+        # receivers.extend([stat.email for stat in project.statisticians if stat.email and not stat.user_id])
 
         requesters_obj = fence_get_users(config, ids=notify_users_id)
-        requesters = requesters_obj['users'] if 'users' in requesters_obj else None
-        logger.info(requesters)
-        if requesters:
-            requesters_email = [req["name"] for req in requesters]
-            receivers.extend(requesters_email)
+        requesters_list = requesters_obj['users'] if 'users' in requesters_obj else None
+        logger.info(requesters_list)
+        if requesters_list:
+            requesters = [req["name"] for req in requesters_list]
+            
 
+        # get approver from EC members
         for consortium_code in consortiums:
             # Get EC members emails
             # returns [ email, disease_group_executive_committee ]
@@ -117,12 +122,15 @@ def send_admin_message(project, consortiums, subject, body):
                     receivers.append(email)
 
         receivers = list(set(receivers))
-        logger.info("Sending email to {}".format(receivers))
+        requesters = list(set(requesters))
+        logger.info("Sending email to {} and {}".format(receivers, requesters))
 
         if is_env_enabled("AWS_SES_DEBUG"):
             logger.debug(f"send_message emails (debug mode): {str(receivers)}")
+            logger.debug(f"send_message emails (debug mode): {str(requesters)}")
         elif receivers:
             # Send the Message via AWS SES
-            return flask.current_app.boto.send_email_ses(body, receivers, subject)
+            flask.current_app.boto.send_email_ses(body, receivers, subject)
+            flask.current_app.boto.send_email_ses(body, requesters, subject)
 
 
