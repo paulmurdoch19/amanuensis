@@ -62,7 +62,7 @@ def notify_user_project_status_update(current_session, project_id, consortiums):
     """
     Notify the users when project state changes.
     """
-    project = get_project_by_id(current_session, project_id)
+    project = get_project_by_id(current_session, 1, project_id)
     email_subject = f"Project {project.name}: Data Delivered"
     email_body = f"The project f{project.name} data was delivered."
 
