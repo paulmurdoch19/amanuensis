@@ -112,7 +112,7 @@ def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, expl
         }
 
 
-def update_filter_set(current_session, logged_user_id, filter_set_id, explorer_id, name, description, filter_object):
+def update_filter_set(current_session, logged_user_id, filter_set_id, explorer_id, name, description, filter_object, graphql_object):
     data = {}
     if name:
         data['name'] = name
@@ -120,6 +120,8 @@ def update_filter_set(current_session, logged_user_id, filter_set_id, explorer_i
         data['description'] = description
     if filter_object:
         data['filter_object'] = filter_object
+    if graphql_object:
+        data["graphql_object"] = graphql_object
 
     #TODO check that at least one has changed
     num_updated = current_session.query(Search).filter(

@@ -7,19 +7,24 @@ import functools
 
 from flask import request, jsonify, Blueprint, current_app
 from flask_sqlalchemy_session import current_session
-
+from datetime import datetime
 from cdislogging import get_logger
 
 from amanuensis.auth.auth import check_arborist_auth
 from amanuensis.config import config
-from amanuensis.errors import UserError
+from amanuensis.errors import UserError, NotFound
 
 from amanuensis.resources import filterset
 from amanuensis.resources import project
 from amanuensis.resources import admin
 
-from amanuensis.schema import ProjectSchema, StateSchema, RequestSchema, ConsortiumDataContributorSchema
-
+from amanuensis.models import ASSOCIATED_USER_ROLES
+from amanuensis.schema import (
+    ProjectSchema,
+    StateSchema,
+    RequestSchema,
+    ConsortiumDataContributorSchema,
+)
 
 logger = get_logger(__name__)
 
@@ -114,8 +119,12 @@ def create_search():
     graphql_object = request.get_json().get("filters", {})
     description = request.get_json().get("description", None)
     ids_list = request.get_json().get("ids_list", None)
-    
-    return jsonify(filterset.create(user_id, True, None, name, description, None, ids_list, graphql_object))
+
+    return jsonify(
+        filterset.create(
+            user_id, True, None, name, description, None, ids_list, graphql_object
+        )
+    )
 
    
 # @blueprint.route("/filter-sets", methods=["GET"])
@@ -183,21 +192,35 @@ def create_project():
     """
     user_id = request.get_json().get("user_id", None)
     if not user_id:
-        raise UserError("You can't create a Project without specifying the user the project will be assigned to.")
+        raise UserError(
+            "You can't create a Project without specifying the user the project will be assigned to."
+        )
 
-    statistician_emails = request.get_json().get("statistician_emails", None)
-    if not statistician_emails:
-        raise UserError("You can't create a Project without specifying the statisticians that will access the data")
-
+    associated_users_emails = request.get_json().get("associated_users_emails", None)
+    if not associated_users_emails:
+        raise UserError("You can't create a Project without specifying the associated_users that will access the data")
 
     name = request.get_json().get("name", None)
     description = request.get_json().get("description", None)
     institution = request.get_json().get("institution", None)
-    
+
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(project.create(user_id, True, name, description, filter_set_ids, None, institution, statistician_emails)))
+    return jsonify(
+        project_schema.dump(
+            project.create(
+                user_id,
+                True,
+                name,
+                description,
+                filter_set_ids,
+                None,
+                institution,
+                associated_users_emails
+            )
+        )
+    )
 
 
 @blueprint.route("/projects", methods=["PUT"])
@@ -212,12 +235,14 @@ def update_project():
     project_id = request.get_json().get("project_id", None)
     if not project_id:
         raise UserError("A project_id is required for this endpoint.")
-    
+
     approved_url = request.get_json().get("approved_url", None)
     filter_set_ids = request.get_json().get("filter_set_ids", None)
 
     project_schema = ProjectSchema()
-    return jsonify(project_schema.dump(project.update(project_id, approved_url, filter_set_ids)))
+    return jsonify(
+        project_schema.dump(project.update(project_id, approved_url, filter_set_ids))
+    )
 
 
 @blueprint.route("/projects/state", methods=["POST"])
@@ -236,7 +261,57 @@ def update_project_state():
         return UserError("There are missing params.")
 
     request_schema = RequestSchema(many=True)
-    return jsonify(request_schema.dump(admin.update_project_state(project_id, state_id)))
+    return jsonify(
+        request_schema.dump(admin.update_project_state(project_id, state_id))
+    )
+
+
+
+@blueprint.route("/associated_user_role", methods=["PUT"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def update_associated_user_role():
+    """
+    Update a project attributes
+
+    Returns a json object
+    """
+    associated_user_id = request.get_json().get("user_id", None)
+    associated_user_email = request.get_json().get("email", None)
+    if not associated_user_id and not associated_user_email:
+        raise UserError("A user_id and or an associated_user_email is required for this endpoint.")
+
+    project_id = request.get_json().get("project_id", None)
+    role = "DATA_ACCESS"
+    if role not in ASSOCIATED_USER_ROLES:
+        raise NotFound("The role {} is not in the allowed list, reach out to pcdc_help@lists.uchicago.edu".format(role))
+
+    return jsonify(admin.update_role(project_id, associated_user_id, associated_user_email, role))
+
+
+@blueprint.route("/projects/date", methods=["PATCH"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+# @debug_log
+def override_project_date():
+    """
+    Updates the update_date of a project.
+    """
+
+    project_id = request.get_json().get("project_id", None)
+    year = request.get_json().get("year", 0)
+    month = request.get_json().get("month", 0)
+    day = request.get_json().get("day", 0)
+
+    new_date = datetime(year, month, day, hour, minute, second, microsecond)
+
+    if not project_id or not new_date:
+        return UserError("There are missing params.")
+
+    request_schema = RequestSchema(many=True)
+
+    return jsonify(
+        request_schema.dump(admin.override_project_date(project_id, new_date))
+    )
 
 
 @blueprint.route("/projects_by_users/<user_id>/<user_email>", methods=["GET"])
@@ -245,4 +320,6 @@ def get_projetcs_by_user_id(user_id, user_email):
     project_schema = ProjectSchema(many=True)
     projects = project_schema.dump(project.get_all(user_id, user_email, None))
     return jsonify(projects)
+
+
 

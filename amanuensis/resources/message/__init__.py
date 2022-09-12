@@ -4,12 +4,12 @@ import smtplib
 import json
 from cdislogging import get_logger
 from gen3authz.client.arborist.errors import ArboristError
+from pcdcutils.environment import is_env_enabled
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
 from amanuensis.resources import userdatamodel as udm
 # from amanuensis.resources.userdatamodel import get_all_messages, get_messages_by_request, send_message
-from amanuensis.resources.request import get_by_id
 from amanuensis.resources.fence import fence_get_users
 from amanuensis.auth.auth import current_user
 from amanuensis.models import (
@@ -18,8 +18,9 @@ from amanuensis.models import (
     Receiver
     # Request
 )
-from hubspotclient.client.hubspot.client import HubspotClient
 
+# TODO initialize on app init instead of here
+from hubspotclient.client.hubspot.client import HubspotClient
 
 logger = get_logger(__name__)
 
@@ -38,7 +39,7 @@ def send_message(logged_user_id, request_id, subject, body):
     with flask.current_app.db.session as session:    
 
         # Get consortium and check that the request exists
-        request = get_by_id(logged_user_id, request_id)
+        request = udm.get_request_by_id(session, logged_user_id, request_id)
         # logger.debug("Request: " + str(request))
         consortium_code = request.consortium_data_contributor.code
         # logger.debug(f"Consortium Code: {consortium_code}")
@@ -51,7 +52,6 @@ def send_message(logged_user_id, request_id, subject, body):
         # returns [ email, disease_group_executive_committee ]
         committee = f"{consortium_code} Executive Committee Member"
         hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
-
         # logger.debug('Hubspot Response: ' + str(hubspot_response))
 
         # Connect to fence to get the user.id from the username(email)
@@ -79,5 +79,58 @@ def send_message(logged_user_id, request_id, subject, body):
         # otherwise send to committee memebers
 
         return udm.send_message(session, logged_user_id, request_id, subject, body, receivers, usernames)
+
+
+def send_admin_message(project, consortiums, subject, body):
+    # The hubspot oAuth implementation is on the way, but not supported yet.
+    hapikey =  config['HUBSPOT']['API_KEY']
+
+    if hapikey == "" or hapikey == "DEV_KEY":
+        logger.info('missing Hubspot API Key, skipping sending emails update.')
+    else:
+        #TODO initialize this on app domain and just use it here
+        hubspot = HubspotClient(hubspot_auth_token=hapikey)
+
+        receivers = []
+        requesters = []
+
+        notify_users_id = []
+        # project request owner
+        notify_users_id.append(project.user_id)
+        # TODO users asssociate with the project request, it could be email or ID they are not both there
+        # TODO update user_id with emails and emails from user_Id with cron side job or at trigger
+        # notify_users_id.extend([a_user.user_id for a_user in project.associated_users if a_user.user_id])
+        # receivers.extend([stat.email for stat in project.statisticians if stat.email and not stat.user_id])
+
+        requesters_obj = fence_get_users(config, ids=notify_users_id)
+        requesters_list = requesters_obj['users'] if 'users' in requesters_obj else None
+        logger.info(requesters_list)
+        if requesters_list:
+            requesters = [req["name"] for req in requesters_list]
+            
+
+        # get approver from EC members
+        for consortium_code in consortiums:
+            # Get EC members emails
+            # returns [ email, disease_group_executive_committee ]
+            committee = f"{consortium_code} Executive Committee Member"
+            hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
+            # logger.debug('Hubspot Response: ' + str(hubspot_response))
+            if hubspot_response and ('total' in hubspot_response) and int(hubspot_response.get("total", '0')):
+                for member in hubspot_response["results"]:
+                    email = member['properties']['email']
+                    receivers.append(email)
+
+        receivers = list(set(receivers))
+        requesters = list(set(requesters))
+        logger.info("Sending email to {} and {}".format(receivers, requesters))
+
+        if is_env_enabled("AWS_SES_DEBUG"):
+            logger.debug(f"send_message emails (debug mode): {str(receivers)}")
+            logger.debug(f"send_message emails (debug mode): {str(requesters)}")
+        elif receivers:
+            # Send the Message via AWS SES
+            flask.current_app.boto.send_email_ses(body, receivers, subject)
+            flask.current_app.boto.send_email_ses(body, requesters, subject)
 
 
