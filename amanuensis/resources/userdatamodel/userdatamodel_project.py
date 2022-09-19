@@ -24,6 +24,7 @@ __all__ = [
     "get_project_by_user",
     "get_project_by_id",
     "get_associated_users",
+    "add_associated_users",
     "update_associated_users",
     "update_project_date",
 ]
@@ -122,6 +123,27 @@ def get_associated_users(current_session, emails):
         return []
     return current_session.query(AssociatedUser).filter(AssociatedUser.email.in_(emails)).all()
 
+def add_associated_users(current_session, project_id, email, user_id):
+    if not user_id and not emails: 
+        raise UserError("Missing email and id.")
+
+    new_user = AssociatedUser(
+        user_id=user_id if user_id else None,
+        user_source="fence",
+        email=email if email else None,
+    )
+
+    current_session.add(new_user)
+    current_session.flush()
+
+    new_project_user = ProjectAssociatedUser(
+        project_id = project_id,
+        associated_user_id = new_user.id
+    )
+
+    current_session.add(new_project_user)
+    current_session.commit()
+    return new_user
 
 def update_associated_users(current_session, project_id, id, email, role):
     user_by_id = None

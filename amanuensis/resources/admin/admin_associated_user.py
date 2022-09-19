@@ -12,10 +12,18 @@ logger = get_logger(__name__)
 
 __all__ = [
     "update_role",
+    "add_associated_users",
 ]
 
 
 def update_role(project_id, user_id, email, role):
     with flask.current_app.db.session as session:  
         ret = udm.update_associated_users(session, project_id, user_id, email, role)
+        return ret
+
+def add_associated_users(users):
+    with flask.current_app.db.session as session:
+        ret = []
+        for user in users:
+            ret.append(udm.add_associated_user(session, user["project_id"], user["email"], user["id"]))
         return ret
