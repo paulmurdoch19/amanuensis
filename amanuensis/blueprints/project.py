@@ -5,6 +5,7 @@ from flask_sqlalchemy_session import current_session
 # from amanuensis.auth import login_required, current_token
 # from amanuensis.errors import Unauthorized, UserError, NotFound
 from amanuensis.resources.project import create, get_all
+from amanuensis.resources.admin import get_by_code
 from amanuensis.resources.fence import fence_get_users
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
@@ -110,7 +111,7 @@ def get_projetcs():
         tmp_project["researcher"]["last_name"] = fence_users[0]["last_name"]
         tmp_project["researcher"]["institution"] = fence_users[0]["institution"]
 
-        tmp_project["status"] = project_status["status"]
+        tmp_project["status"] = get_by_code(project_status["status"]).name
         tmp_project["submitted_at"] = submitted_at
         tmp_project["completed_at"] = project_status["completed_at"] if "completed_at" in project_status else None
 
