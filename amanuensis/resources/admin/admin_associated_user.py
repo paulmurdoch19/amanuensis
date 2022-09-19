@@ -25,5 +25,5 @@ def add_associated_users(users):
     with flask.current_app.db.session as session:
         ret = []
         for user in users:
-            ret.append(udm.add_associated_user(session, user["project_id"], user["email"], user["id"]))
+            ret.append(udm.add_associated_user(session, user["project_id"], user["email"] if "email" in user else None, user["id"] if "id" in user else None))
         return ret

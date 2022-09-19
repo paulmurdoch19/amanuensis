@@ -124,7 +124,7 @@ def get_associated_users(current_session, emails):
     return current_session.query(AssociatedUser).filter(AssociatedUser.email.in_(emails)).all()
 
 def add_associated_user(current_session, project_id, email, user_id):
-    if not user_id and not emails: 
+    if not user_id and not email: 
         raise UserError("Missing email and id.")
 
     new_user = AssociatedUser(
