@@ -41,7 +41,18 @@ def get_project_by_consortium(current_session, consortium, logged_user_id):
 
 
 def get_project_by_user(current_session, logged_user_id, logged_user_email):
-    return current_session.query(Project).filter(Project.active == True).join(Project.associated_users).filter(or_(Project.user_id == logged_user_id, AssociatedUser.user_id == logged_user_id, AssociatedUser.email == logged_user_email)).all()
+    return (
+        current_session.query(Project)
+        .filter(Project.active == True)
+        .join(Project.associated_users, isouter=True)
+        .filter(
+            or_(
+                Project.user_id == logged_user_id,
+                AssociatedUser.user_id == logged_user_id,
+            )
+        )
+        .all()
+    )
 
 
 def get_project_by_id(current_session, logged_user_id, project_id):
