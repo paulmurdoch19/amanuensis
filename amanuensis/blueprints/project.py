@@ -116,11 +116,12 @@ def get_projetcs():
         tmp_project["completed_at"] = project_status["completed_at"] if "completed_at" in project_status else None
 
         tmp_project["has_access"] = False
-        if "associated_users" in project:
-            for associated_user in project["associated_users"]:
-                if logged_user_id == associated_user["user_id"] or logged_user_email == associated_user["email"]:
-                    tmp_project["has_access"] = True
-                    break
+        if "associated_users_roles" in project:
+            for associated_user_role in project["associated_users_roles"]:
+                if associated_user_role["role"] == "DATA_ACCESS":
+                    if logged_user_id == associated_user_role["associated_user"]["user_id"] or logged_user_email == associated_user_role["associated_user"]["email"]:
+                        tmp_project["has_access"] = True
+                        break
 
         return_projects.append(tmp_project)
 
