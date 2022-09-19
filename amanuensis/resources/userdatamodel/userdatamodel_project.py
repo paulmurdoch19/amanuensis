@@ -24,7 +24,7 @@ __all__ = [
     "get_project_by_user",
     "get_project_by_id",
     "get_associated_users",
-    "add_associated_users",
+    "add_associated_user",
     "update_associated_users",
     "update_project_date",
 ]
@@ -123,7 +123,7 @@ def get_associated_users(current_session, emails):
         return []
     return current_session.query(AssociatedUser).filter(AssociatedUser.email.in_(emails)).all()
 
-def add_associated_users(current_session, project_id, email, user_id):
+def add_associated_user(current_session, project_id, email, user_id):
     if not user_id and not emails: 
         raise UserError("Missing email and id.")
 
