@@ -49,6 +49,7 @@ def get_project_by_user(current_session, logged_user_id, logged_user_email):
             or_(
                 Project.user_id == logged_user_id,
                 AssociatedUser.user_id == logged_user_id,
+                AssociatedUser.email == logged_user_email,
             )
         )
         .all()
