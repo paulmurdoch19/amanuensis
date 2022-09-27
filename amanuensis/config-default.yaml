@@ -218,6 +218,8 @@ AWS_SES:
 HUBSPOT:
   API_KEY: "DEV_KEY"
   
+DB_MIGRATION_POSTGRES_LOCK_KEY: 100
+
 CONSORTIUM_STATUS:
   INSTRUCT:
   # In order of precedence.
@@ -244,5 +246,3 @@ CONSORTIUM_STATUS:
     NOTIFY:
       - "DATA_DELIVERED"
   # Add consortia
-
-
