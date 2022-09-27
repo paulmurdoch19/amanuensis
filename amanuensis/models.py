@@ -32,6 +32,7 @@ from amanuensis.config import config
 
 
 
+##### DEPRECATED ######
 to_timestamp = (
     "CREATE OR REPLACE FUNCTION pc_datetime_to_timestamp(datetoconvert timestamp) "
     "RETURNS BIGINT AS "
@@ -329,4 +330,4 @@ def add_not_null_constraint(table_name, column_name, driver, metadata):
             )
             session.commit()
 
-
+##### END DEPRECATED ######
