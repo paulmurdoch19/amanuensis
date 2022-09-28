@@ -10,7 +10,6 @@ from pcdcutils.errors import KeyPathInvalidError, NoKeyError
 from cdislogging import get_logger
 from cdispyutils.config import get_value
 from gen3authz.client.arborist.client import ArboristClient
-
 from amanuensis.errors import UserError
 from amanuensis.models import migrate
 from amanuensis.resources.aws.boto_manager import BotoManager

@@ -8,6 +8,7 @@ Revises:
 Create Date: 2022-08-01 14:23:46.869309
 
 """
+
 from alembic import context, op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
@@ -22,6 +23,7 @@ from amanuensis.config import config
 from userportaldatamodel.driver import SQLAlchemyDriver
 
 from userportaldatamodel.models import (ConsortiumDataContributor, State)
+
 
 # revision identifiers, used by Alembic.
 revision = "03ceab80c865"
@@ -570,3 +572,4 @@ def downgrade() -> None:
     op.drop_table("input_type")
     op.drop_table("consortium_data_contributor")
     logger.info("Tables removed.")
+
