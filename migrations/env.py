@@ -91,8 +91,8 @@ def run_migrations_online() -> None:
                 # Solution based on https://github.com/sqlalchemy/alembic/issues/633
                 # TODO lock the DB for all processes during migrations
                 connection.execute(
-                    # f"SELECT pg_advisory_xact_lock({amanuensis_config['DB_MIGRATION_POSTGRES_LOCK_KEY']});"
-                    f"SELECT pg_advisory_xact_lock(100);"
+                    f"SELECT pg_advisory_xact_lock({amanuensis_config['DB_MIGRATION_POSTGRES_LOCK_KEY']});"
+
                 )
             context.run_migrations()
             if connection.dialect.name == "postgresql":

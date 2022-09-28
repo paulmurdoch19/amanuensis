@@ -84,41 +84,53 @@ def send_message(logged_user_id, request_id, subject, body):
 def send_admin_message(project, consortiums, subject, body):
     # The hubspot oAuth implementation is on the way, but not supported yet.
     hapikey =  config['HUBSPOT']['API_KEY']
-    hubspot = HubspotClient(hubspot_auth_token=hapikey)
 
-    receivers = []
+    if hapikey == "" or hapikey == "DEV_KEY":
+        logger.info('missing Hubspot API Key, skipping sending emails update.')
+    else:
+        #TODO initialize this on app domain and just use it here
+        hubspot = HubspotClient(hubspot_auth_token=hapikey)
 
-    notify_users_id = []
-    notify_users_id.append(project.user_id)
-    notify_users_id.extend([stat.user_id for stat in project.statisticians if stat.user_id])
+        receivers = []
+        requesters = []
 
-    receivers.extend([stat.email for stat in project.statisticians if stat.email and not stat.user_id])
+        notify_users_id = []
+        # project request owner
+        notify_users_id.append(project.user_id)
+        # TODO users asssociate with the project request, it could be email or ID they are not both there
+        # TODO update user_id with emails and emails from user_Id with cron side job or at trigger
+        # notify_users_id.extend([a_user.user_id for a_user in project.associated_users if a_user.user_id])
+        # receivers.extend([stat.email for stat in project.statisticians if stat.email and not stat.user_id])
 
-    requesters_obj = fence_get_users(config, ids=notify_users_id)
-    requesters = requesters_obj['users'] if 'users' in requesters_obj else None
-    logger.info(requesters)
-    if requesters:
-        requesters_email = [req["name"] for req in requesters]
-        receivers.extend(requesters_email)
+        requesters_obj = fence_get_users(config, ids=notify_users_id)
+        requesters_list = requesters_obj['users'] if 'users' in requesters_obj else None
+        logger.info(requesters_list)
+        if requesters_list:
+            requesters = [req["name"] for req in requesters_list]
+            
 
-    for consortium_code in consortiums:
-        # Get EC members emails
-        # returns [ email, disease_group_executive_committee ]
-        committee = f"{consortium_code} Executive Committee Member"
-        hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
-        # logger.debug('Hubspot Response: ' + str(hubspot_response))
-        if hubspot_response and ('total' in hubspot_response) and int(hubspot_response.get("total", '0')):
-            for member in hubspot_response["results"]:
-                email = member['properties']['email']
-                receivers.append(email)
+        # get approver from EC members
+        for consortium_code in consortiums:
+            # Get EC members emails
+            # returns [ email, disease_group_executive_committee ]
+            committee = f"{consortium_code} Executive Committee Member"
+            hubspot_response = hubspot.get_contacts_by_committee(committee=committee)
+            # logger.debug('Hubspot Response: ' + str(hubspot_response))
+            if hubspot_response and ('total' in hubspot_response) and int(hubspot_response.get("total", '0')):
+                for member in hubspot_response["results"]:
+                    email = member['properties']['email']
+                    receivers.append(email)
 
-    receivers = list(set(receivers))
-    logger.info("Sending email to {}".format(receivers))
+        receivers = list(set(receivers))
+        requesters = list(set(requesters))
+        logger.info("Sending email to {} and {}".format(receivers, requesters))
 
-    if is_env_enabled("AWS_SES_DEBUG"):
-        logger.debug(f"send_message emails (debug mode): {str(receivers)}")
-    elif email:
-        # Send the Message via AWS SES
-        return flask.current_app.boto.send_email_ses(body, receivers, subject)
+        if is_env_enabled("AWS_SES_DEBUG"):
+            logger.debug(f"send_message emails (debug mode): {str(receivers)}")
+            logger.debug(f"send_message emails (debug mode): {str(requesters)}")
+        elif receivers:
+            # Send the Message via AWS SES
+            flask.current_app.boto.send_email_ses(body, receivers, subject)
+            flask.current_app.boto.send_email_ses(body, requesters, subject)
 
 
