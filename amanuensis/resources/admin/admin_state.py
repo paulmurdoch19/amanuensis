@@ -21,6 +21,7 @@ __all__ = [
     "update_project_state",
     "create_consortium",
     "get_by_code",
+    "override_project_date",
 ]
 
 
@@ -71,3 +72,11 @@ def create_consortium(name, code):
         consortium = udm.create_consortium(session, name, code)
         consortium_schema.dump(consortium)
         return consortium
+
+
+def override_project_date(project_id, new_date):
+    with flask.current_app.db.session as session:
+        request_schema = RequestSchema(many=True)
+        requests = udm.update_project_date(session, project_id, new_date)
+        request_schema.dump(requests)
+        return requests

@@ -5,7 +5,7 @@ from yaml import safe_load
 import json
 import pprint
 
-
+from alembic.config import main as alembic_main
 from cdislogging import get_logger
 from sqlalchemy import func
 
@@ -36,8 +36,21 @@ logger = get_logger(__name__)
 #     email_users_without_access(db, auth_ids, emails, check_linking, google_project_id)
 
 
-def migrate_database(db):
-    driver = SQLAlchemyDriver(db)
-    migrate(driver)
+def migrate_database():
+    alembic_main(["--raiseerr", "upgrade", "head"])
     logger.info("Done.")
 
+
+
+def main():
+    # args = parse_arguments()
+    # # get database information
+    # sys.path.append(args.path)
+    # if args.action == "migrate":
+    #     migrate_database()
+    migrate_database()
+    
+
+
+if __name__ == "__main__":
+    main()

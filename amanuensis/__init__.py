@@ -1,14 +1,18 @@
 from collections import OrderedDict
 import os
-
 import flask
 from flask_cors import CORS
 from flask_sqlalchemy_session import flask_scoped_session, current_session
-from userportaldatamodel.driver import SQLAlchemyDriver
 
+from userportaldatamodel.driver import SQLAlchemyDriver
+from pcdcutils.signature import SignatureManager
+from pcdcutils.errors import KeyPathInvalidError, NoKeyError
+from aws_client.boto import BotoManager
+from cdislogging import get_logger
+from cdispyutils.config import get_value
+from gen3authz.client.arborist.client import ArboristClient
 from amanuensis.errors import UserError
 from amanuensis.models import migrate
-
 from amanuensis.error_handler import get_error_response
 from amanuensis.config import config
 from amanuensis.settings import CONFIG_SEARCH_FOLDERS
@@ -20,15 +24,7 @@ import amanuensis.blueprints.request
 import amanuensis.blueprints.admin
 import amanuensis.blueprints.download_urls
 
-from pcdcutils.signature import SignatureManager
 
-from cdislogging import get_logger
-
-from cdispyutils.config import get_value
-
-from gen3authz.client.arborist.client import ArboristClient
-
-from aws_client.boto import BotoManager
 # Can't read config yet. Just set to debug for now, else no handlers.
 # Later, in app_config(), will actually set level based on config
 logger = get_logger(__name__)
@@ -66,17 +62,10 @@ def app_init(
 
 
 def app_sessions(app):
+    ''' Override userdatamodel's `setup_db` since Alembic handles the migrations now. '''
     app.url_map.strict_slashes = False
+    SQLAlchemyDriver.setup_db = lambda _: None
     app.db = SQLAlchemyDriver(config["DB"])
-    logger.warning("DB connected")
-    # TODO: we will make a more robust migration system external from the application
-    #       initialization soon
-    if config["ENABLE_DB_MIGRATION"]:
-        logger.info("Running database migration...")
-        migrate(app.db)
-        logger.info("Done running database migration.")
-    else:
-        logger.info("NOT running database migration.")
 
     session = flask_scoped_session(app.db.Session, app)  # noqa
 
@@ -135,7 +124,15 @@ def app_config(
 
     # load private key for cross-service access
     key_path = config.get("PRIVATE_KEY_PATH", None)
-    config["RSA_PRIVATE_KEY"] = SignatureManager(key_path=key_path).get_key()
+
+    try:
+        config["RSA_PRIVATE_KEY"] = SignatureManager(key_path=key_path).get_key()
+    except NoKeyError:
+        logger.warn('AMANUENSIS_PUBLIC_KEY not found.')
+        pass
+    except KeyPathInvalidError:
+        logger.warn('AMANUENSIS_PUBLIC_KEY_PATH invalid.')
+        pass
 
     # _check_s3_buckets(app)
 
@@ -220,7 +217,6 @@ def handle_error(error):
     Register an error handler for general exceptions.
     """
     return get_error_response(error)
-
 
 
 
