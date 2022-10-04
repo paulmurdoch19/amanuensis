@@ -3,7 +3,7 @@ from secrets import token_urlsafe
 # from sqlalchemy import func
 
 # from amanuensis.errors import NotFound, UserError
-from amanuensis.models import Search, FilterSourceType, SearchIsShared
+from amanuensis.models import Search, FilterSourceType #, SearchIsShared
 
 __all__ = [
     "get_filter_sets",
@@ -12,8 +12,8 @@ __all__ = [
     "delete_filter_set",
     "update_filter_set",
     # "get_filter_sets_by_name",
-    "create_filter_set_snapshot",
-    "get_snapshot_by_token",
+    # "create_filter_set_snapshot",
+    # "get_snapshot_by_token",
 ]
 
 
@@ -198,120 +198,120 @@ def delete_filter_set(current_session, logged_user_id, filter_set_id, explorer_i
     }
 
 
-def share_filter_set(
-    current_session,
-    logged_user_id,
-    filter_set_id,
-    explorer_id,
-    write_access=False,
-    delete_access=False,
-):
-    """
-    Share the filter set with another user.
-    """
-    logged_user_id = int(logged_user_id)
-    filter_set = (
-        current_session.query(Search)
-        .filter(
-            Search.id == filter_set_id,
-            # Search.filter_source_internal_id == explorer_id,
-            # Search.filter_source == FilterSourceType.explorer,
-            Search.user_id == logged_user_id,
-        )
-        .first()
-    )
+# def share_filter_set(
+#     current_session,
+#     logged_user_id,
+#     filter_set_id,
+#     explorer_id,
+#     write_access=False,
+#     delete_access=False,
+# ):
+#     """
+#     Share the filter set with another user.
+#     """
+#     logged_user_id = int(logged_user_id)
+#     filter_set = (
+#         current_session.query(Search)
+#         .filter(
+#             Search.id == filter_set_id,
+#             # Search.filter_source_internal_id == explorer_id,
+#             # Search.filter_source == FilterSourceType.explorer,
+#             Search.user_id == logged_user_id,
+#         )
+#         .first()
+#     )
 
-    if not filter_set:
-        return {"code": 404, "result": "error, filter_set not found"}
+#     if not filter_set:
+#         return {"code": 404, "result": "error, filter_set not found"}
 
-    filter_set.filter_source = FilterSourceType.explorer
-    filter_set.filter_source_internal_id = None
+#     filter_set.filter_source = FilterSourceType.explorer
+#     filter_set.filter_source_internal_id = None
 
-    shareable_token = token_urlsafe(16)
+#     shareable_token = token_urlsafe(16)
 
-    shared_search = SearchIsShared(
-        search_id=filter_set.id,
-        user_id=logged_user_id,
-        write_access=write_access,
-        delete_access=delete_access,
-        shareable_token=shareable_token,
-    )
+#     shared_search = SearchIsShared(
+#         search_id=filter_set.id,
+#         user_id=logged_user_id,
+#         write_access=write_access,
+#         delete_access=delete_access,
+#         shareable_token=shareable_token,
+#     )
 
-    filter_set.snapshots.append(shared_search)
+#     filter_set.snapshots.append(shared_search)
 
-    return shareable_token
+#     return shareable_token
 
 
-def create_filter_set_snapshot(current_session, logged_user_id, filter_set_id):
-    """
-    Create a new snapshot of the filter_set.
-    """
-    logged_user_id = int(logged_user_id)
+# def create_filter_set_snapshot(current_session, logged_user_id, filter_set_id):
+#     """
+#     Create a new snapshot of the filter_set.
+#     """
+#     logged_user_id = int(logged_user_id)
 
-    filter_set = (
-        current_session.query(Search).filter(Search.id == filter_set_id).first()
-    )
+#     filter_set = (
+#         current_session.query(Search).filter(Search.id == filter_set_id).first()
+#     )
 
-    if not filter_set:
-        return {"code": 404, "result": "error, filter_set not found"}
+#     if not filter_set:
+#         return {"code": 404, "result": "error, filter_set not found"}
 
-    if filter_set.user_id != logged_user_id:
-        return {
-            "code": 403,
-            "result": "Forbidden access. You are not allowed to access this filter set.",
-        }
+#     if filter_set.user_id != logged_user_id:
+#         return {
+#             "code": 403,
+#             "result": "Forbidden access. You are not allowed to access this filter set.",
+#         }
 
-    snapshot = create_filter_set(
-        current_session,
-        logged_user_id,
-        filter_set.filter_source,
-        filter_set.filter_source_internal_id,
-        filter_set.name,
-        filter_set.description,
-        filter_set.filter_object,
-        filter_set.ids_list,
-        is_snapshot=True,
-    )
+#     snapshot = create_filter_set(
+#         current_session,
+#         logged_user_id,
+#         filter_set.filter_source,
+#         filter_set.filter_source_internal_id,
+#         filter_set.name,
+#         filter_set.description,
+#         filter_set.filter_object,
+#         filter_set.ids_list,
+#         is_snapshot=True,
+#     )
 
-    shared_token = share_filter_set(
-        current_session,
-        logged_user_id,
-        snapshot["id"],
-        filter_set.filter_source_internal_id,
-        False,
-        False,
-    )
+#     shared_token = share_filter_set(
+#         current_session,
+#         logged_user_id,
+#         snapshot["id"],
+#         filter_set.filter_source_internal_id,
+#         False,
+#         False,
+#     )
 
-    return shared_token
+#     return shared_token
 
-def get_snapshot_by_token(session, logged_user_id, token):
-    """
-    Get the snapshot by the token.
-    """
-    logged_user_id = int(logged_user_id)
+# def get_snapshot_by_token(session, logged_user_id, token):
+#     """
+#     Get the snapshot by the token.
+#     """
+#     logged_user_id = int(logged_user_id)
 
-    snapshot = (
-        session.query(SearchIsShared)
-        .filter(SearchIsShared.shareable_token == token)
-        .first()
-    )
+#     snapshot = (
+#         session.query(SearchIsShared)
+#         .filter(SearchIsShared.shareable_token == token)
+#         .first()
+#     )
 
-    if not snapshot:
-        return {"code": 404, "result": "error, snapshot not found"}
+#     if not snapshot:
+#         return {"code": 404, "result": "error, snapshot not found"}
 
-    if snapshot.user_id != logged_user_id:
-        return {
-            "code": 403,
-            "result": "Forbidden access. You are not allowed to access this snapshot.",
-        }
+#     if snapshot.user_id != logged_user_id:
+#         return {
+#             "code": 403,
+#             "result": "Forbidden access. You are not allowed to access this snapshot.",
+#         }
 
-    return {
-        "code": 200,
-        "result": {
-            "id": snapshot.search_id,
-            "name": snapshot.search.name,
-            "description": snapshot.search.description,
-            "filter_object": snapshot.search.filter_object,
-            "ids_list": snapshot.search.ids_list,
-        },
-    }
+#     return {
+#         "code": 200,
+#         "result": {
+#             "id": snapshot.search_id,
+#             "name": snapshot.search.name,
+#             "description": snapshot.search.description,
+#             "filter_object": snapshot.search.filter_object,
+#             "ids_list": snapshot.search.ids_list,
+#         },
+#     }
