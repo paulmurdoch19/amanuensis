@@ -8,12 +8,12 @@ from amanuensis.resources.filterset import (
     create,
     delete,
     update,
-    # create_snapshot,
-    # get_snapshot,
+    create_snapshot,
+    get_snapshot,
 )
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
-from amanuensis.errors import AuthError
+from amanuensis.errors import AuthError, UserError
 from amanuensis.schema import SearchSchema
 from cdislogging import get_logger
 
@@ -139,33 +139,36 @@ def delete_search(filter_set_id):
     return response
 
 
-# @blueprint.route("/snapshot/", methods=["POST"])
-# def create_snapshot_from_filter_set():
-#     """
-#     Create a snapshot of a filter set given its id.
+@blueprint.route("/snapshot/", methods=["POST"])
+def create_snapshot_from_filter_set():
+    """
+    Create a snapshot of a filter set given its id.
 
-#     Returns the snapshot if successful.
-#     """
-#     try:
-#         logged_user_id = current_user.id
-#     except AuthError:
-#         logger.warning("Unable to load or find the user, check your token")
+    Returns the snapshot if successful.
+    """
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning("Unable to load or find the user, check your token")
 
-#     filter_set_id = flask.request.args.get("filter_set_id", default=1, type=int)
+    filter_set_id = flask.request.args.get("filter_set_id", default=None, type=int)
+    users_list = flask.request.get_json().get("users_list", None)
+    if not filter_set_id:
+        raise UserError("Missing parameters.")
 
-#     response = flask.jsonify(create_snapshot(logged_user_id, filter_set_id))
-#     return response
+    response = flask.jsonify(create_snapshot(logged_user_id, filter_set_id, users_list))
+    return response
 
 
-# @blueprint.route("/snapshot/<token>", methods=["GET"])
-# def get_filter_set_snapshot(token):
-#     """
-#     Return the snapshot for the given token.
-#     """
-#     try:
-#         logged_user_id = current_user.id
-#     except AuthError:
-#         logger.warning("Unable to load or find the user, check your token")
+@blueprint.route("/snapshot/<token>", methods=["GET"])
+def get_filter_set_snapshot(token):
+    """
+    Return the snapshot for the given token.
+    """
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning("Unable to load or find the user, check your token")
 
-#     response = flask.jsonify(get_snapshot(logged_user_id, token))
-#     return response
+    response = flask.jsonify(get_snapshot(logged_user_id, token))
+    return response
