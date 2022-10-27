@@ -87,13 +87,15 @@ def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, expl
     new_filter_set = Search(
         user_id=logged_user_id,
         filter_source_internal_id=explorer_id,
-        filter_source=FilterSourceType.manual if is_amanuensis_admin else FilterSourceType.explorer,
+        filter_source=FilterSourceType.manual
+        if is_amanuensis_admin
+        else FilterSourceType.explorer,
         user_source="fence",
         name=name,
         description=description,
         filter_object=filter_object,
         ids_list=ids_list,
-        # is_snapshot=is_snapshot,
+        is_snapshot=is_snapshot,
         graphql_object=graphql_object
     )
     # TODO add es_index, add dataset_version
