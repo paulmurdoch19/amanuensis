@@ -13,7 +13,7 @@ from amanuensis.resources.filterset import (
 )
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
-from amanuensis.errors import AuthError
+from amanuensis.errors import AuthError, UserError
 from amanuensis.schema import SearchSchema
 from cdislogging import get_logger
 
@@ -151,9 +151,12 @@ def create_snapshot_from_filter_set():
     except AuthError:
         logger.warning("Unable to load or find the user, check your token")
 
-    filter_set_id = flask.request.args.get("filter_set_id", default=1, type=int)
+    filter_set_id = flask.request.args.get("filter_set_id", default=None, type=int)
+    users_list = flask.request.get_json().get("users_list", None)
+    if not filter_set_id:
+        raise UserError("Missing parameters.")
 
-    response = flask.jsonify(create_snapshot(logged_user_id, filter_set_id))
+    response = flask.jsonify(create_snapshot(logged_user_id, filter_set_id, users_list))
     return response
 
 

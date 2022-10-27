@@ -22,6 +22,8 @@ from amanuensis.auth.auth import get_jwt_from_header
 from amanuensis.config import config
 from amanuensis.errors import NotFound, UserError
 
+from aws_client.boto import BotoManager
+
 
 rng = SystemRandom()
 alphanumeric = string.ascii_uppercase + string.ascii_lowercase + string.digits

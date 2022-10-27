@@ -7,12 +7,12 @@ from flask_sqlalchemy_session import flask_scoped_session, current_session
 from userportaldatamodel.driver import SQLAlchemyDriver
 from pcdcutils.signature import SignatureManager
 from pcdcutils.errors import KeyPathInvalidError, NoKeyError
+from aws_client.boto import BotoManager
 from cdislogging import get_logger
 from cdispyutils.config import get_value
 from gen3authz.client.arborist.client import ArboristClient
 from amanuensis.errors import UserError
 from amanuensis.models import migrate
-from amanuensis.resources.aws.boto_manager import BotoManager
 from amanuensis.error_handler import get_error_response
 from amanuensis.config import config
 from amanuensis.settings import CONFIG_SEARCH_FOLDERS

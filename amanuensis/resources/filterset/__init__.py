@@ -63,9 +63,10 @@ def delete(logged_user_id, filter_set_id, explorer_id):
         return delete_filter_set(session, logged_user_id, filter_set_id, explorer_id)
 
 
-def create_snapshot(logged_user_id, filter_set_id):
+def create_snapshot(logged_user_id, filter_set_id, users_list):
     with flask.current_app.db.session as session:
-        return create_filter_set_snapshot(session, logged_user_id, filter_set_id)
+        return create_filter_set_snapshot(session, logged_user_id, filter_set_id, users_list)
+
 
 def get_snapshot(logged_user_id, token):
     with flask.current_app.db.session as session:
