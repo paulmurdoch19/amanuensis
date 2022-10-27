@@ -36,4 +36,3 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("search_is_shared")
 
-
