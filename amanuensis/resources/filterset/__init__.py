@@ -11,8 +11,8 @@ from amanuensis.resources.userdatamodel import (
     delete_filter_set,
     update_filter_set,
     get_filter_sets_by_user_id, 
-    # create_filter_set_snapshot, 
-    # get_snapshot_by_token
+    create_filter_set_snapshot, 
+    get_snapshot_by_token
 )
 
 from amanuensis.schema import SearchSchema
@@ -63,10 +63,10 @@ def delete(logged_user_id, filter_set_id, explorer_id):
         return delete_filter_set(session, logged_user_id, filter_set_id, explorer_id)
 
 
-# def create_snapshot(logged_user_id, filter_set_id):
-#     with flask.current_app.db.session as session:
-#         return create_filter_set_snapshot(session, logged_user_id, filter_set_id)
+def create_snapshot(logged_user_id, filter_set_id):
+    with flask.current_app.db.session as session:
+        return create_filter_set_snapshot(session, logged_user_id, filter_set_id)
 
-# def get_snapshot(logged_user_id, token):
-#     with flask.current_app.db.session as session:
-#         return get_snapshot_by_token(session, logged_user_id, token)
+def get_snapshot(logged_user_id, token):
+    with flask.current_app.db.session as session:
+        return get_snapshot_by_token(session, logged_user_id, token)
