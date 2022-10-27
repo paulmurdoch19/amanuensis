@@ -8,8 +8,8 @@ from amanuensis.resources.filterset import (
     create,
     delete,
     update,
-    # create_snapshot,
-    # get_snapshot,
+    create_snapshot,
+    get_snapshot,
 )
 from amanuensis.config import config
 from amanuensis.auth.auth import current_user
