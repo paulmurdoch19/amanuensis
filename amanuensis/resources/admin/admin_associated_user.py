@@ -1,11 +1,15 @@
 import flask
-import json
 from cdislogging import get_logger
 
-from amanuensis.resources import userdatamodel as udm
 from amanuensis.config import config
-from amanuensis.schema import StateSchema, RequestSchema, ConsortiumDataContributorSchema, AssociatedUserSchema
-from amanuensis.errors import NotFound
+from amanuensis.resources import fence
+from amanuensis.resources import userdatamodel as udm
+from amanuensis.schema import (
+    AssociatedUserSchema,
+    ConsortiumDataContributorSchema,
+    RequestSchema,
+    StateSchema,
+)
 
 logger = get_logger(__name__)
 
@@ -24,17 +28,66 @@ def add_associated_users(users):
     with flask.current_app.db.session as session:
         associated_user_schema = AssociatedUserSchema(many=True)
         ret = []
-        user_emails = [user["email"] for user in users]
-        users_in_table = udm.get_associated_users(session, user_emails)
+        users_with_email = [user for user in users if "email" in user]
+        users_with_id = [
+            user
+            for user in users
+            if "id" in user
+        ]
+        user_emails = [user["email"] for user in users_with_email]
+        user_ids = [user["id"] for user in users_with_id]
+        associated_users = udm.get_associated_users(session, user_emails)
+        associated_users += udm.get_associated_users_by_id(session, user_ids)
+
+        associated_user_emails = [user.email for user in associated_users]
+        associated_user_ids = [user.user_id for user in associated_users]
+
+        for i, user in enumerate(users_with_id):
+            if user["id"] in associated_user_ids:
+                users_with_id.pop(i)
+
+        for i, user in enumerate(users_with_email):
+            if user["email"] in associated_user_emails:
+                users_with_email.pop(i)
+
+        user_emails = [user["email"] for user in users_with_email]
+        user_ids = [user["id"] for user in users_with_id]
+
+        fence_users = []
+        if user_emails:
+            fence_users.extend(fence.fence_get_users(config, usernames=user_emails)["users"])
+        if user_ids:
+            fence_users.extend(fence.fence_get_users(config, ids=user_ids)["users"])
+        if fence_users:
+            fence_users = [
+                {"email": user["name"], "id": user["id"]} for user in fence_users
+            ]
+
+        for fence_user in fence_users:
+            for user in users_with_email:
+                if user["email"] == fence_user["email"]:
+                    user["id"] = fence_user["id"]
+                    break
+
+        for fence_user in fence_users:
+            for user in users_with_id:
+                if user["id"] == fence_user["id"]:
+                    user["email"] = fence_user["email"]
+                    break
+        
+        users.clear()
+        users = users_with_email + users_with_id
+        seen_id = []
         for user in users:
-            if user not in users_in_table:
+            if user["id"] not in seen_id:
                 ret.append(
                     udm.add_associated_user(
-                        session, 
-                        user["project_id"], 
+                        session,
+                        user["project_id"],
                         user["email"] if "email" in user else None,
-                        user["id"] if "id" in user else None
+                        user["id"] if "id" in user else None,
                     )
                 )
-                associated_user_schema.dump(ret)
+                seen_id.append(user["id"])
+            associated_user_schema.dump(ret)
         return ret

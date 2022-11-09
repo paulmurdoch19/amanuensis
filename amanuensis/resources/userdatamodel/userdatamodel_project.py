@@ -27,6 +27,7 @@ __all__ = [
     "add_associated_user",
     "update_associated_users",
     "update_project_date",
+    "get_associated_users_by_id",
 ]
 
 
@@ -134,6 +135,17 @@ def get_associated_users(current_session, emails):
     if not emails:
         return []
     return current_session.query(AssociatedUser).filter(AssociatedUser.email.in_(emails)).all()
+
+
+def get_associated_users_by_id(current_session, ids):
+    if not ids:
+        return []
+    return (
+        current_session.query(AssociatedUser)
+        .filter(AssociatedUser.user_id.in_(ids))
+        .all()
+    )
+
 
 def add_associated_user(current_session, project_id, email, user_id):
     if not user_id and not email: 
