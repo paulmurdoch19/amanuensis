@@ -10,6 +10,7 @@ from amanuensis.schema import (
     RequestSchema,
     StateSchema,
 )
+from amanuensis.errors import UserError
 
 logger = get_logger(__name__)
 
@@ -42,13 +43,6 @@ def add_associated_users(users):
         associated_user_emails = [user.email for user in associated_users]
         associated_user_ids = [user.user_id for user in associated_users]
 
-        for i, user in enumerate(users_with_id):
-            if user["id"] in associated_user_ids:
-                users_with_id.pop(i)
-
-        for i, user in enumerate(users_with_email):
-            if user["email"] in associated_user_emails:
-                users_with_email.pop(i)
 
         user_emails = [user["email"] for user in users_with_email]
         user_ids = [user["id"] for user in users_with_id]
@@ -77,17 +71,31 @@ def add_associated_users(users):
         
         users.clear()
         users = users_with_email + users_with_id
-        seen_id = []
+        seen_id, seen_email = associated_user_ids, associated_user_emails
         for user in users:
-            if user["id"] not in seen_id:
-                ret.append(
-                    udm.add_associated_user(
-                        session,
-                        user["project_id"],
-                        user["email"] if "email" in user else None,
-                        user["id"] if "id" in user else None,
-                    )
+            email, user_id = None, None
+            if "email" in user:
+                if user["email"] not in seen_email:
+                    seen_email.append(user["email"])
+                    email = user["email"]
+                else:
+                    continue
+            if "id" in user:
+                if user["id"] not in seen_id:
+                    seen_id.append(user["id"])
+                    user_id = user["id"]
+                else:
+                    continue
+            if not (user_id or email):
+                raise UserError("The associated user must have at least an email or id. Neither was found.")
+
+            ret.append(
+                udm.add_associated_user(
+                    session,
+                    user["project_id"],
+                    email,
+                    user_id,
                 )
-                seen_id.append(user["id"])
-            associated_user_schema.dump(ret)
+            )
+        associated_user_schema.dump(ret)
         return ret
