@@ -35,6 +35,8 @@ def add_associated_users(users):
             for user in users
             if "id" in user
         ]
+        if not (users_with_email or users_with_id):
+            raise UserError("The associated user must have at least an email or id. Neither was found.")
         user_emails = [user["email"] for user in users_with_email]
         user_ids = [user["id"] for user in users_with_id]
         associated_users = udm.get_associated_users(session, user_emails)
@@ -86,8 +88,6 @@ def add_associated_users(users):
                     user_id = user["id"]
                 else:
                     continue
-            if not (user_id or email):
-                raise UserError("The associated user must have at least an email or id. Neither was found.")
 
             ret.append(
                 udm.add_associated_user(
