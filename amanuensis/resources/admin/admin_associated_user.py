@@ -45,10 +45,6 @@ def add_associated_users(users):
         associated_user_emails = [user.email for user in associated_users]
         associated_user_ids = [user.user_id for user in associated_users]
 
-
-        user_emails = [user["email"] for user in users_with_email]
-        user_ids = [user["id"] for user in users_with_id]
-
         fence_users = []
         if user_emails:
             fence_users.extend(fence.fence_get_users(config, usernames=user_emails)["users"])
