@@ -29,21 +29,20 @@ def add_associated_users(users):
     with flask.current_app.db.session as session:
         associated_user_schema = AssociatedUserSchema(many=True)
         ret = []
-        users_with_email = [user for user in users if "email" in user]
-        users_with_id = [
-            user
-            for user in users
-            if "id" in user
-        ]
-        if not (users_with_email or users_with_id):
-            raise UserError("The associated user must have at least an email or id. Neither was found.")
+        users_with_id, users_with_email = [], []
+        for user in users:
+            if "email" in user:
+                users_with_email.append(user)
+            elif "id" in user:
+                users_with_id.append(user)
+            else:
+                raise UserError(
+                    "The associated user must have at least an email or id. Neither was found."
+                )
         user_emails = [user["email"] for user in users_with_email]
         user_ids = [user["id"] for user in users_with_id]
         associated_users = udm.get_associated_users(session, user_emails)
         associated_users += udm.get_associated_users_by_id(session, user_ids)
-
-        associated_user_emails = [user.email for user in associated_users]
-        associated_user_ids = [user.user_id for user in associated_users]
 
         fence_users = []
         if user_emails:
@@ -66,10 +65,13 @@ def add_associated_users(users):
                 if user["id"] == fence_user["id"]:
                     user["email"] = fence_user["email"]
                     break
+
+        associated_user_emails = [user.email for user in associated_users]
+        associated_user_ids = [user.user_id for user in associated_users]
         
-        users.clear()
-        users = users_with_email + users_with_id
         seen_id, seen_email = associated_user_ids, associated_user_emails
+
+        users = users_with_email + users_with_id
         for user in users:
             email, user_id = None, None
             if "email" in user:
