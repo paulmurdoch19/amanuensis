@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "amanuensis"
-version = "2.6.1"
+version = "2.6.2"
 description = "Gen3 Portal related data"
 authors = ["PCDC UChicago <lgraglia@uchicago.edu>"]
 license = "Apache-2.0"
