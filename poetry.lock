@@ -78,23 +78,30 @@ requests = "*"
 
 [[package]]
 name = "authutils"
-version = "6.1.0"
+version = "6.1.4"
 description = "Gen3 auth utility functions"
 category = "main"
 optional = false
-python-versions = ">=3.6,<4.0"
+python-versions = "^3.6"
+develop = false
 
 [package.dependencies]
-authlib = ">=0.11,<1.0"
-cached-property = ">=1.4,<2.0"
+authlib = "0.11.0"
+cached-property = "~=1.4"
 cdiserrors = "<2.0.0"
 httpx = ">=0.12.1,<1.0.0"
-pyjwt = {version = ">=1.5,<2.0", extras = ["crypto"]}
-xmltodict = ">=0.9,<1.0"
+pyjwt = {version = "~=1.5", extras = ["crypto"]}
+xmltodict = "~=0.9"
 
 [package.extras]
 flask = ["Flask (>=0.10.1)"]
 fastapi = ["fastapi (>=0.54.1,<0.55.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/chicagopcdc/authutils.git"
+reference = "6.1.4"
+resolved_reference = "a9143ea09890b804b74dce08377bce103dbb4d2f"
 
 [[package]]
 name = "backoff"
@@ -323,7 +330,7 @@ yaml = ["PyYAML (>=3.10)"]
 
 [[package]]
 name = "cryptography"
-version = "38.0.1"
+version = "38.0.4"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
 category = "main"
 optional = false
@@ -714,7 +721,7 @@ http2 = ["h2 (>=3,<5)"]
 
 [[package]]
 name = "httplib2"
-version = "0.20.4"
+version = "0.21.0"
 description = "A comprehensive HTTP client library."
 category = "main"
 optional = false
@@ -1023,7 +1030,7 @@ pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
 
 [[package]]
 name = "paramiko"
-version = "2.11.0"
+version = "2.12.0"
 description = "SSH2 protocol library"
 category = "main"
 optional = false
@@ -1048,6 +1055,27 @@ description = "Python Build Reasonableness"
 category = "dev"
 optional = false
 python-versions = ">=2.6"
+
+[[package]]
+name = "pcdc-aws-client"
+version = "0.3.3"
+description = "aws client"
+category = "main"
+optional = false
+python-versions = "^3.6"
+develop = false
+
+[package.dependencies]
+boto3 = "*"
+cdiserrors = "*"
+cdispyutils = "*"
+retry = "*"
+
+[package.source]
+type = "git"
+url = "https://github.com/chicagopcdc/pcdc-aws-client.git"
+reference = "0.3.3"
+resolved_reference = "006a5e4111727ec883efefb2cb414c68931a9dcd"
 
 [[package]]
 name = "pcdcutils"
@@ -1093,7 +1121,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "psycopg2"
-version = "2.9.4"
+version = "2.9.5"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
 category = "main"
 optional = false
@@ -1266,7 +1294,7 @@ pycrypto = ["pycrypto (>=2.6.0,<2.7.0)"]
 
 [[package]]
 name = "pytz"
-version = "2022.5"
+version = "2022.6"
 description = "World timezone definitions, modern and historical"
 category = "main"
 optional = false
@@ -1497,7 +1525,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "66e93b8a297039bf03fb7db5760436f3a517dea0fa7bd801fca2bbc042ae6cbd"
+content-hash = "0a9f6c377eb9a3181be2bc0f77b29ee998455cffec06a94dc54a8997a15aabde"
 
 [metadata.files]
 addict = [
@@ -1519,10 +1547,7 @@ authlib = [
     {file = "Authlib-0.11-py2.py3-none-any.whl", hash = "sha256:3a226f231e962a16dd5f6fcf0c113235805ba206e294717a64fa8e04ae3ad9c4"},
     {file = "Authlib-0.11.tar.gz", hash = "sha256:9741db6de2950a0a5cefbdb72ec7ab12f7e9fd530ff47219f1530e79183cbaaf"},
 ]
-authutils = [
-    {file = "authutils-6.1.0-py3-none-any.whl", hash = "sha256:682dba636694c36fb35af1d9ff576bb8436337c3899f0ef434cda5918d661db9"},
-    {file = "authutils-6.1.0.tar.gz", hash = "sha256:7263af0b2ce3a0db19236fd123b34f795d07e07111b7bd18a51808568ddfdc2e"},
-]
+authutils = []
 backoff = [
     {file = "backoff-1.11.1-py2.py3-none-any.whl", hash = "sha256:61928f8fa48d52e4faa81875eecf308eccfb1016b018bb6bd21e05b5d90a96c5"},
     {file = "backoff-1.11.1.tar.gz", hash = "sha256:ccb962a2378418c667b3c979b504fdeb7d9e0d29c0579e3b13b86467177728cb"},
@@ -1849,10 +1874,7 @@ httpcore = [
     {file = "httpcore-0.13.3-py3-none-any.whl", hash = "sha256:ff614f0ef875b9e5fe0bdd459b31ea0eea282ff12dc82add83d68b3811ee94ad"},
     {file = "httpcore-0.13.3.tar.gz", hash = "sha256:5d674b57a11275904d4fd0819ca02f960c538e4472533620f322fc7db1ea0edc"},
 ]
-httplib2 = [
-    {file = "httplib2-0.20.4-py3-none-any.whl", hash = "sha256:8b6a905cb1c79eefd03f8669fd993c36dc341f7c558f056cb5a33b5c2f458543"},
-    {file = "httplib2-0.20.4.tar.gz", hash = "sha256:58a98e45b4b1a48273073f905d2961666ecf0fbac4250ea5b47aef259eb5c585"},
-]
+httplib2 = []
 httpx = [
     {file = "httpx-0.20.0-py3-none-any.whl", hash = "sha256:33af5aad9bdc82ef1fc89219c1e36f5693bf9cd0ebe330884df563445682c0f8"},
     {file = "httpx-0.20.0.tar.gz", hash = "sha256:09606d630f070d07f9ff28104fbcea429ea0014c1e89ac90b4d8de8286c40e7b"},
@@ -1967,11 +1989,9 @@ packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
     {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
 ]
-paramiko = [
-    {file = "paramiko-2.11.0-py2.py3-none-any.whl", hash = "sha256:655f25dc8baf763277b933dfcea101d636581df8d6b9774d1fb653426b72c270"},
-    {file = "paramiko-2.11.0.tar.gz", hash = "sha256:003e6bee7c034c21fbb051bf83dc0a9ee4106204dd3c53054c71452cc4ec3938"},
-]
+paramiko = []
 pbr = []
+pcdc-aws-client = []
 pcdcutils = []
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
