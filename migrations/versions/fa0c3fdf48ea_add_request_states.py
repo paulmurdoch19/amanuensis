@@ -22,8 +22,6 @@ logger = logging.getLogger("amanuensis.alembic")
 
 def upgrade() -> None:
 
-    conn = op.get_bind()
-    session = Session(bind=conn)
     states = []
 
     states.append(State(name="Draft", code="DRAFT"))
@@ -55,10 +53,29 @@ def upgrade() -> None:
 
     states.append(State(name="Published", code="PUBLISHED"))
 
+    conn = op.get_bind()
+    session = Session(bind=conn)
     session.add_all(states)
     session.commit()
 
 
 def downgrade() -> None:
-    pass
 
+    state_codes = [
+        "DRAFT",
+        "SUBMITTED",
+        "REVISION",
+        "APPROVED_WITH_FEEDBACK",
+        "REQUEST_CRITERIA_FINALIZED",
+        "WITHDRAWAL",
+        "AGREEMENTS_NEGOTIATION",
+        "AGREEMENTS_EXECUTED",
+        "DATA_AVAILABLE",
+        "DATA_DOWNLOADED",
+        "PUBLISHED",
+    ]
+    conn = op.get_bind()
+    session = Session(bind=conn)
+    for code in state_codes:
+        session.query(State).filter(State.code == code).delete()
+    session.commit()
