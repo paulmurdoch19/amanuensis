@@ -49,8 +49,6 @@ def add_associated_users(users):
                     }
                 )
 
-        logger.error(f"Users: {users}")
-        logger.error(f"Fence users: {fence_users}")
         verified_users, new_users = [], []
         for user in users:
             in_fence = False
@@ -68,10 +66,7 @@ def add_associated_users(users):
             ):  # if the user is not in fence having only user_id is meaningless.
                 new_users.append(user)
 
-        logger.error(f"verified users: {verified_users}")
-        logger.error(f"new_users: {new_users}")
         all_users = verified_users + new_users
-        logger.error(f"All users: {all_users}")
         user_emails = [user["email"] for user in all_users]
         user_ids = [user["id"] for user in verified_users]
 
@@ -109,7 +104,6 @@ def add_associated_users(users):
                 if user["email"] == associated_user.email:
                     project_id = user["project_id"]
                     if project_id not in projects:
-                        logger.error(f"user: {user}")
                         ret.append(
                             udm.add_associated_user_to_project(
                                 session,
@@ -122,7 +116,6 @@ def add_associated_users(users):
 
         for user in all_users:
             if user["email"] not in associated_user_emails:
-                logger.error(f"Adding user: {user}")
                 ret.append(
                     udm.add_associated_user(
                         session,
