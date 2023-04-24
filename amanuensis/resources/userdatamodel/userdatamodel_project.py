@@ -23,11 +23,14 @@ __all__ = [
     "get_project_by_consortium",
     "get_project_by_user",
     "get_project_by_id",
+    "get_associated_user",
     "get_associated_users",
     "add_associated_user",
     "update_associated_users",
     "update_project_date",
+    "get_associated_user_by_id",
     "get_associated_users_by_id",
+    "add_associated_user_to_project",
 ]
 
 
@@ -137,6 +140,12 @@ def get_associated_users(current_session, emails):
     return current_session.query(AssociatedUser).filter(AssociatedUser.email.in_(emails)).all()
 
 
+def get_associated_user(current_session, email):
+    if not email:
+        return
+    return current_session.query(AssociatedUser).filter(AssociatedUser.email == email).first()
+
+
 def get_associated_users_by_id(current_session, ids):
     if not ids:
         return []
@@ -146,6 +155,14 @@ def get_associated_users_by_id(current_session, ids):
         .all()
     )
 
+def get_associated_user_by_id(current_session, id):
+    if not id:
+        return
+    return (
+        current_session.query(AssociatedUser)
+        .filter(AssociatedUser.user_id == id)
+        .first()
+    )
 
 def add_associated_user(current_session, project_id, email, user_id):
     if not user_id and not email: 
@@ -225,6 +242,19 @@ def update_project_date(session, project_id, new_update_date):
             raise UserError("The new update_date must be later than the create date.")
     return requests
 
+
+def add_associated_user_to_project(current_session, associated_user, project_id):
+    if not id:
+        raise UserError("Missing user id.")
+
+    new_project_user = ProjectAssociatedUser(
+        project_id = project_id,
+        associated_user_id = associated_user.id
+    )
+
+    current_session.add(new_project_user)
+    current_session.commit()
+    return associated_user
 
 # def delete_project(current_session, project_name):
 #     """
