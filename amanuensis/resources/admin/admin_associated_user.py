@@ -7,6 +7,7 @@ from amanuensis.config import config
 from amanuensis.resources import fence
 from amanuensis.resources import userdatamodel as udm
 from amanuensis.schema import AssociatedUserSchema
+from amanuensis.errors import UserError
 
 logger = get_logger(__name__)
 
@@ -23,105 +24,94 @@ def update_role(project_id, user_id, email, role):
 
 
 def add_associated_users(users):
-
+    # users variable format: [{project_id: "", id: "", email: ""},{}]
     users = [defaultdict(lambda: None, user) for user in users]
 
     with flask.current_app.db.session as session:
         associated_user_schema = AssociatedUserSchema(many=True)
         ret = []
-        user_emails = [user["email"] for user in users]
-        user_ids = [user["id"] for user in users]
 
-        fence_users_by_email = fence.fence_get_users(config, usernames=user_emails)[
-            "users"
-        ]
-        fence_users_by_id = fence.fence_get_users(config, ids=user_ids)["users"]
+        # Get list of emails and ids
+        user_emails = [user["email"] for user in users if "email" in user]
+        user_ids = [user["id"] for user in users if "id" in user]
 
-        fence_users, seen_emails = [], []
-        all_fence_users = fence_users_by_email + fence_users_by_id
-        for user in all_fence_users:
-            if user["name"] not in seen_emails:
-                seen_emails.append(user["name"])
-                fence_users.append(
-                    {
-                        "id": user["id"],
-                        "name": user["name"],
-                    }
-                )
 
-        verified_users, new_users = [], []
         for user in users:
-            in_fence = False
-            for fence_user in fence_users:
-                if user["email"] == fence_user["name"]:
-                    user["id"] = fence_user["id"]
-                    verified_users.append(user)
-                    in_fence = True
-                elif user["id"] == fence_user["id"]:
-                    user["email"] = fence_user["name"]
-                    verified_users.append(user)
-                    in_fence = True
-            if (
-                not in_fence and user["email"]
-            ):  # if the user is not in fence having only user_id is meaningless.
-                new_users.append(user)
+            fence_user = None
+            amanuensis_user = None
 
-        all_users = verified_users + new_users
-        user_emails = [user["email"] for user in all_users]
-        user_ids = [user["id"] for user in verified_users]
-
-        associated_users = udm.get_associated_users(session, user_emails)
-
-        associated_users_by_id = udm.get_associated_users_by_id(session, user_ids)
-
-        for user in associated_users_by_id:
-            if user not in associated_users:
-                associated_users.append(user)
-
-        # Check associated_user against fence and use fence as an authoritative source.
-        for associated_user in associated_users:
-            for verified_user in verified_users:
-                if (
-                    associated_user.email == verified_user["email"]
-                    and associated_user.user_id != verified_user["id"]
-                ):
-                    associated_user.user_id = verified_user["id"]
-                    udm.associate_user.update_associated_user(session, associated_user)
-
-                elif (
-                    associated_user.email != verified_user["email"]
-                    and associated_user.user_id == verified_user["id"]
-                ):
-
-                    associated_user.email = verified_user["email"]
-                    udm.associate_user.update_associated_user(
-                        session, associated_user=associated_user
+            # FENCE Retrieve the users information from the Fence DB
+            fence_user_by_email = None
+            fence_user_by_id = None
+            if "id" in user:
+                fence_user_by_id = fence.fence_get_users(config, ids=[user["id"]])["users"]
+                fence_user_by_id = fence_user_by_id[0] if len(fence_user_by_id) == 1 else None
+            elif "email" in user:
+                fence_user_by_email = fence.fence_get_users(config, usernames=[user["email"]])["users"]
+                fence_user_by_email = fence_user_by_email[0] if len(fence_user_by_email) == 1 else None  
+            # Check for discrepancies in case the user submitted both id and email instead of just one of the two
+            if fence_user_by_email and fence_user_by_id:
+                if fence_user_by_email["id"] != fence_user_by_id["id"] or fence_user_by_email["name"] != fence_user_by_id["name"]:
+                    raise UserError(
+                        "Invalid input - The ID and the email has to be for the same user. Only one is required. {} and {} don't match the same person in Fence.".format(user["id"], user["email"])
                     )
 
-        for associated_user in associated_users:
-            projects = [project.id for project in associated_user.projects]
-            for user in all_users:
-                if user["email"] == associated_user.email:
-                    project_id = user["project_id"]
-                    if project_id not in projects:
-                        ret.append(
-                            udm.add_associated_user_to_project(
-                                session,
-                                associated_user=associated_user,
-                                project_id=project_id,
-                            )
-                        )
+            # AMANUENSIS Retrieve the users from the Amanuensis DB
+            associated_user_by_email = None
+            associated_user_by_id = None
+            if "id" in user:
+                associated_user_by_id = udm.get_associated_users_by_id(session, [user["id"]])
+                associated_user_by_id = associated_user_by_id[0] if len(associated_user_by_id) == 1 else None
+            elif "email" in user:
+                associated_user_by_email = udm.get_associated_users(session, [user["email"]])
+                associated_user_by_email = associated_user_by_email[0] if len(associated_user_by_email) == 1 else None  
+            # Check for discrepancies in case the user submitted both id and email instead of just one of the two
+            if associated_user_by_email and associated_user_by_id:
+                if associated_user_by_email["user_id"] != associated_user_by_id["user_id"] or associated_user_by_email["email"] != associated_user_by_id["email"]:
+                    raise UserError(
+                        "Invalid input - The ID and the email has to be for the same user. Only one is required. {} and {} don't match the same person in Amanuensis".format(user["id"], user["email"])
+                    )
 
-        associated_user_emails = [user.email for user in associated_users]
+            # Check if the user exists in fence, if it doesn't send email to the user letting him/her know they need to register in the portal to be able to download the data once they are ready.
+            if not fence_user_by_email and not fence_user_by_id:
+                #TODO send notification to the user about registering in the portal to see the data
+                logger.info("The user {} has not created an account in the commons yet".format(user["id"] if "id" in user else user["email"]))
+            fence_user = fence_user_by_id if fence_user_by_id else fence_user_by_email
 
-        for user in all_users:
-            if user["email"] not in associated_user_emails:
+            # Check if the user exists in amanuensis, if it does check it is in sync with fence and update if needed, if it doesn't add it using the fence info
+            if not associated_user_by_email and not associated_user_by_id:
+                # Create the user in amanuensis
+                if fence_user:
+                    user["email"] = fence_user["name"]
+                    user["id"] = fence_user["id"]
+                logger.info("Creting new Associated user")
                 ret.append(
                     udm.add_associated_user(
                         session,
                         project_id=user["project_id"],
                         email=user["email"],
                         user_id=user["id"],
+                    )
+                )
+            else:
+                amanuensis_user = associated_user_by_id if associated_user_by_id else associated_user_by_email
+                updated = False
+                if amanuensis_user["email"] != fence_user["name"]:
+                    amanuensis_user["email"] = fence_user["name"]
+                    updated = True
+                if amanuensis_user["user_id"] != fence_user["id"]
+                    amanuensis_user["user_id"] = fence_user["id"]
+                    updated = True
+
+                if updated:
+                    #Update amanuensis associated_user
+
+                # add user to project
+                ret.append(
+                    udm.add_associated_user_to_project(
+                        session,
+                        associated_user=amanuensis_user,
+                        project_id=user["project_id"],
                     )
                 )
 
