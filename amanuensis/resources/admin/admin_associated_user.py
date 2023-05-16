@@ -108,7 +108,7 @@ def add_associated_users(users):
 
                 # add user to project
                 ret.append(
-                    udm.add_associated_user_to_project(
+                    udm.associate_user.add_associated_user_to_project(
                         session,
                         associated_user=amanuensis_user,
                         project_id=user["project_id"],

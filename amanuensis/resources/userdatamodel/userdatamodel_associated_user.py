@@ -10,6 +10,7 @@ __all__ = [
     "update_associated_user",
     "update_associated_users",
     "add_associated_user",
+    "add_associated_user_to_project",
 ]
 
 def get_associated_user(current_session, email):
@@ -103,3 +104,17 @@ def add_associated_user(current_session, project_id, email, user_id):
     current_session.add(new_project_user)
     current_session.commit()
     return new_user
+
+
+def add_associated_user_to_project(current_session, associated_user, project_id):
+    if not id:
+        raise UserError("Missing user id.")
+
+    new_project_user = ProjectAssociatedUser(
+        project_id = project_id,
+        associated_user_id = associated_user.id
+    )
+
+    current_session.add(new_project_user)
+    current_session.commit()
+    return associated_user

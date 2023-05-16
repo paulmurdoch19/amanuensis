@@ -27,7 +27,7 @@ __all__ = [
     
     "update_associated_users",
     "update_project_date",
-    "add_associated_user_to_project",
+    
 ]
 
 
@@ -198,18 +198,7 @@ def update_project_date(session, project_id, new_update_date):
     return requests
 
 
-def add_associated_user_to_project(current_session, associated_user, project_id):
-    if not id:
-        raise UserError("Missing user id.")
 
-    new_project_user = ProjectAssociatedUser(
-        project_id = project_id,
-        associated_user_id = associated_user.id
-    )
-
-    current_session.add(new_project_user)
-    current_session.commit()
-    return associated_user
 
 # def delete_project(current_session, project_name):
 #     """
