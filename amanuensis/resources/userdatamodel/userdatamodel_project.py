@@ -23,11 +23,8 @@ __all__ = [
     "get_project_by_consortium",
     "get_project_by_user",
     "get_project_by_id",
-    
-    
     "update_associated_users",
     "update_project_date",
-    
 ]
 
 
@@ -128,17 +125,6 @@ def update_project(current_session, project_id, approved_url=None, searches=None
             "code": 500,
             "error": "Nothing has been updated, check the logs to see what happened during the transaction.",
         }
-
-
-
-
-
-
-
-
-
-
-
 
 
 def update_associated_users(current_session, project_id, id, email, role):

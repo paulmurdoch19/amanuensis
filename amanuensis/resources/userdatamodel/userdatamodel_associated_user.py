@@ -107,7 +107,7 @@ def add_associated_user(current_session, project_id, email, user_id):
 
 
 def add_associated_user_to_project(current_session, associated_user, project_id):
-    if not id:
+    if not associated_user and not associated_user.id:
         raise UserError("Missing user id.")
 
     new_project_user = ProjectAssociatedUser(

@@ -31,11 +31,6 @@ def add_associated_users(users):
         associated_user_schema = AssociatedUserSchema(many=True)
         ret = []
 
-        # Get list of emails and ids
-        user_emails = [user["email"] for user in users if "email" in user]
-        user_ids = [user["id"] for user in users if "id" in user]
-
-
         for user in users:
             fence_user = None
             amanuensis_user = None
@@ -74,7 +69,7 @@ def add_associated_users(users):
 
             # Check if the user exists in fence, if it doesn't send email to the user letting him/her know they need to register in the portal to be able to download the data once they are ready.
             if not fence_user_by_email and not fence_user_by_id:
-                #TODO send notification to the user about registering in the portal to see the data
+                #TODO send notification to the user about registering in the portal to see the data / and potentially create the user in fence programmatically
                 logger.info("The user {} has not created an account in the commons yet".format(user["id"] if "id" in user else user["email"]))
             fence_user = fence_user_by_id if fence_user_by_id else fence_user_by_email
 
@@ -105,6 +100,7 @@ def add_associated_users(users):
 
                 if updated:
                     #Update amanuensis associated_user
+                    udm.associate_user.update_associated_user(current_session, amanuensis_user)
 
                 # add user to project
                 ret.append(
