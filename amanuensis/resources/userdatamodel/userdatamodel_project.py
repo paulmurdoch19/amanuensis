@@ -23,7 +23,7 @@ __all__ = [
     "get_project_by_consortium",
     "get_project_by_user",
     "get_project_by_id",
-    "get_associated_user",
+    
     "add_associated_user",
     "update_associated_users",
     "update_project_date",
@@ -73,7 +73,6 @@ def get_project_by_id(current_session, logged_user_id, project_id):
             ProjectAssociatedUser, Project.associated_users_roles
         ).join(
             AssociatedUser, ProjectAssociatedUser.associated_user).first()
-
 
 
 def create_project(current_session, user_id, description, name, institution, searches, requests, associated_users):
@@ -134,10 +133,7 @@ def update_project(current_session, project_id, approved_url=None, searches=None
 
 
 
-def get_associated_user(current_session, email):
-    if not email:
-        return
-    return current_session.query(AssociatedUser).filter(AssociatedUser.email == email).first()
+
 
 
 
