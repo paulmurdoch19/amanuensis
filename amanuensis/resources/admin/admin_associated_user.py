@@ -91,12 +91,11 @@ def add_associated_users(users):
             else:
                 amanuensis_user = associated_user_by_id if associated_user_by_id else associated_user_by_email
                 updated = False
-                logger.info(amanuensis_user)
-                if amanuensis_user["email"] != fence_user["name"]:
-                    amanuensis_user["email"] = fence_user["name"]
+                if amanuensis_user.email != fence_user["name"]:
+                    amanuensis_user.email = fence_user["name"]
                     updated = True
-                if amanuensis_user["user_id"] != fence_user["id"]:
-                    amanuensis_user["user_id"] = fence_user["id"]
+                if amanuensis_user.user_id != fence_user["id"]:
+                    amanuensis_user.user_id = fence_user["id"]
                     updated = True
 
                 if updated:
