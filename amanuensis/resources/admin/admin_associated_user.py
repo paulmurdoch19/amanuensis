@@ -100,7 +100,7 @@ def add_associated_users(users):
 
                 if updated:
                     #Update amanuensis associated_user
-                    udm.associate_user.update_associated_user(current_session, amanuensis_user)
+                    udm.associate_user.update_associated_user(session, amanuensis_user)
 
                 # add user to project
                 ret.append(
