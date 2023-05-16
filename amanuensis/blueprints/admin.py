@@ -198,8 +198,8 @@ def create_project():
         )
 
     associated_users_emails = request.get_json().get("associated_users_emails", None)
-    if not associated_users_emails:
-        raise UserError("You can't create a Project without specifying the associated_users that will access the data")
+    # if not associated_users_emails:
+    #     raise UserError("You can't create a Project without specifying the associated_users that will access the data")
 
     name = request.get_json().get("name", None)
     description = request.get_json().get("description", None)
