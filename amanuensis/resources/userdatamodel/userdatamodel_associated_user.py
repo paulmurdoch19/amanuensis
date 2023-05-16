@@ -2,8 +2,6 @@ import amanuensis
 from amanuensis.models import AssociatedUser
 
 __all__ = [
-    
-    
     "get_associated_user",
     "get_associated_users",
     "get_associated_user_by_id",
@@ -11,7 +9,7 @@ __all__ = [
     "get_associated_user_by_user_id",
     "update_associated_user",
     "update_associated_users",
-    
+    "add_associated_user",
 ]
 
 def get_associated_user(current_session, email):
@@ -82,3 +80,26 @@ def update_associated_users(current_session, associated_users):
         )
 
     return "200"
+
+
+def add_associated_user(current_session, project_id, email, user_id):
+    if not user_id and not email: 
+        raise UserError("Missing email and id.")
+
+    new_user = AssociatedUser(
+        user_id=user_id if user_id else None,
+        user_source="fence",
+        email=email if email else None,
+    )
+
+    current_session.add(new_user)
+    current_session.flush()
+
+    new_project_user = ProjectAssociatedUser(
+        project_id = project_id,
+        associated_user_id = new_user.id
+    )
+
+    current_session.add(new_project_user)
+    current_session.commit()
+    return new_user

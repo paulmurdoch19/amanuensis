@@ -86,7 +86,7 @@ def add_associated_users(users):
                     user["id"] = fence_user["id"]
                 logger.info("Creting new Associated user")
                 ret.append(
-                    udm.add_associated_user(
+                    udm.associate_user.add_associated_user(
                         session,
                         project_id=user["project_id"],
                         email=user["email"],
