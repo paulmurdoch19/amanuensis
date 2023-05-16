@@ -1,5 +1,5 @@
 import amanuensis
-from amanuensis.models import AssociatedUser
+from amanuensis.models import AssociatedUser, ProjectAssociatedUser
 
 __all__ = [
     "get_associated_user",
