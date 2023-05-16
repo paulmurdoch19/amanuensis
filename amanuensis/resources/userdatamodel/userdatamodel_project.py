@@ -23,8 +23,6 @@ __all__ = [
     "get_project_by_consortium",
     "get_project_by_user",
     "get_project_by_id",
-    "get_associated_users",
-    "add_associated_user",
     "update_associated_users",
     "update_project_date",
 ]
@@ -72,7 +70,6 @@ def get_project_by_id(current_session, logged_user_id, project_id):
             ProjectAssociatedUser, Project.associated_users_roles
         ).join(
             AssociatedUser, ProjectAssociatedUser.associated_user).first()
-
 
 
 def create_project(current_session, user_id, description, name, institution, searches, requests, associated_users):
@@ -130,33 +127,6 @@ def update_project(current_session, project_id, approved_url=None, searches=None
         }
 
 
-def get_associated_users(current_session, emails):
-    if not emails:
-        return []
-    return current_session.query(AssociatedUser).filter(AssociatedUser.email.in_(emails)).all()
-
-def add_associated_user(current_session, project_id, email, user_id):
-    if not user_id and not email: 
-        raise UserError("Missing email and id.")
-
-    new_user = AssociatedUser(
-        user_id=user_id if user_id else None,
-        user_source="fence",
-        email=email if email else None,
-    )
-
-    current_session.add(new_user)
-    current_session.flush()
-
-    new_project_user = ProjectAssociatedUser(
-        project_id = project_id,
-        associated_user_id = new_user.id
-    )
-
-    current_session.add(new_project_user)
-    current_session.commit()
-    return new_user
-
 def update_associated_users(current_session, project_id, id, email, role):
     user_by_id = None
     user_by_email = None
@@ -212,6 +182,8 @@ def update_project_date(session, project_id, new_update_date):
         else:
             raise UserError("The new update_date must be later than the create date.")
     return requests
+
+
 
 
 # def delete_project(current_session, project_name):

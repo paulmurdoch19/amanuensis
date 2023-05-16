@@ -11,7 +11,7 @@ from amanuensis.resources.userdatamodel import (
     get_project_by_user,
     get_project_by_id,
     update_project,
-    get_associated_users
+    associate_user
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
 
@@ -67,7 +67,7 @@ def get_by_id(logged_user_id, project_id):
 
 def get_all_associated_users(emails):
     with flask.current_app.db.session as session:
-        associated_users = get_associated_users(session, emails)
+        associated_users = associate_user.get_associated_users(session, emails)
         return associated_users
 
 
