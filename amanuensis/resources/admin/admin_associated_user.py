@@ -60,7 +60,7 @@ def add_associated_users(users):
             associated_user_by_email = None
             associated_user_by_id = None
             if "id" in user:
-                associated_user_by_id = udm.get_associated_users_by_id(session, [user["id"]])
+                associated_user_by_id = udm.associate_user.get_associated_users_by_id(session, [user["id"]])
                 associated_user_by_id = associated_user_by_id[0] if len(associated_user_by_id) == 1 else None
             elif "email" in user:
                 associated_user_by_email = udm.get_associated_users(session, [user["email"]])

@@ -6,6 +6,9 @@ __all__ = [
     "update_associated_user",
     "get_associated_users",
     "get_associated_user_by_id",
+    "get_associated_users_by_id",
+    "get_associated_user_by_user_id",
+    
 ]
 
 
@@ -26,6 +29,23 @@ def get_associated_user_by_id(current_session, id):
         current_session.query(AssociatedUser).filter(AssociatedUser.id==id).first()
     )
 
+def get_associated_users_by_id(current_session, ids):
+    if not ids:
+        return []
+    return (
+        current_session.query(AssociatedUser)
+        .filter(AssociatedUser.user_id.in_(ids))
+        .all()
+    )
+
+def get_associated_user_by_user_id(current_session, id):
+    if not id:
+        return
+    return (
+        current_session.query(AssociatedUser)
+        .filter(AssociatedUser.user_id == id)
+        .first()
+    )
 
 def update_associated_user(current_session, associated_user):
 
