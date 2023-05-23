@@ -1,18 +1,22 @@
-from wsgiref.util import request_uri
 import flask
 from flask_sqlalchemy_session import current_session
+from wsgiref.util import request_uri
 
-# from amanuensis.auth import login_required, current_token
-# from amanuensis.errors import Unauthorized, UserError, NotFound
+from cdislogging import get_logger
+
 from amanuensis.resources.project import create, get_all
 from amanuensis.resources.admin import get_by_code
 from amanuensis.resources.fence import fence_get_users
-from amanuensis.config import config
-from amanuensis.auth.auth import current_user
+from amanuensis.resources.request import get_request_state
+from amanuensis.auth.auth import current_user, has_arborist_access
 from amanuensis.errors import AuthError, InternalError
 from amanuensis.schema import ProjectSchema
-from amanuensis.resources.request import get_request_state
-from cdislogging import get_logger
+from amanuensis.config import config
+
+
+# from amanuensis.auth import login_required, current_token
+# from amanuensis.errors import Unauthorized, UserError, NotFound
+
 
 
 blueprint = flask.Blueprint("projects", __name__)
@@ -69,11 +73,15 @@ def get_projetcs():
     except AuthError:
         logger.warning("Unable to load or find the user, check your token")
 
-    # TODO assign this as a resource in arborist
-    approver = flask.request.args.get("approver", None)
+    # special_user = [approver, admin]
+    special_user = flask.request.args.get("special_user", None)
+    if special_user and special_user == "admin" and not has_arborist_access(resource="/services/amanuensis", method="*"):
+        raise AuthError(
+                "The user is trying to access as admin but it's not an admin."
+            )
 
     project_schema = ProjectSchema(many=True)
-    projects = project_schema.dump(get_all(logged_user_id, logged_user_email, approver))
+    projects = project_schema.dump(get_all(logged_user_id, logged_user_email, special_user))
 
     return_projects = []
 
