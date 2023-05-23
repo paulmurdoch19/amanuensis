@@ -7,6 +7,7 @@ from sqlalchemy.orm import aliased
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Project,
+    Request,
     Search,
     AssociatedUser,
     ProjectAssociatedUser,
