@@ -37,9 +37,14 @@ logger = get_logger(__name__)
 def get_all(logged_user_id, logged_user_email, special_user):
     project_schema = ProjectSchema(many=True)
     with flask.current_app.db.session as session:
+        print("LUCAAAAAAAA")
+        print(special_user)
         if special_user:
+            print(special_user)
             if special_user == "admin":
+                print(special_user)
                 projects = get_all_projects(session)
+                print(projects)
                 project_schema.dump(projects)
                 return projects
 
