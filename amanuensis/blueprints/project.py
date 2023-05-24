@@ -74,7 +74,10 @@ def get_projetcs():
         logger.warning("Unable to load or find the user, check your token")
 
     # special_user = [approver, admin]
-    special_user = flask.request.args.get("special_user", None)
+    special_user = flask.request.get_json().get("special_user", None)
+    # special_user = flask.request.args.get("special_user", None)
+    print(special_user)
+    print("LUCAAAAAAA")
     if special_user and special_user == "admin" and not has_arborist_access(resource="/services/amanuensis", method="*"):
         raise AuthError(
                 "The user is trying to access as admin but it's not an admin."
