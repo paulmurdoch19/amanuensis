@@ -40,7 +40,6 @@ def get_all(logged_user_id, logged_user_email, special_user):
         if special_user:
             if special_user == "admin":
                 projects = get_all_projects(session)
-                print(projects)
                 project_schema.dump(projects)
                 return projects
 
