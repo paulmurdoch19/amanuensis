@@ -33,8 +33,6 @@ __all__ = [
 def get_all_projects(current_session):
     return (
         current_session.query(Project)
-        .join(Project.requests)
-        .join(Request.consortium_data_contributor)
         .all()
     )
 
