@@ -7,6 +7,7 @@ from sqlalchemy.orm import aliased
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Project,
+    Request,
     Search,
     AssociatedUser,
     ProjectAssociatedUser,
@@ -20,12 +21,20 @@ from amanuensis.resources.userdatamodel.userdatamodel_request import (
 __all__ = [
     "create_project",
     "update_project",
+    "get_all_projects",
     "get_project_by_consortium",
     "get_project_by_user",
     "get_project_by_id",
     "update_associated_users",
     "update_project_date",
 ]
+
+
+def get_all_projects(current_session):
+    return (
+        current_session.query(Project)
+        .all()
+    )
 
 
 def get_project_by_consortium(current_session, consortium, logged_user_id):

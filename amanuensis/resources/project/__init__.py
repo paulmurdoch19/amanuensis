@@ -7,6 +7,7 @@ from gen3authz.client.arborist.errors import ArboristError
 
 from amanuensis.resources.userdatamodel import (
     create_project,
+    get_all_projects,
     get_project_by_consortium,
     get_project_by_user,
     get_project_by_id,
@@ -33,25 +34,30 @@ from amanuensis.schema import ProjectSchema
 logger = get_logger(__name__)
 
 
-def get_all(logged_user_id, logged_user_email, approver):
+def get_all(logged_user_id, logged_user_email, special_user):
     project_schema = ProjectSchema(many=True)
     with flask.current_app.db.session as session:
-        if approver:
-            #TODO check if the user is part of a EC commettee, if so get the one submitted to the consortium
-            #Get consortium
-            isEcMember = True
-            consortium = "INRG"
-            if isEcMember and consortium:
-                projects = get_project_by_consortium(session, consortium, logged_user_id)
+        if special_user:
+            if special_user == "admin":
+                projects = get_all_projects(session)
                 project_schema.dump(projects)
                 return projects
-            else:
-                raise NotFound(
-                    "User role and consortium not matching or user {} is not assigned to the Executive Commettee in the system. Consortium: {}".format(
-                            logged_user_id,
-                            consortium
-                        )
-                    )
+
+            # #TODO check if the user is part of a EC commettee, if so get the one submitted to the consortium
+            # #Get consortium
+            # isEcMember = True
+            # consortium = "INRG"
+            # if isEcMember and consortium:
+            #     projects = get_project_by_consortium(session, consortium, logged_user_id)
+            #     project_schema.dump(projects)
+            #     return projects
+            # else:
+            #     raise NotFound(
+            #         "User role and consortium not matching or user {} is not assigned to the Executive Commettee in the system. Consortium: {}".format(
+            #                 logged_user_id,
+            #                 consortium
+            #             )
+            #         )
 
         projects = get_project_by_user(session, logged_user_id, logged_user_email)
         project_schema.dump(projects)
