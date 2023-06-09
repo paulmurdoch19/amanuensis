@@ -12,7 +12,8 @@ from amanuensis.resources.userdatamodel import (
     get_project_by_user,
     get_project_by_id,
     update_project,
-    associate_user
+    associate_user,
+    update_request_state
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
 
@@ -159,4 +160,73 @@ def update(project_id, approved_url, filter_set_ids):
 
     with flask.current_app.db.session as session:
         return update_project(session, project_id, approved_url)
+
+
+def update_project_searches(logged_user_id, project_id, filter_sets_id):
+    project_schema = ProjectSchema()
+    with flask.current_app.db.session as session:
+        # Retrieve the project
+        project = get_project_by_id(session, logged_user_id, project_id)
+
+        # Retrieve all the filter_sets
+        filter_sets = filterset.get_filter_sets_by_ids(session, filter_sets_id) 
+
+        # TODO make this a config variable in amanuensis-config.yaml
+        path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
+        new_consortiums = []
+        for s in filter_sets:
+            # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
+            new_consortiums.extend(get_consortium_list(path, s.graphql_object, s.ids_list))    
+        new_consortiums = list(set(new_consortiums))
+        new_consortiums = [consortium.upper() for consortium in consortiums]
+            
+        # Get all the consortium involved in the existing requests
+        requests = project.requests
+        old_consortiums = [request.consortium_data_contributor.code for request in requests]
+
+        # Check if the consortium list is changed after changing the associated search
+        add_consortiums = list(set(new_consortiums) - set(old_consortiums))
+        remove_consortiums = list(set(old_consortiums) - set(new_consortiums))
+
+        if add_consortiums and len(add_consortiums) > 0:
+            # Defaulst state is SUBMITTED
+            default_state = admin.get_by_code("IN_REVIEW")
+            if not default_state:
+                raise NotFound("The state with id {} has not been found".format(default_state))
+
+            for add_consortium in add_consortiums:
+                consortium = consortium_data_contributor.get(code=add_consortium)
+                if consortium is None:
+                    raise NotFound(
+                        "Consortium with code {} not found.".format(
+                            add_consortium
+                        )
+                    )
+                req = Request()
+                req.consortium_data_contributor = consortium
+                req.states.append(default_state)
+                project.requests.append(req)
+
+
+        if remove_consortiums and len(remove_consortiums) > 0:
+            default_state = admin.get_by_code("WITHDRAWAL")
+            if not default_state:
+                raise NotFound("The state with id {} has not been found".format(default_state))
+
+            for remove_consortium in remove_consortiums:
+                request = get_request_by_consortium(session, None, remove_consortium)
+                update_request_state(session, request, default_state)
+
+
+        # Update he filterset
+        # session.query().filter(Institution.uid == uid).update({Institution.display_name: display_name})
+        # userdatamodel project -> update_project
+        project.searches = filter_sets
+
+        session.commit()
+        project_schema.dump(project)
+        return project
+
+    
+
 
