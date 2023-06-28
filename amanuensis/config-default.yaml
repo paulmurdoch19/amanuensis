@@ -191,15 +191,15 @@ HTTP_PROXY:
 # NOTE: Leaving as null will force fence to default to {{BASE_URL}}/index
 # example value: 'https://example.com/index'
 INDEXD: null
-# url where authz microservice is running
-ARBORIST: null
-FENCE: 'http://fence-service'
 
 # this is the username which fence uses to make authenticated requests to indexd
 INDEXD_USERNAME: 'amanuensis'
 # this is the password which fence uses to make authenticated requests to indexd
 INDEXD_PASSWORD: ''
 
+# url where authz microservice is running
+ARBORIST: null
+FENCE: 'http://fence-service'
 
 # //////////////////////////////////////////////////////////////////////////////////////
 # EMAIL

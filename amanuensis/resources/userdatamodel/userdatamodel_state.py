@@ -102,7 +102,7 @@ def update_project_state(
             )
             updated = True
 
-    if state.code in consortium_statuses[consortium]["NOTIFY"] and updated:
+    if state.code in consortium_statuses[consortium if consortium in config["CONSORTIUM_STATUS"] else "DEFAULT"]["NOTIFY"] and updated:
         notify_user_project_status_update(
             current_session,
             project_id,
