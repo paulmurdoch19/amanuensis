@@ -10,9 +10,9 @@ from flask_sqlalchemy_session import current_session
 from datetime import datetime
 from cdislogging import get_logger
 
-from amanuensis.auth.auth import check_arborist_auth
+from amanuensis.auth.auth import check_arborist_auth, current_user
 from amanuensis.config import config
-from amanuensis.errors import UserError, NotFound
+from amanuensis.errors import UserError, NotFound, AuthError
 
 from amanuensis.resources import filterset
 from amanuensis.resources import project
