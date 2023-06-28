@@ -1,6 +1,7 @@
-from secrets import token_urlsafe
 import uuid
+import flask
 # from sqlalchemy import func
+from secrets import token_urlsafe
 
 from amanuensis.errors import NotFound
 from amanuensis.models import Search, FilterSourceType, SearchIsShared
@@ -136,29 +137,30 @@ def create_filter_set(current_session, logged_user_id, is_amanuensis_admin, expl
             "filters": new_filter_set.filter_object
         }
 
-def copy_filter_set_to_user(current_session, filterset_id, src_user_id, dst_user_id):
-    # TODO check user_ids exists, specially the destination
-    filter_set = (
-        current_session.query(Search).filter(Search.id == filterset_id, Search.user_id == int(src_user_id)).first()
-    )
+def copy_filter_set_to_user(filterset_id, src_user_id, dst_user_id):
+    with flask.current_app.db.session as current_session:
+        # TODO check user_ids exists, specially the destination
+        filter_set = (
+            current_session.query(Search).filter(Search.id == filterset_id, Search.user_id == int(src_user_id)).first()
+        )
 
-    if not filter_set:
-        raise NotFound("error, filter_set not found")
+        if not filter_set:
+            raise NotFound("error, filter_set not found")
 
-    #Create a new search linked to the dst user
-    new_filterset = create_filter_set(
-        current_session,
-        dst_user_id,
-        True,
-        filter_set.filter_source_internal_id,
-        filter_set.name,
-        filter_set.description,
-        filter_set.filter_object,
-        filter_set.ids_list,
-        filter_set.graphql_object
-    )
+        #Create a new search linked to the dst user
+        new_filterset = create_filter_set(
+            current_session,
+            dst_user_id,
+            True,
+            filter_set.filter_source_internal_id,
+            filter_set.name,
+            filter_set.description,
+            filter_set.filter_object,
+            filter_set.ids_list,
+            filter_set.graphql_object
+        )
 
-    return new_filterset
+        return new_filterset
 
 def update_filter_set(current_session, logged_user_id, filter_set_id, explorer_id, name, description, filter_object, graphql_object):
     data = {}

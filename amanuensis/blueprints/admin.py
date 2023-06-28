@@ -332,7 +332,6 @@ def copy_search_to_user():
     # return flask.jsonify(search_schema.dump(filterset.copy_filter_set_to_user(filterset_id, logged_user_id, user_id)))
     return jsonify(filterset.copy_filter_set_to_user(filterset_id, logged_user_id, user_id))
 
-
 @blueprint.route("/copy-search-to-project", methods=["POST"])
 @check_arborist_auth(resource="/services/amanuensis", method="*")
 def copy_search_to_project():
