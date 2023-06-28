@@ -324,13 +324,13 @@ def copy_search_to_user():
         logger.warning("Unable to load or find the user, check your token")
 
 
-    filterset_id = flask.request.get_json().get("filtersetId", None)
-    user_id = flask.request.get_json().get("userId", None)
+    filterset_id = request.get_json().get("filtersetId", None)
+    user_id = request.get_json().get("userId", None)
 
 
     search_schema = SearchSchema()
     # return flask.jsonify(search_schema.dump(filterset.copy_filter_set_to_user(filterset_id, logged_user_id, user_id)))
-    return flask.jsonify(filterset.copy_filter_set_to_user(filterset_id, logged_user_id, user_id))
+    return jsonify(filterset.copy_filter_set_to_user(filterset_id, logged_user_id, user_id))
 
 
 @blueprint.route("/copy-search-to-project", methods=["POST"])
@@ -348,12 +348,12 @@ def copy_search_to_project():
         logger.warning("Unable to load or find the user, check your token")
 
 
-    filterset_id = flask.request.get_json().get("filtersetId", None)
-    project_id = flask.request.get_json().get("projectId", None)
+    filterset_id = request.get_json().get("filtersetId", None)
+    project_id = request.get_json().get("projectId", None)
 
 
     project_schema = ProjectSchema()
-    return flask.jsonify(project_schema.dump(project.update_project_searches(logged_user_id, project_id, filterset_id)))
+    return jsonify(project_schema.dump(project.update_project_searches(logged_user_id, project_id, filterset_id)))
     # return flask.jsonify(project.update_project_searches(logged_user_id, project_id, filterset_id))
 
 
