@@ -6,7 +6,7 @@ Create Date: 2023-06-08 17:27:11.052974
 
 """
 from alembic import op
-import sqlalchemy as sa
+from sqlalchemy.orm.session import Session
 
 
 # revision identifiers, used by Alembic.
