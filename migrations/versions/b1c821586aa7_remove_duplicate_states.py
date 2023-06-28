@@ -23,10 +23,6 @@ def upgrade() -> None:
     session.query(State).filter(State.code == "DATA_AVAILABLE").delete()
     session.query(State).filter(State.code == "DATA_DELIVERED").update({State.code: "DATA_AVAILABLE"})
 
-    states = []
-    states.append(State(name="Published", code="PUBLISHED"))
-    session.add_all(states)
-
     session.commit()
 
 
@@ -34,12 +30,6 @@ def downgrade() -> None:
     conn = op.get_bind()
     session = Session(bind=conn)
     session.query(State).filter(State.code == "DATA_AVAILABLE").update({State.code: "DATA_DELIVERED"})
-
-    state_codes = [
-        "PUBLISHED",
-    ]
-    for code in state_codes:
-        session.query(State).filter(State.code == code).delete()
 
     session.commit()
 
