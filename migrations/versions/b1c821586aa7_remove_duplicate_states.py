@@ -21,7 +21,7 @@ def upgrade() -> None:
     conn = op.get_bind()
     session = Session(bind=conn)
     session.query(State).filter(State.code == "DATA_AVAILABLE").delete()
-    session.query(State).filter(State.code == "DATA_DELIVERED").update({State.code: "DATA_AVAILABLE"})
+    session.query(State).filter(State.code == "DATA_DELIVERED").update({State.code: "DATA_AVAILABLE", State.name: "Data Available"})
 
     session.commit()
 
@@ -29,7 +29,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     conn = op.get_bind()
     session = Session(bind=conn)
-    session.query(State).filter(State.code == "DATA_AVAILABLE").update({State.code: "DATA_DELIVERED"})
+    session.query(State).filter(State.code == "DATA_AVAILABLE").update({State.code: "DATA_DELIVERED", State.name: "Data Delivered"})
 
     session.commit()
 
