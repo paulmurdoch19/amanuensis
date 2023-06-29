@@ -26,6 +26,7 @@ logger = get_logger(__name__)
 
 # cache = SimpleCache()
 
+
 def determine_status_code(statuses_by_consortium):
     """
     Takes status codes from all the requests within a project and returns the project status based on their precedence.
@@ -38,19 +39,21 @@ def determine_status_code(statuses_by_consortium):
         overall_consortium = None
         overall_dist_to_end = None
         for status in statuses_by_consortium:
-            ordered_statuses_by_consortium = list(config["CONSORTIUM_STATUS"][status["consortium"]]["CODES"])
-            final_statuses = list(config["CONSORTIUM_STATUS"][status["consortium"]]["FINAL"])
+            config_version = status["consortium"] if status["consortium"] in config["CONSORTIUM_STATUS"] else "DEFAULT"
+            ordered_statuses_by_consortium = list(config["CONSORTIUM_STATUS"][config_version]["CODES"])
+            final_statuses = list(config["CONSORTIUM_STATUS"][config_version]["FINAL"])
             
             if status["status_code"] not in ordered_statuses_by_consortium:
                 raise InternalError("{} not found in the config".format(status["status_code"]))
 
-            approved_index = ordered_statuses_by_consortium.index("DATA_DELIVERED")
+            approved_index = ordered_statuses_by_consortium.index("DATA_AVAILABLE")
             index = ordered_statuses_by_consortium.index(status["status_code"])
             dist_to_end = approved_index - index
 
             if status["status_code"] in final_statuses:
                 return {"status": status["status_code"], "completed_at": status["update_date"]} 
 
+            # TODO check this the sign may need to be inverted
             if not overall_status or dist_to_end > overall_dist_to_end:
                 overall_dist_to_end = dist_to_end
                 overall_consortium = status["consortium"]

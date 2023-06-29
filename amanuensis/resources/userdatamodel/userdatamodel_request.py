@@ -12,6 +12,7 @@ __all__ = [
     "get_request_by_id",
     "get_request_by_consortium",
     "get_requests_by_project_id",
+    "update_request_state",
 ]
 
 
@@ -27,3 +28,14 @@ def get_request_by_id(current_session, user_id, request_id):
 
 def get_requests_by_project_id(current_session, project_id):
     return current_session.query(Request).filter(Request.project_id == project_id).all()
+
+def update_request_state(
+    current_session, request, state
+):
+    """
+    Updates the state for a request
+    """
+    request.states.append(state)
+    current_session.flush()
+    return request
+

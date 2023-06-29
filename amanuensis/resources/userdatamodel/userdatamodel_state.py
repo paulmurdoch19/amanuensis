@@ -3,6 +3,7 @@ from sqlalchemy import func, desc
 from amanuensis.resources.message import send_admin_message
 from amanuensis.resources.userdatamodel.userdatamodel_project import get_project_by_id
 from amanuensis.errors import NotFound, UserError
+from amanuensis.config import config
 from amanuensis.models import (
     State,
     ConsortiumDataContributor,
@@ -89,7 +90,7 @@ def update_project_state(
                     request.id, state.code
                 )
             )
-        elif state_code in consortium_statuses[consortium]["FINAL"]:
+        elif state_code in consortium_statuses[consortium if consortium in config["CONSORTIUM_STATUS"] else "DEFAULT"]["FINAL"]:
             raise UserError(
                 "Cannot change state of request {} from {} because it's a final state".format(
                     request.id, state.code
@@ -101,7 +102,7 @@ def update_project_state(
             )
             updated = True
 
-    if state.code in consortium_statuses[consortium]["NOTIFY"] and updated:
+    if state.code in consortium_statuses[consortium if consortium in config["CONSORTIUM_STATUS"] else "DEFAULT"]["NOTIFY"] and updated:
         notify_user_project_status_update(
             current_session,
             project_id,

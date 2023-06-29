@@ -19,12 +19,12 @@ from amanuensis.resources.userdatamodel.userdatamodel_request import (
 )
 
 __all__ = [
-    "create_project",
-    "update_project",
     "get_all_projects",
     "get_project_by_consortium",
     "get_project_by_user",
     "get_project_by_id",
+    "create_project",
+    "update_project",
     "update_associated_users",
     "update_project_date",
 ]
@@ -191,6 +191,7 @@ def update_project_date(session, project_id, new_update_date):
         else:
             raise UserError("The new update_date must be later than the create date.")
     return requests
+
 
 
 
