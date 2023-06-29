@@ -13,7 +13,8 @@ from amanuensis.resources.userdatamodel import (
     get_filter_sets_by_user_id, 
     create_filter_set_snapshot, 
     get_snapshot_by_token,
-    copy_filter_set_to_user
+    copy_filter_set_to_user,
+    get_filter_sets_by_ids
 )
 
 from amanuensis.schema import SearchSchema
@@ -48,6 +49,11 @@ def get_by_user_id(user_id, is_admin):
         user_id = int(user_id)
     with flask.current_app.db.session as session:
         return get_filter_sets_by_user_id(session, user_id, is_admin)
+
+
+def get_filter_sets_by_ids_f(filter_set_ids):
+    with flask.current_app.db.session as session:
+        return get_filter_sets_by_ids(session, filter_set_ids)
 
 def create(logged_user_id, is_amanuensis_admin, explorer_id, name, description, filter_object, ids_list, graphql_object):
     with flask.current_app.db.session as session:    

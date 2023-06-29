@@ -169,7 +169,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
         project = get_project_by_id(session, logged_user_id, project_id)
 
         # Retrieve all the filter_sets
-        filter_sets = filterset.get_filter_sets_by_ids(session, filter_sets_id) 
+        filter_sets = filterset.get_filter_sets_by_ids_f(filter_sets_id) 
 
         # TODO make this a config variable in amanuensis-config.yaml
         path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
