@@ -172,3 +172,10 @@ def get_filter_set_snapshot(token):
 
     response = flask.jsonify(get_snapshot(logged_user_id, token))
     return response
+
+
+
+
+
+
+
