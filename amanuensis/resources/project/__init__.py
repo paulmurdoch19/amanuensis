@@ -178,7 +178,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
             # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
             new_consortiums.extend(get_consortium_list(path, s.graphql_object, s.ids_list))    
         new_consortiums = list(set(new_consortiums))
-        new_consortiums = [consortium.upper() for consortium in consortiums]
+        new_consortiums = [consortium.upper() for consortium in new_consortiums]
             
         # Get all the consortium involved in the existing requests
         requests = project.requests
