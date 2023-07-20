@@ -167,6 +167,8 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
     with flask.current_app.db.session as session:
         # Retrieve the project
         project = get_project_by_id(session, logged_user_id, project_id)
+        if not project:
+            raise NotFound("The project with id {} has not been found".format(project_id))
 
         # Retrieve all the filter_sets
         filter_sets = filterset.get_filter_sets_by_ids_f(filter_sets_id) 

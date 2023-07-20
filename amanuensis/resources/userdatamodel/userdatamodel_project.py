@@ -1,4 +1,4 @@
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, and_
 import amanuensis
 
 from sqlalchemy.orm import aliased
@@ -74,11 +74,14 @@ def get_project_by_id(current_session, logged_user_id, project_id):
     #     ).join(Project.associated_users).join(ProjectAssociatedUser, Project.associated_users_roles).join(assoc_users, assoc_users.id == ProjectAssociatedUser.associated_user_id).first()
 
     return current_session.query(Project).filter(
-            Project.id == project_id
+         and_(
+                Project.id == project_id,
+                Project.active == True,
+            )
         ).join(
-            ProjectAssociatedUser, Project.associated_users_roles
+            ProjectAssociatedUser, Project.associated_users_roles, isouter=True
         ).join(
-            AssociatedUser, ProjectAssociatedUser.associated_user).first()
+            AssociatedUser, ProjectAssociatedUser.associated_user, isouter=True).first()
 
 
 def create_project(current_session, user_id, description, name, institution, searches, requests, associated_users):
