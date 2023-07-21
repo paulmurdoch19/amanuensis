@@ -17,7 +17,7 @@ from amanuensis.resources.userdatamodel import (
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
-    get_request_by_consortium,
+    get_requests_by_project_id,
 )
 
 from amanuensis.config import config
@@ -219,14 +219,13 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                 raise NotFound("The state with id {} has not been found".format(default_state))
 
             for remove_consortium in remove_consortiums:
-                request = get_request_by_consortium(session, None, remove_consortium)
-                if request and len(request) == 1:
-                    update_request_state(session, request[0], default_state)
-                else:
-                    raise InternalError("Error with the received request {}".format(
-                            request
-                        )
-                    )
+                requests_by_project = get_requests_by_project_id(current_session, project_id)
+                for request_by_project in requests_by_project:
+                    logger.info("LUCAAAAAA")
+                    logger.info(remove_consortium)
+                    logger.info(request_by_project.consortium_data_contributor.code)
+                    if request_by_project.consortium_data_contributor.code == remove_consortium:
+                        update_request_state(session, request_by_project, default_state)
 
 
         # Update he filterset
