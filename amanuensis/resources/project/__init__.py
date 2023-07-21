@@ -219,7 +219,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                 raise NotFound("The state with id {} has not been found".format(default_state))
 
             for remove_consortium in remove_consortiums:
-                requests_by_project = get_requests_by_project_id(current_session, project_id)
+                requests_by_project = get_requests_by_project_id(session, project_id)
                 for request_by_project in requests_by_project:
                     logger.info("LUCAAAAAA")
                     logger.info(remove_consortium)
