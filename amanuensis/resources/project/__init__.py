@@ -16,6 +16,9 @@ from amanuensis.resources.userdatamodel import (
     update_request_state
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
+from amanuensis.resources.userdatamodel.userdatamodel_request import (
+    get_request_by_consortium,
+)
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
