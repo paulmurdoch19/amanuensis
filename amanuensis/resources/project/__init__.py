@@ -203,7 +203,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                 raise NotFound("The state with id {} has not been found".format(default_state))
 
             for add_consortium in add_consortiums:
-                consortium = consortium_data_contributor.get(code=add_consortium)
+                consortium = consortium_data_contributor.get(code=add_consortium, session=session)
                 if consortium is None:
                     raise NotFound(
                         "Consortium with code {} not found.".format(
