@@ -234,6 +234,8 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                 requests_by_project = get_requests_by_project_id(session, project_id)
                 for request_by_project in requests_by_project:
                     if request_by_project.consortium_data_contributor.code == remove_consortium:
+                        logger.info(default_state)
+                        logger.info(request_by_project.states)
                         update_request_state(session, request_by_project, default_state)
 
 
@@ -241,6 +243,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
         # session.query().filter(Institution.uid == uid).update({Institution.display_name: display_name})
         # userdatamodel project -> update_project
         logger.info(project.searches)
+        logger.info(filter_sets)
         project.searches = filter_sets
 
         session.commit()
