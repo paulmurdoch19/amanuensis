@@ -16,6 +16,7 @@ from amanuensis.resources.userdatamodel import (
     update_request_state
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
+from amanuensis.resources.request import get_request_state
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests_by_project_id,
 )
@@ -187,7 +188,9 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
             
         # Get all the consortium involved in the existing requests
         requests = project.requests
-        old_consortiums = [request.consortium_data_contributor.code for request in requests]
+        requests_with_state = [{"request": request, "state": get_request_state(request["id"])} for request in requests]
+        # TODO make this configurable
+        old_consortiums = [request["request"].consortium_data_contributor.code for request in requests_with_state if request["state"].code not in ["WITHDRAWAL"]]
 
         # Check if the consortium list is changed after changing the associated search
         add_consortiums = list(set(new_consortiums) - set(old_consortiums))
