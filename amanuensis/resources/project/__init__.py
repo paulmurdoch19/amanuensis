@@ -220,7 +220,13 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
 
             for remove_consortium in remove_consortiums:
                 request = get_request_by_consortium(session, None, remove_consortium)
-                update_request_state(session, request, default_state)
+                if request and len(request) == 1:
+                    update_request_state(session, request[0], default_state)
+                else:
+                    raise InternalError("Error with the received request {}".format(
+                            request
+                        )
+                    )
 
 
         # Update he filterset
