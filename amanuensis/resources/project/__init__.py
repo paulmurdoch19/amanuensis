@@ -221,9 +221,6 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
             for remove_consortium in remove_consortiums:
                 requests_by_project = get_requests_by_project_id(session, project_id)
                 for request_by_project in requests_by_project:
-                    logger.info("LUCAAAAAA")
-                    logger.info(remove_consortium)
-                    logger.info(request_by_project.consortium_data_contributor.code)
                     if request_by_project.consortium_data_contributor.code == remove_consortium:
                         update_request_state(session, request_by_project, default_state)
 

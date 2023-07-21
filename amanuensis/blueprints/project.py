@@ -50,11 +50,11 @@ def determine_status_code(statuses_by_consortium):
             index = ordered_statuses_by_consortium.index(status["status_code"])
             dist_to_end = approved_index - index
 
-            if status["status_code"] in final_statuses:
-                return {"status": status["status_code"], "completed_at": status["update_date"]} 
+            # if status["status_code"] in final_statuses:
+            #     return {"status": status["status_code"], "completed_at": status["update_date"]} 
 
-            # TODO check this the sign may need to be inverted
-            if not overall_status or dist_to_end > overall_dist_to_end:
+            # TODO remove the hardcoding and refactor this entire logic
+            if not overall_status or dist_to_end < overall_dist_to_end or overall_status in ["WITHDRAWAL","REJECTED"]:
                 overall_dist_to_end = dist_to_end
                 overall_consortium = status["consortium"]
                 overall_status = status["status_code"]
