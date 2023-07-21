@@ -240,6 +240,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
         # Update he filterset
         # session.query().filter(Institution.uid == uid).update({Institution.display_name: display_name})
         # userdatamodel project -> update_project
+        logger.info(project.searches)
         project.searches = filter_sets
 
         session.commit()
