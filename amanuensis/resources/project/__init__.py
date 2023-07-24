@@ -196,13 +196,6 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
         add_consortiums = list(set(new_consortiums) - set(old_consortiums))
         remove_consortiums = list(set(old_consortiums) - set(new_consortiums))
 
-        
-        logger.info(add_consortiums)
-        logger.info(remove_consortiums)
-        logger.info(new_consortiums)
-        logger.info(old_consortiums)
-
-
         if add_consortiums and len(add_consortiums) > 0:
             logger.info("ADD!!!!!")
             # Defaulst state is SUBMITTED
@@ -234,17 +227,12 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                 requests_by_project = get_requests_by_project_id(session, project_id)
                 for request_by_project in requests_by_project:
                     if request_by_project.consortium_data_contributor.code == remove_consortium:
-                        logger.info(default_state)
-                        logger.info(request_by_project)
                         update_request_state(session, request_by_project, default_state)
-                        logger.info(request_by_project)
 
 
         # Update he filterset
         # session.query().filter(Institution.uid == uid).update({Institution.display_name: display_name})
         # userdatamodel project -> update_project
-        logger.info(project.searches)
-        logger.info(filter_sets)
         project.searches = filter_sets
 
         session.commit()
