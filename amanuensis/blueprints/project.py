@@ -54,7 +54,7 @@ def determine_status_code(statuses_by_consortium):
             #     return {"status": status["status_code"], "completed_at": status["update_date"]} 
 
             # TODO remove the hardcoding and refactor this entire logic
-            if not overall_status or dist_to_end < overall_dist_to_end or overall_status in ["WITHDRAWAL","REJECTED"]:
+            if not overall_status or dist_to_end > overall_dist_to_end or overall_status in ["WITHDRAWAL","REJECTED"]:
                 overall_dist_to_end = dist_to_end
                 overall_consortium = status["consortium"]
                 overall_status = status["status_code"]
