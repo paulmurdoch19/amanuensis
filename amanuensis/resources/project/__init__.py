@@ -237,6 +237,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                         logger.info(default_state)
                         logger.info(request_by_project.states)
                         update_request_state(session, request_by_project, default_state)
+                        logger.info(request_by_project)
 
 
         # Update he filterset
