@@ -74,7 +74,7 @@ def get_request_state(request_id):
             .filter(RequestState.request_id == request_id)
             .order_by(RequestState.create_date.desc())
             .first()
-            .state
+            # .state
         )
 
         

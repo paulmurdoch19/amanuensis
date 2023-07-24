@@ -101,7 +101,7 @@ def get_projetcs():
         for request in project["requests"]:
             #TODO this should come from the get_all above and not make extra queries to the DB. 
             request_state = get_request_state(request["id"])
-            statuses_by_consortium.append({"status_code": request_state.code, "consortium": request["consortium_data_contributor"]["code"], "update_date": request_state.update_date})
+            statuses_by_consortium.append({"status_code": request_state.state.code, "consortium": request["consortium_data_contributor"]["code"], "update_date": request_state.create_date})
 
             if not submitted_at:
                 submitted_at = request["create_date"]
