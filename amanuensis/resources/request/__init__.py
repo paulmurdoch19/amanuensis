@@ -67,15 +67,23 @@ def get_by_id(logged_user_id, request_id):
         return get_request_by_id(session, logged_user_id, request_id)
 
 
-def get_request_state(request_id):
-    with flask.current_app.db.session as session:
+def get_request_state(request_id, session=None):
+    if session:
         return (
             session.query(RequestState)
             .filter(RequestState.request_id == request_id)
-            .join(State, RequestState.state, isouter=True)
             .order_by(RequestState.create_date.desc())
             .first()
             # .state
         )
+    else:
+        with flask.current_app.db.session as session:
+            return (
+                session.query(RequestState)
+                .filter(RequestState.request_id == request_id)
+                .order_by(RequestState.create_date.desc())
+                .first()
+                # .state
+            )
 
         
