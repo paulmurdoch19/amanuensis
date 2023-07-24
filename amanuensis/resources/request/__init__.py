@@ -17,7 +17,7 @@ from amanuensis.errors import (
     Unauthorized,
     UserError,
 )
-from amanuensis.models import Request, Project, RequestState
+from amanuensis.models import Request, Project, RequestState, State
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_request_by_consortium,
     get_request_by_id,
@@ -72,6 +72,7 @@ def get_request_state(request_id):
         return (
             session.query(RequestState)
             .filter(RequestState.request_id == request_id)
+            .join(RequestState.state, isouter=True)
             .order_by(RequestState.create_date.desc())
             .first()
             # .state
