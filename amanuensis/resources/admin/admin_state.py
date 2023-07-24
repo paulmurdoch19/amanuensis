@@ -38,9 +38,12 @@ def get_all_states():
         return udm.get_all_states(session)
 
 
-def get_by_code(code):
-    with flask.current_app.db.session as session:
+def get_by_code(code, session=None):
+    if session:
         return udm.get_state_by_code(session, code)
+    else:
+        with flask.current_app.db.session as session:
+            return udm.get_state_by_code(session, code)
 
 
 def update_project_state(project_id, state_id):

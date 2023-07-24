@@ -226,7 +226,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
 
         if remove_consortiums and len(remove_consortiums) > 0:
             logger.info("REMOVE!!!!!")
-            default_state = admin.get_by_code("WITHDRAWAL")
+            default_state = admin.get_by_code("WITHDRAWAL", session)
             if not default_state:
                 raise NotFound("The state with id {} has not been found".format(default_state))
 
@@ -235,7 +235,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                 for request_by_project in requests_by_project:
                     if request_by_project.consortium_data_contributor.code == remove_consortium:
                         logger.info(default_state)
-                        logger.info(request_by_project.states)
+                        logger.info(request_by_project)
                         update_request_state(session, request_by_project, default_state)
                         logger.info(request_by_project)
 

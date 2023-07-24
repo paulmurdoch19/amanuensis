@@ -39,6 +39,7 @@ def update_request_state(
     req_state = RequestState()
     req_state.request = request
     req_state.state = state
+    current_session.add(req_state)
     # request.states.append(state)
     current_session.flush()
     return request
