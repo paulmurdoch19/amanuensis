@@ -203,6 +203,9 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
             if not default_state:
                 raise NotFound("The state with id {} has not been found".format(default_state))
 
+            existing_consortiums_ids = [r.consortium_data_contributor_id for r in project.requests]
+            existing_consortiums_ids = list(set(existing_consortiums_ids))
+
             for add_consortium in add_consortiums:
                 consortium = consortium_data_contributor.get(code=add_consortium, session=session)
                 if consortium is None:
@@ -211,10 +214,18 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                             add_consortium
                         )
                     )
-                req = Request()
-                req.consortium_data_contributor = consortium
-                req.states.append(default_state)
-                project.requests.append(req)
+
+                if consortium.id in existing_consortiums_ids:
+                    # Update existing request record
+                    for r in project.requests:
+                        if r.consortium_data_contributor_id == consortium.id:
+                            update_request_state(session, r, default_state)
+                else:
+                    # create a new request record for this consortium
+                    req = Request()
+                    req.consortium_data_contributor = consortium
+                    req.states.append(default_state)
+                    project.requests.append(req)
 
 
         if remove_consortiums and len(remove_consortiums) > 0:
