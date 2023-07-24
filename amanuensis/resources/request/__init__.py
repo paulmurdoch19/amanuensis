@@ -72,7 +72,7 @@ def get_request_state(request_id):
         return (
             session.query(RequestState)
             .filter(RequestState.request_id == request_id)
-            .join(RequestState.state, isouter=True)
+            .join(State, RequestState.state, isouter=True)
             .order_by(RequestState.create_date.desc())
             .first()
             # .state
