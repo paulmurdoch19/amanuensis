@@ -50,11 +50,11 @@ def determine_status_code(statuses_by_consortium):
             index = ordered_statuses_by_consortium.index(status["status_code"])
             dist_to_end = approved_index - index
 
-            if status["status_code"] in final_statuses:
-                return {"status": status["status_code"], "completed_at": status["update_date"]} 
+            # if status["status_code"] in final_statuses:
+            #     return {"status": status["status_code"], "completed_at": status["update_date"]} 
 
-            # TODO check this the sign may need to be inverted
-            if not overall_status or dist_to_end > overall_dist_to_end:
+            # TODO remove the hardcoding and refactor this entire logic
+            if not overall_status or dist_to_end > overall_dist_to_end or overall_status in ["WITHDRAWAL","REJECTED"]:
                 overall_dist_to_end = dist_to_end
                 overall_consortium = status["consortium"]
                 overall_status = status["status_code"]
@@ -100,8 +100,8 @@ def get_projetcs():
         statuses_by_consortium = []
         for request in project["requests"]:
             #TODO this should come from the get_all above and not make extra queries to the DB. 
-            request_state = get_request_state(request["id"])
-            statuses_by_consortium.append({"status_code": request_state.code, "consortium": request["consortium_data_contributor"]["code"], "update_date": request_state.update_date})
+            request_state = get_request_state(request["id"], current_session)
+            statuses_by_consortium.append({"status_code": request_state.state.code, "consortium": request["consortium_data_contributor"]["code"], "update_date": request_state.create_date})
 
             if not submitted_at:
                 submitted_at = request["create_date"]
