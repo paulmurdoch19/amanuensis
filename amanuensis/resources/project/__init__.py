@@ -197,7 +197,6 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
         remove_consortiums = list(set(old_consortiums) - set(new_consortiums))
 
         if add_consortiums and len(add_consortiums) > 0:
-            logger.info("ADD!!!!!")
             # Defaulst state is SUBMITTED
             default_state = admin.get_by_code("IN_REVIEW")
             if not default_state:
@@ -229,7 +228,6 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
 
 
         if remove_consortiums and len(remove_consortiums) > 0:
-            logger.info("REMOVE!!!!!")
             default_state = admin.get_by_code("WITHDRAWAL", session)
             if not default_state:
                 raise NotFound("The state with id {} has not been found".format(default_state))
