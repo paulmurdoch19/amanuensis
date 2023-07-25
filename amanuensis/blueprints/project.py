@@ -50,11 +50,11 @@ def determine_status_code(statuses_by_consortium):
             index = ordered_statuses_by_consortium.index(status["status_code"])
             dist_to_end = approved_index - index
 
-            if status["status_code"] in final_statuses:
-                return {"status": status["status_code"], "completed_at": status["update_date"]} 
+            # if status["status_code"] in final_statuses:
+            #     return {"status": status["status_code"], "completed_at": status["update_date"]} 
 
-            # TODO check this the sign may need to be inverted
-            if not overall_status or dist_to_end > overall_dist_to_end:
+            # TODO remove the hardcoding and refactor this entire logic
+            if not overall_status or dist_to_end > overall_dist_to_end or overall_status in ["WITHDRAWAL","REJECTED"]:
                 overall_dist_to_end = dist_to_end
                 overall_consortium = status["consortium"]
                 overall_status = status["status_code"]
@@ -100,8 +100,8 @@ def get_projetcs():
         statuses_by_consortium = []
         for request in project["requests"]:
             #TODO this should come from the get_all above and not make extra queries to the DB. 
-            request_state = get_request_state(request["id"])
-            statuses_by_consortium.append({"status_code": request_state.code, "consortium": request["consortium_data_contributor"]["code"], "update_date": request_state.update_date})
+            request_state = get_request_state(request["id"], current_session)
+            statuses_by_consortium.append({"status_code": request_state.state.code, "consortium": request["consortium_data_contributor"]["code"], "update_date": request_state.create_date})
 
             if not submitted_at:
                 submitted_at = request["create_date"]
@@ -140,33 +140,46 @@ def get_projetcs():
     return flask.jsonify(return_projects)
 
 
-# DISABLE FOR NOW SINCE ONLY ADMIN CAN CREATE A PROJECT
-# @blueprint.route("/", methods=["POST"])
-# def create_project():
-#     """
-#     Create a search on the userportaldatamodel database
+@blueprint.route("/", methods=["POST"])
+def create_project():
+    """
+    Create a data request project
 
-#     Returns a json object
-#     """
-#     try:
-#         logged_user_id = current_user.id
-#     except AuthError:
-#         logger.warning(
-#             "Unable to load or find the user, check your token"
-#         )
+    Returns a json object
+    """
+    try:
+        logged_user_id = current_user.id
+    except AuthError:
+        logger.warning(
+            "Unable to load or find the user, check your token"
+        )
 
-#     # get the explorer_id from the querystring
-#     explorer_id = flask.request.args.get('explorer', default=1, type=int)
 
-#     name = flask.request.get_json().get("name", None)
-#     description = flask.request.get_json().get("description", None)
+    associated_users_emails = request.get_json().get("associated_users_emails", None)
+    # if not associated_users_emails:
+    #     raise UserError("You can't create a Project without specifying the associated_users that will access the data")
 
-#     #backward compatibility
-#     search_ids = flask.request.get_json().get("search_ids", None)
-#     filter_set_ids = flask.request.get_json().get("filter_set_ids", None)
+    name = request.get_json().get("name", None)
+    description = request.get_json().get("description", None)
+    institution = request.get_json().get("institution", None)
 
-#     if search_ids and not filter_set_ids:
-#         filter_set_ids = search_ids
+    filter_set_ids = request.get_json().get("filter_set_ids", None)
 
-#     project_schema = ProjectSchema()
-#     return flask.jsonify(project_schema.dump(create(logged_user_id, False, name, description, filter_set_ids, explorer_id)))
+    # get the explorer_id from the querystring ex: https://portal-dev.pedscommons.org/explorer?id=1
+    explorer_id = flask.request.args.get('explorer', default=1, type=int)
+
+    project_schema = ProjectSchema()
+    return jsonify(
+        project_schema.dump(
+            project.create(
+                logged_user_id,
+                False,
+                name,
+                description,
+                filter_set_ids,
+                explorer_id,
+                institution,
+                associated_users_emails
+            )
+        )
+    )

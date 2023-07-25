@@ -16,6 +16,10 @@ from amanuensis.resources.userdatamodel import (
     update_request_state
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
+from amanuensis.resources.request import get_request_state
+from amanuensis.resources.userdatamodel.userdatamodel_request import (
+    get_requests_by_project_id,
+)
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
@@ -167,6 +171,8 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
     with flask.current_app.db.session as session:
         # Retrieve the project
         project = get_project_by_id(session, logged_user_id, project_id)
+        if not project:
+            raise NotFound("The project with id {} has not been found".format(project_id))
 
         # Retrieve all the filter_sets
         filter_sets = filterset.get_filter_sets_by_ids_f(filter_sets_id) 
@@ -182,7 +188,9 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
             
         # Get all the consortium involved in the existing requests
         requests = project.requests
-        old_consortiums = [request.consortium_data_contributor.code for request in requests]
+        requests_with_state = [{"request": request, "state": get_request_state(request.id).state} for request in requests]
+        # TODO make this configurable
+        old_consortiums = [request["request"].consortium_data_contributor.code for request in requests_with_state if request["state"].code not in ["WITHDRAWAL"]]
 
         # Check if the consortium list is changed after changing the associated search
         add_consortiums = list(set(new_consortiums) - set(old_consortiums))
@@ -194,28 +202,41 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
             if not default_state:
                 raise NotFound("The state with id {} has not been found".format(default_state))
 
+            existing_consortiums_ids = [r.consortium_data_contributor_id for r in project.requests]
+            existing_consortiums_ids = list(set(existing_consortiums_ids))
+
             for add_consortium in add_consortiums:
-                consortium = consortium_data_contributor.get(code=add_consortium)
+                consortium = consortium_data_contributor.get(code=add_consortium, session=session)
                 if consortium is None:
                     raise NotFound(
                         "Consortium with code {} not found.".format(
                             add_consortium
                         )
                     )
-                req = Request()
-                req.consortium_data_contributor = consortium
-                req.states.append(default_state)
-                project.requests.append(req)
+
+                if consortium.id in existing_consortiums_ids:
+                    # Update existing request record
+                    for r in project.requests:
+                        if r.consortium_data_contributor_id == consortium.id:
+                            update_request_state(session, r, default_state)
+                else:
+                    # create a new request record for this consortium
+                    req = Request()
+                    req.consortium_data_contributor = consortium
+                    req.states.append(default_state)
+                    project.requests.append(req)
 
 
         if remove_consortiums and len(remove_consortiums) > 0:
-            default_state = admin.get_by_code("WITHDRAWAL")
+            default_state = admin.get_by_code("WITHDRAWAL", session)
             if not default_state:
                 raise NotFound("The state with id {} has not been found".format(default_state))
 
             for remove_consortium in remove_consortiums:
-                request = get_request_by_consortium(session, None, remove_consortium)
-                update_request_state(session, request, default_state)
+                requests_by_project = get_requests_by_project_id(session, project_id)
+                for request_by_project in requests_by_project:
+                    if request_by_project.consortium_data_contributor.code == remove_consortium:
+                        update_request_state(session, request_by_project, default_state)
 
 
         # Update he filterset

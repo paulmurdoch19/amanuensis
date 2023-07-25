@@ -4,7 +4,8 @@ from sqlalchemy import func
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Request,
-    Project
+    Project,
+    RequestState
 )
 
 __all__ = [
@@ -35,7 +36,11 @@ def update_request_state(
     """
     Updates the state for a request
     """
-    request.states.append(state)
+    req_state = RequestState()
+    req_state.request = request
+    req_state.state = state
+    current_session.add(req_state)
+    # request.states.append(state)
     current_session.flush()
     return request
 
