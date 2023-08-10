@@ -169,7 +169,7 @@ def create_project():
     explorer_id = flask.request.args.get('explorer', default=1, type=int)
 
     project_schema = ProjectSchema()
-    return jsonify(
+    return flask.jsonify(
         project_schema.dump(
             project.create(
                 logged_user_id,
