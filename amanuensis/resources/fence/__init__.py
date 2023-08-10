@@ -43,7 +43,7 @@ def fence_get_users(config, usernames=None, ids=None):
         headers = {'Content-Type': 'application/json'}
         body = json.dumps(queryBody)
         jwt = get_jwt_from_header()
-        sm = SignatureManager(key=config["RSA_PRIVATE_KEY"])
+        sm = SignatureManager(key=config["PRIVATE_KEY_PATH"])
         
         headers['Authorization'] = 'bearer ' + jwt
         headers['Signature'] = b'signature ' + sm.sign(body)
