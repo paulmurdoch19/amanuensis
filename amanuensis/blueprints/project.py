@@ -155,15 +155,15 @@ def create_project():
         )
 
 
-    associated_users_emails = request.get_json().get("associated_users_emails", None)
+    associated_users_emails = flask.request.get_json().get("associated_users_emails", None)
     # if not associated_users_emails:
     #     raise UserError("You can't create a Project without specifying the associated_users that will access the data")
 
-    name = request.get_json().get("name", None)
-    description = request.get_json().get("description", None)
-    institution = request.get_json().get("institution", None)
+    name = flask.request.get_json().get("name", None)
+    description = flask.request.get_json().get("description", None)
+    institution = flask.request.get_json().get("institution", None)
 
-    filter_set_ids = request.get_json().get("filter_set_ids", None)
+    filter_set_ids = flask.request.get_json().get("filter_set_ids", None)
 
     # get the explorer_id from the querystring ex: https://portal-dev.pedscommons.org/explorer?id=1
     explorer_id = flask.request.args.get('explorer', default=1, type=int)
