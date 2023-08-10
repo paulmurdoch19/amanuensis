@@ -171,7 +171,7 @@ def create_project():
     project_schema = ProjectSchema()
     return flask.jsonify(
         project_schema.dump(
-            project.create(
+            create(
                 logged_user_id,
                 False,
                 name,
