@@ -41,7 +41,7 @@ def fence_get_users(config, usernames=None, ids=None):
         # sending request to Fence
         url = config['FENCE'] + "/admin/users/selected"  
         headers = {'Content-Type': 'application/json'}
-        body = json.dumps(queryBody) #, separators=(',', ':')
+        body = json.dumps(queryBody)
         jwt = get_jwt_from_header()
         sm = SignatureManager(key=config["RSA_PRIVATE_KEY"])
         
