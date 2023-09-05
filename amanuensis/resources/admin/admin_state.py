@@ -72,7 +72,7 @@ def update_project_state(project_id, state_id):
 def create_consortium(name, code):
     with flask.current_app.db.session as session:
         consortium_schema = ConsortiumDataContributorSchema()
-        consortium = udm.create_consortium(session, name, code)
+        consortium = udm.create_consortium(session, code, name)
         consortium_schema.dump(consortium)
         return consortium
 

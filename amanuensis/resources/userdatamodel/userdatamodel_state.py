@@ -13,24 +13,11 @@ __all__ = [
     "create_state",
     "get_all_states",
     "update_project_state",
-    "create_consortium",
     "get_state_by_id",
     "get_state_by_code",
 ]
 
 logger = getLogger(__name__)
-
-
-def create_consortium(current_session, name, code):
-    """
-    Creates a consortium
-    """
-    new_consortium = ConsortiumDataContributor(name=name, code=code)
-
-    current_session.add(new_consortium)
-    current_session.flush()
-
-    return new_consortium
 
 
 def create_state(current_session, name, code):
