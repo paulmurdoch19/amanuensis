@@ -30,7 +30,7 @@ logger = get_logger(__name__)
 # cache = SimpleCache()
 
 
-def determine_status_code(this_project_ruquests_states):
+def determine_status_code(this_project_requests_states):
     """
     Takes status codes from all the requests within a project and returns the project status based on their precedence.
     Example: if all request status are "APPROVED", then the status code will be "APPROVED".
@@ -48,7 +48,7 @@ def determine_status_code(this_project_ruquests_states):
             #states_stack = [(id, code)]
             states_stack = sorted([(state[0], state[1]) for state in leaf_states_id_query], key=lambda state: state[1], reverse=True)
             this_project_state_heirarchy = []
-            while states_stack and this_project_ruquests_states:
+            while states_stack and this_project_requests_states:
                 current_state = states_stack.pop()
                 if current_state[0] not in seen_ids:
                     parent_states_code_id = session.query(Transition.state_src_id, State.code).join(
@@ -59,11 +59,11 @@ def determine_status_code(this_project_ruquests_states):
                     states_stack.extend([state for state in parent_states_code_id])
                     seen_ids.add(current_state[0])
 
-                if current_state[1] in this_project_ruquests_states:
-                    this_project_ruquests_states.remove(current_state[1])
+                if current_state[1] in this_project_requests_states:
+                    this_project_requests_states.remove(current_state[1])
                     this_project_state_heirarchy.append(current_state[1])
 
-            if this_project_ruquests_states:
+            if this_project_requests_states:
                 raise InternalError("{project_request_states} are not valid state(s)")
 
             if not this_project_state_heirarchy:
