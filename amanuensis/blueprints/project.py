@@ -12,9 +12,9 @@ from amanuensis.auth.auth import current_user, has_arborist_access
 from amanuensis.errors import AuthError, InternalError
 from amanuensis.schema import ProjectSchema
 from amanuensis.config import config
-from userportaldatamodel.models import State
+from userportaldatamodel.models import State, Transition
 #TODO: userportaldatamodel.models needs to be updated to include transition
-from userportaldatamodel.transition import Transition
+#from userportaldatamodel.transition import Transition
 
 
 # from amanuensis.auth import login_required, current_token
