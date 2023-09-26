@@ -7,9 +7,7 @@ Create Date: 2023-09-14 11:11:27.065014
 """
 from alembic import op
 import sqlalchemy as sa
-from userportaldatamodel.models import State
-#TODO: userportaldatamodel.models needs to be updated to include transition
-from userportaldatamodel.transition import Transition
+from userportaldatamodel.models import State, Transition
 from sqlalchemy.orm import Session
 
 
