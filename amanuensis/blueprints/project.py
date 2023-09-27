@@ -67,7 +67,7 @@ def determine_status_code(this_project_requests_states):
                 raise InternalError("{project_request_states} are not valid state(s)")
 
             if not this_project_state_heirarchy:
-                raise InternalError("no states were given")
+                return {"status": None}
             
             if len(this_project_state_heirarchy) >= 2 and this_project_state_heirarchy[-1] == "APPROVED" and this_project_state_heirarchy[-2] == "APPROVED_WITH_FEEDBACK":
                 return {"status": "APPROVED_WITH_FEEDBACK"}
