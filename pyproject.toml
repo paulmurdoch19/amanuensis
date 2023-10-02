@@ -17,7 +17,7 @@ authlib = {git = "https://github.com/uc-cdis/authlib", rev = "v0.11_CVE_patch_v1
 #authlib = "*" # let authutils decide which version we're using
 authutils = "^6.2.2" # authutils = {git = "https://github.com/chicagopcdc/authutils.git", rev = "6.1.4"}  
 bcrypt = "^3.1.4"
-boto3 = "~1.9.91"
+boto3 = "1.28.57"
 botocore = ">=1.12.253"
 cached_property = "^1.5.1"
 cdiserrors = "<2.0.0"
@@ -42,7 +42,7 @@ paramiko = "^2.6.0"
 prometheus-client = "^0.9.0"
 prometheus-flask-exporter = "^0.18.1"
 psycopg2 = "^2.8.3"
-pycryptodome = "3.9.8"
+pycryptodome = "3.19.0"
 PyJWT = "^2.4.0"
 python_dateutil = "^2.6.1"
 python-jose = "^2.0.2"
@@ -57,11 +57,11 @@ Flask-WTF = "^1.0.0"
 
 html2text = "^2020.1.16"
 
-pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.1.2"}
+pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "PEDS-1024"}
 # pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "pcdc_dev"}
 # hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "0.1.0"}
 # userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "pcdc_dev"}
-hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "1.0.1"}
+hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "dependency-update"}
 pcdc-aws-client = {git = "https://github.com/chicagopcdc/pcdc-aws-client.git", rev = "0.3.3"}
 userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "1.4.2"}
 
