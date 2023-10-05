@@ -1283,8 +1283,8 @@ urllib3 = "1.26.5"
 [package.source]
 type = "git"
 url = "https://github.com/chicagopcdc/hubspotclient.git"
-reference = "dependency-update"
-resolved_reference = "81dbd8c40d2a0710b8a6c9f54411979a7db6dbf7"
+reference = "1.0.2"
+resolved_reference = "69233395b778f5a7afcc21136ec9790c81e91e22"
 
 [[package]]
 name = "idna"
@@ -2545,4 +2545,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<4.0.0"
-content-hash = "24a14c9e5ded940b16e75a48d31d49a5945c302da07221c051a3af5d30a2df59"
+content-hash = "6b9e6eb9e380eef089b38ff64b718393f6c8a01aa56572b60607de23e7b580b0"
