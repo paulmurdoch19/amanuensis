@@ -57,12 +57,12 @@ Flask-WTF = "^1.0.0"
 
 html2text = "^2020.1.16"
 
-pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "PEDS-1024"}
-# pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "pcdc_dev"}
+
+pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.1.3"}
 # hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "0.1.0"}
 # userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "pcdc_dev"}
 hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "dependency-update"}
-pcdc-aws-client = {git = "https://github.com/chicagopcdc/pcdc-aws-client.git", rev = "0.3.3"}
+pcdc-aws-client = {git = "https://github.com/chicagopcdc/pcdc-aws-client.git", rev = "1.2.3"}
 userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "1.4.2"}
 
 [tool.poetry.dev-dependencies]
