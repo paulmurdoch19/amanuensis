@@ -22,6 +22,11 @@ def update_role(project_id, user_id, email, role):
         ret = udm.update_associated_users(session, project_id, user_id, email, role)
         return ret
 
+def get_codes_for_roles():
+    with flask.current_app.db.session as session:
+        roles = udm.get_associated_user_roles(session)
+        return {data.role: data.code for data in roles}
+
 
 def add_associated_users(users):
     # users variable format: [{project_id: "", id: "", email: ""},{}]

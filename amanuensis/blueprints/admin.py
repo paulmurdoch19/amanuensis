@@ -17,7 +17,7 @@ from amanuensis.resources import filterset
 from amanuensis.resources import project
 from amanuensis.resources import admin
 
-from amanuensis.models import ASSOCIATED_USER_ROLES
+from amanuensis.models import AssociatedUserRoles
 from amanuensis.schema import (
     ProjectSchema,
     StateSchema,
@@ -233,9 +233,12 @@ def update_project_state():
         request_schema.dump(admin.update_project_state(project_id, state_id))
     )
 
+@blueprint.route("/all_associated_user_roles", methods=["GET"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+def get_all_associated_user_roles():
+    return jsonify(admin.get_codes_for_roles())
 
-
-@blueprint.route("/associated_user_role", methods=["PUT"])
+@blueprint.route("/associated_user_role", methods=["PUT", "DELETE"])
 @check_arborist_auth(resource="/services/amanuensis", method="*")
 # @debug_log
 def update_associated_user_role():
@@ -250,10 +253,13 @@ def update_associated_user_role():
         raise UserError("A user_id and or an associated_user_email is required for this endpoint.")
 
     project_id = request.get_json().get("project_id", None)
-    role = "DATA_ACCESS"
-    if role not in ASSOCIATED_USER_ROLES:
-        raise NotFound("The role {} is not in the allowed list, reach out to pcdc_help@lists.uchicago.edu".format(role))
-
+    role = request.get_json().get("role", None)
+    if request.method == "PUT":     
+        if not role:
+            raise UserError("A role is required for this endpoint")
+        if role not in admin.get_codes_for_roles():
+            raise NotFound("The role {} is not in the allowed list, reach out to pcdc_help@lists.uchicago.edu".format(role))
+    
     return jsonify(admin.update_role(project_id, associated_user_id, associated_user_email, role))
 
 
