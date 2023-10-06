@@ -18,7 +18,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.drop_table('project_has_associated_user')
+
+    op.add_column(
+        "project_has_associated_user",
+        sa.Column("active", sa.Boolean(), nullable=False, server_default='true')
+    )
+
 
     op.create_table(
         'associated_user_roles',
@@ -30,34 +35,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id')
     )
 
-    op.create_table(
-        "project_has_associated_user",
-        sa.Column("project_id", sa.Integer(), nullable=False),
-        sa.Column("associated_user_id", sa.Integer(), nullable=False),
-        sa.Column("role", sa.Text(), nullable=False),
-        sa.Column("active", sa.Boolean(), nullable=False),
-        sa.Column(
-            "create_date",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=True,
-        ),
-        sa.Column(
-            "update_date",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=True,
-        ),
-        sa.ForeignKeyConstraint(
-            ["associated_user_id"],
-            ["associated_user.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["project_id"],
-            ["project.id"],
-        ),
-        sa.PrimaryKeyConstraint("project_id", "associated_user_id"),
-    )
+    
 
     conn = op.get_bind()
     session = Session(bind=conn)
@@ -73,32 +51,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_column("project_has_associated_user", 'active')
     op.drop_table('associated_user_roles')
-    op.drop_table('project_has_associated_user')
-    op.create_table(
-        "project_has_associated_user",
-        sa.Column("project_id", sa.Integer(), nullable=False),
-        sa.Column("associated_user_id", sa.Integer(), nullable=False),
-        sa.Column("role", sa.Text(), nullable=False),
-        sa.Column(
-            "create_date",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=True,
-        ),
-        sa.Column(
-            "update_date",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=True,
-        ),
-        sa.ForeignKeyConstraint(
-            ["associated_user_id"],
-            ["associated_user.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["project_id"],
-            ["project.id"],
-        ),
-        sa.PrimaryKeyConstraint("project_id", "associated_user_id"),
-    )
+    
