@@ -37,45 +37,46 @@ def determine_status_code(this_project_requests_states):
     However, if one of the request status is "PENDING", and "PENDING" has higher precedence
     then the status code will be "PENDING".
     """
+    #run BFS on state flow chart
     try: 
+        #check if withdrawal or Rejected are a state
+        if "WITHDRAWAL" in this_project_requests_states:
+                return {"status": "WITHDRAWAL"}
+            
+        if "REJECTED" in this_project_requests_states:
+            return {"status": "REJECTED"}
+        
         with flask.current_app.db.session as session:
-            seen_ids = set()
-
-            leaf_states_names = ["WITHDRAWAL", "REJECTED", "PUBLISHED"]
-
-            leaf_states_id_query = session.query(State.id, State.code).filter(State.code.in_(leaf_states_names)).all()
-
-            #states_stack = [(id, code)]
-            states_stack = sorted([(state[0], state[1]) for state in leaf_states_id_query], key=lambda state: state[1], reverse=True)
-            this_project_state_heirarchy = []
-            while states_stack and this_project_requests_states:
-                current_state = states_stack.pop()
-                if current_state[0] not in seen_ids:
+            seen_codes = set()
+            overall_project_state = None
+            #states_queue = [(id, code)]
+            states_queue = [(session.query(State.id).filter(State.code == "PUBLISHED").all()[0], "PUBLISHED")]
+            while states_queue and this_project_requests_states:
+                #pull out data of current state
+                current_state = states_queue.pop(0)
+                if current_state[1] not in seen_codes:
+                    #add state to seen
+                    seen_codes.add(current_state[1])
+                    #query parent states and add to queue
                     parent_states_code_id = session.query(Transition.state_src_id, State.code).join(
                                                             Transition, Transition.state_src_id == State.id
                                                         ).filter(
                                                             Transition.state_dst.has(id=current_state[0])
                                                         ).all()
-                    states_stack.extend([state for state in parent_states_code_id])
-                    seen_ids.add(current_state[0])
-
-                if current_state[1] in this_project_requests_states:
-                    this_project_requests_states.remove(current_state[1])
-                    this_project_state_heirarchy.append(current_state[1])
+                    states_queue.extend([state for state in parent_states_code_id])
+                    #change overall project status if applicable
+                    if current_state[1] in this_project_requests_states:
+                        this_project_requests_states.remove(current_state[1])
+                        if ((current_state[1] == "APPROVED" and overall_project_state == "APPROVED_WITH_FEEDBACK")    
+                            or (current_state[1] == "REVISION") and overall_project_state == "SUBMITTED"):
+                            continue
+                        else:
+                            overall_project_state = current_state[1]
 
             if this_project_requests_states:
                 raise InternalError("{project_request_states} are not valid state(s)")
 
-            if not this_project_state_heirarchy:
-                return {"status": None}
-            
-            if len(this_project_state_heirarchy) >= 2 and this_project_state_heirarchy[-1] == "APPROVED" and this_project_state_heirarchy[-2] == "APPROVED_WITH_FEEDBACK":
-                return {"status": "APPROVED_WITH_FEEDBACK"}
-            
-            if len(this_project_state_heirarchy) >= 2 and this_project_state_heirarchy[-1] == "IN_REVIEW" and this_project_state_heirarchy[-2] == "REVISION":
-                return {"status": "REVISION"}
-
-            return {"status": this_project_state_heirarchy[-1]}
+            return {"status": overall_project_state}
 
     except (KeyError, InternalError):
         #  logger.error(
