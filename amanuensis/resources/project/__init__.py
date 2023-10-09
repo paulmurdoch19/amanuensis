@@ -13,7 +13,8 @@ from amanuensis.resources.userdatamodel import (
     get_project_by_id,
     update_project,
     associate_user,
-    update_request_state
+    update_request_state,
+    get_state_by_code
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
 from amanuensis.resources.request import get_request_state
@@ -164,6 +165,14 @@ def update(project_id, approved_url, filter_set_ids):
 
     with flask.current_app.db.session as session:
         return update_project(session, project_id, approved_url)
+
+
+def update_project_request_states(requests, state_code):
+    with flask.current_app.db.session as session:
+        state = get_state_by_code(session, state_code)
+        for request in requests:
+            update_request_state(session, request, state)
+
 
 
 def update_project_searches(logged_user_id, project_id, filter_sets_id):
