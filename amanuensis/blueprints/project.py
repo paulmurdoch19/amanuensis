@@ -115,10 +115,10 @@ def get_projetcs():
         completed_at = None
         project_status = None
         statuses_by_consortium = set()
+        consortiums = set()
         for request in project["requests"]:
-            #TODO this should come from the get_all above and not make extra queries to the DB. 
-            request_state = get_request_state(request["id"], flask.current_app.scoped_session())
-            statuses_by_consortium.add(request_state.state.code)
+            statuses_by_consortium.add(request['states'][-1]["code"])
+            consortiums.add(request['consortium_data_contributor']['code'])
 
             if not submitted_at:
                 submitted_at = request["create_date"]
@@ -151,7 +151,8 @@ def get_projetcs():
                     if logged_user_id == associated_user_role["associated_user"]["user_id"] or logged_user_email == associated_user_role["associated_user"]["email"]:
                         tmp_project["has_access"] = True
                         break
-
+        
+        tmp_project["consortia"] = list(consortiums)
         return_projects.append(tmp_project)
 
     return flask.jsonify(return_projects)
