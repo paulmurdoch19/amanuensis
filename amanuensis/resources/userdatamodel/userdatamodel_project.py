@@ -11,7 +11,7 @@ from amanuensis.models import (
     Search,
     AssociatedUser,
     ProjectAssociatedUser,
-    ASSOCIATED_USER_ROLES,
+    AssociatedUserRoles,
     RequestState,
 )
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
@@ -139,6 +139,10 @@ def update_project(current_session, project_id, approved_url=None, searches=None
         }
 
 
+def get_associated_user_roles(current_session):
+    return current_session.query(AssociatedUserRoles).all()
+
+
 def update_associated_users(current_session, project_id, id, email, role):
     user_by_id = None
     user_by_email = None
@@ -159,14 +163,24 @@ def update_associated_users(current_session, project_id, id, email, role):
     # print(user_by_email)
     # print(email)
     # print(id)
+    
+
     if user_by_id:
-        user_by_id.role = role
+        if role:
+            user_by_id.role = role
+            user_by_id.active = True
+        else:
+            user_by_id.active = False
     elif user_by_email:
-        user_by_email.role = role
+        if role:
+            user_by_email.role = role
+            user_by_email.acive = True
+        else:
+            user_by_email.active = False
     else:
         raise NotFound("No user associated with project {} found.".format(project_id))
 
-    # current_session.commit()
+    #current_session.commit()
     current_session.flush()
     return "200"
 
