@@ -43,9 +43,9 @@ def download_data(project_id):
     associated_users_ids = []
     associated_users_emails = []
     for associated_user_role in project.associated_users_roles:
-        if associated_user_role.associated_user.user_id and associated_user_role.role == "DATA_ACCESS":
+        if associated_user_role.associated_user.user_id and associated_user_role.role.code == "DATA_ACCESS":
             associated_users_ids.append(associated_user_role.associated_user.user_id)
-        if associated_user_role.associated_user.email and associated_user_role.role == "DATA_ACCESS":
+        if associated_user_role.associated_user.email and associated_user_role.role.code == "DATA_ACCESS":
             associated_users_emails.append(associated_user_role.associated_user.email)
 
     if logged_user_id not in associated_users_ids and logged_user_email not in associated_users_emails:
