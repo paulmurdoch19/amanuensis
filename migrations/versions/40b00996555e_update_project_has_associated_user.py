@@ -19,22 +19,28 @@ depends_on = None
 
 logger = logging.getLogger("amanuensis.alembic")
 
-conn = op.get_bind()
-session = Session(bind=conn)
-role_ids_role_codes = session.query(AssociatedUserRoles.id, AssociatedUserRoles.code).all()
-roles_dict = {}
-for role in role_ids_role_codes:
-    roles_dict[role.code] = role.id
-
 def upgrade() -> None:
+    conn = op.get_bind()
+    session = Session(bind=conn)
+    role_ids_role_codes = session.query(AssociatedUserRoles.id, AssociatedUserRoles.code).all()
+    roles_dict = {}
+    for role in role_ids_role_codes:
+        roles_dict[role.code] = role.id
+
     logger.warn("userporataldatamodel must be at version 1.6.0 or greater")
     op.add_column("project_has_associated_user", sa.Column('role_id', sa.Integer, sa.ForeignKey('associated_user_roles.id')))
 
-    op.execute(f"UPDATE project_has_associated_user SET role_id = CASE WHEN role = 'DATA_ACCESS' THEN {roles_dict['DATA_ACCESS']} WHEN role = 'METADATA_ACCESS' THEN {roles_dict['METADATA_ACCESS']} ELSE 0 END")
+    op.execute(f"UPDATE project_has_associated_user SET role_id = CASE WHEN role = 'DATA_ACCESS' THEN {roles_dict['DATA_ACCESS']} WHEN role = 'METADATA_ACCESS' THEN {roles_dict['METADATA_ACCESS']} ELSE NULL END")
 
     op.drop_column("project_has_associated_user", 'role')
 
 def downgrade() -> None:
+    conn = op.get_bind()
+    session = Session(bind=conn)
+    role_ids_role_codes = session.query(AssociatedUserRoles.id, AssociatedUserRoles.code).all()
+    roles_dict = {}
+    for role in role_ids_role_codes:
+        roles_dict[role.code] = role.id
     logger.warn("userportaldatamodel must be at version 1.5.0 or less")
     op.add_column("project_has_associated_user", sa.Column('role', sa.String, nullable=False, server_default="METADATA_ACESS"))
 
