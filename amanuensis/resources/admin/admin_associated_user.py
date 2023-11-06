@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 __all__ = [
     "update_role",
     "add_associated_users",
+    "get_codes_for_roles",
 ]
 
 
