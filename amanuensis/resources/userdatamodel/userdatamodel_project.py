@@ -27,6 +27,7 @@ __all__ = [
     "update_project",
     "update_associated_users",
     "update_project_date",
+    "get_associated_user_roles",
 ]
 
 
