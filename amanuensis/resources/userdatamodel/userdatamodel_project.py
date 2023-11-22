@@ -165,16 +165,17 @@ def update_associated_users(current_session, project_id, id, email, role):
     # print(email)
     # print(id)
     
+    new_role = current_session.query(AssociatedUserRoles).filter(AssociatedUserRoles.code == role).first()
 
     if user_by_id:
         if role:
-            user_by_id.role = role
+            user_by_id.role = new_role
             user_by_id.active = True
         else:
             user_by_id.active = False
     elif user_by_email:
         if role:
-            user_by_email.role = role
+            user_by_email.role = new_role
             user_by_email.acive = True
         else:
             user_by_email.active = False
