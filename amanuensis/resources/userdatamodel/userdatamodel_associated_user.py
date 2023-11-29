@@ -83,7 +83,7 @@ def update_associated_users(current_session, associated_users):
     return "200"
 
 
-def add_associated_user(current_session, project_id, email, user_id):
+def add_associated_user(current_session, project_id, email, user_id, role_id):
     if not user_id and not email: 
         raise UserError("Missing email and id.")
 
@@ -98,7 +98,8 @@ def add_associated_user(current_session, project_id, email, user_id):
 
     new_project_user = ProjectAssociatedUser(
         project_id = project_id,
-        associated_user_id = new_user.id
+        associated_user_id = new_user.id,
+        role_id=role_id
     )
 
     current_session.add(new_project_user)
@@ -106,13 +107,14 @@ def add_associated_user(current_session, project_id, email, user_id):
     return new_user
 
 
-def add_associated_user_to_project(current_session, associated_user, project_id):
+def add_associated_user_to_project(current_session, associated_user, project_id, role_id):
     if not associated_user and not associated_user.id:
         raise UserError("Missing user id.")
 
     new_project_user = ProjectAssociatedUser(
         project_id = project_id,
-        associated_user_id = associated_user.id
+        associated_user_id = associated_user.id,
+        role_id=role_id
     )
 
     current_session.add(new_project_user)

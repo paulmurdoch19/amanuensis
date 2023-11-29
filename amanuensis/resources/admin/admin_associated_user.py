@@ -8,6 +8,7 @@ from amanuensis.resources import fence
 from amanuensis.resources import userdatamodel as udm
 from amanuensis.schema import AssociatedUserSchema
 from amanuensis.errors import UserError
+from amanuensis.models import AssociatedUserRoles
 
 logger = get_logger(__name__)
 
@@ -78,6 +79,10 @@ def add_associated_users(users):
                 #TODO send notification to the user about registering in the portal to see the data / and potentially create the user in fence programmatically
                 logger.info("The user {} has not created an account in the commons yet".format(user["id"] if "id" in user else user["email"]))
             fence_user = fence_user_by_id if fence_user_by_id else fence_user_by_email
+            
+            #get the foreign key for the role
+
+            role_id = session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == "METADATA_ACCESS").first()[0]
 
             # Check if the user exists in amanuensis, if it does check it is in sync with fence and update if needed, if it doesn't add it using the fence info
             if not associated_user_by_email and not associated_user_by_id:
@@ -92,6 +97,7 @@ def add_associated_users(users):
                         project_id=user["project_id"],
                         email=user["email"],
                         user_id=user["id"],
+                        role_id=role_id
                     )
                 )
             else:
@@ -114,6 +120,7 @@ def add_associated_users(users):
                         session,
                         associated_user=amanuensis_user,
                         project_id=user["project_id"],
+                        role_id=role_id
                     )
                 )
 
