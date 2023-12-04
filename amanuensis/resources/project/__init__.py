@@ -197,7 +197,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
             
         # Get all the consortium involved in the existing requests
         requests = project.requests
-        requests_with_state = [{"request": request, "state": get_request_state(request.id).state} for request in requests]
+        requests_with_state = [{"request": request, "state": get_request_state(request.id, session).state} for request in requests]
         # TODO make this configurable
         old_consortiums = [request["request"].consortium_data_contributor.code for request in requests_with_state if request["state"].code not in ["WITHDRAWAL"]]
 

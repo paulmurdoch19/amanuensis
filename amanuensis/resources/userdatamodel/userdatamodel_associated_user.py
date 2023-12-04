@@ -1,4 +1,4 @@
-import amanuensis
+from amanuensis.errors import NotFound, UserError
 from amanuensis.models import AssociatedUser, ProjectAssociatedUser
 
 __all__ = [
@@ -63,7 +63,7 @@ def update_associated_user(current_session, associated_user):
         current_session=current_session, id=associated_user.id
     )
     if not user:
-        raise amanuensis.errors.NotFound("Associated user not found.")
+        raise NotFound("Associated user not found.")
     
     user.email = associated_user.email
     user.user_id = associated_user.user_id
