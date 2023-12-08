@@ -30,7 +30,7 @@ def get_codes_for_roles():
         return {data.role: data.code for data in roles}
 
 
-def add_associated_users(users, role_id=None):
+def add_associated_users(users, role=None):
    # users variable format: [{project_id: "", id: "", email: ""},{}]
     users = [defaultdict(lambda: None, user) for user in users]
 
@@ -81,9 +81,10 @@ def add_associated_users(users, role_id=None):
             fence_user = fence_user_by_id if fence_user_by_id else fence_user_by_email
             
             #get the foreign key for the role
-            if not role_id:
+            if not role:
                 role_id = session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == "METADATA_ACCESS").first()[0]
-
+            else:
+                role_id = session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == role).first()[0]
             # Check if the user exists in amanuensis, if it does check it is in sync with fence and update if needed, if it doesn't add it using the fence info
             if not associated_user_by_email and not associated_user_by_id:
                 # Create the user in amanuensis
