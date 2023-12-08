@@ -274,11 +274,12 @@ def add_associated_user():
     Returns a json object
     """
     users = request.get_json().get("users", None)
+    role = request.get_json().get("role", None)
     if not users:
         raise UserError("The body should be in the following format: [{project_id: \"\", id: \"\", email: \"\"},...] ")
 
     associated_user_schema = AssociatedUserSchema(many=True)
-    return jsonify(associated_user_schema.dump(admin.add_associated_users(users)))
+    return jsonify(associated_user_schema.dump(admin.add_associated_users(users, role)))
 
 
 @blueprint.route("/projects/date", methods=["PATCH"])
