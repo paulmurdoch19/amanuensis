@@ -7,7 +7,7 @@ from amanuensis.config import config
 from amanuensis.resources import fence
 from amanuensis.resources import userdatamodel as udm
 from amanuensis.schema import AssociatedUserSchema
-from amanuensis.errors import UserError
+from amanuensis.errors import UserError, NotFound
 from amanuensis.models import AssociatedUserRoles
 
 logger = get_logger(__name__)
@@ -84,7 +84,10 @@ def add_associated_users(users, role=None):
             if not role:
                 role_id = session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == "METADATA_ACCESS").first()[0]
             else:
-                role_id = session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == role).first()[0]
+                try:
+                    role_id = session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == role).first()[0]
+                except TypeError:
+                    raise NotFound("input role is not a valid option")
             # Check if the user exists in amanuensis, if it does check it is in sync with fence and update if needed, if it doesn't add it using the fence info
             if not associated_user_by_email and not associated_user_by_id:
                 # Create the user in amanuensis
