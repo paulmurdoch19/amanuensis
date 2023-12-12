@@ -7,7 +7,8 @@ from amanuensis.config import config
 from amanuensis.resources import fence
 from amanuensis.resources import userdatamodel as udm
 from amanuensis.schema import AssociatedUserSchema
-from amanuensis.errors import UserError
+from amanuensis.errors import UserError, NotFound
+from amanuensis.models import AssociatedUserRoles
 
 logger = get_logger(__name__)
 
@@ -29,8 +30,8 @@ def get_codes_for_roles():
         return {data.role: data.code for data in roles}
 
 
-def add_associated_users(users):
-    # users variable format: [{project_id: "", id: "", email: ""},{}]
+def add_associated_users(users, role=None):
+   # users variable format: [{project_id: "", id: "", email: ""},{}]
     users = [defaultdict(lambda: None, user) for user in users]
 
     with flask.current_app.db.session as session:
@@ -78,7 +79,15 @@ def add_associated_users(users):
                 #TODO send notification to the user about registering in the portal to see the data / and potentially create the user in fence programmatically
                 logger.info("The user {} has not created an account in the commons yet".format(user["id"] if "id" in user else user["email"]))
             fence_user = fence_user_by_id if fence_user_by_id else fence_user_by_email
-
+            
+            #get the foreign key for the role
+            if not role:
+                role_id = session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == "METADATA_ACCESS").first()[0]
+            else:
+                try:
+                    role_id = session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == role).first()[0]
+                except TypeError:
+                    raise NotFound("input role is not a valid option")
             # Check if the user exists in amanuensis, if it does check it is in sync with fence and update if needed, if it doesn't add it using the fence info
             if not associated_user_by_email and not associated_user_by_id:
                 # Create the user in amanuensis
@@ -92,6 +101,7 @@ def add_associated_users(users):
                         project_id=user["project_id"],
                         email=user["email"],
                         user_id=user["id"],
+                        role_id=role_id
                     )
                 )
             else:
@@ -114,6 +124,7 @@ def add_associated_users(users):
                         session,
                         associated_user=amanuensis_user,
                         project_id=user["project_id"],
+                        role_id=role_id
                     )
                 )
 
