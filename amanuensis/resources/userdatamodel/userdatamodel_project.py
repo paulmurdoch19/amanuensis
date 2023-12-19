@@ -101,7 +101,9 @@ def create_project(current_session, user_id, description, name, institution, sea
     current_session.flush()
     new_project.searches.extend(searches)
     new_project.requests.extend(requests)
-    new_project.associated_users.extend(associated_users)
+    role_id = current_session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == "METADATA_ACCESS").first()[0]
+    for associated_user in associated_users:
+        new_project.project_has_associated_user.append(ProjectAssociatedUser(associated_user=associated_user, role_id=role_id))
 
     # current_session.flush()
     # current_session.add(new_project)
