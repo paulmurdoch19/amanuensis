@@ -3,7 +3,7 @@ import amanuensis
 
 from sqlalchemy.orm import aliased
 
-
+from cdislogging import get_logger
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Project,
@@ -17,6 +17,8 @@ from amanuensis.models import (
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests_by_project_id,
 )
+
+logger = get_logger(__name__)
 
 __all__ = [
     "get_all_projects",
@@ -105,7 +107,8 @@ def create_project(current_session, user_id, description, name, institution, sea
     if role_id:
         for associated_user in associated_users:
             new_project.project_has_associated_user.append(ProjectAssociatedUser(associated_user=associated_user, role_id=role_id[0]))
-
+    else:
+        logger.error("no roles present for associated users, no assoicated users will be added to project")
     # current_session.flush()
     # current_session.add(new_project)
     # current_session.merge(new_project)
