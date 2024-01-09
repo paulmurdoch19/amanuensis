@@ -13,6 +13,22 @@ __all__ = [
     "add_associated_user_to_project",
 ]
 
+
+#TODO 
+#here are some notes on some things to look into regarding this module
+
+#Methods get_associated_user and get_associated_users
+#Maybe we should add _by_email to the names of these keep it more consistent
+
+#all the get methods have a single item and multi item look up versions and they probably could be combined into one 
+#and we could cast the single item loopup as a list
+#might keep things simplier
+
+# Methods add_associated_user_to_project and add_associated_user
+# these methods kind of do that same thing and we could have one method that adds associated users to the DB 
+# and the other add associated users to projects then set up a catch so if a request trys to add an associated user to a project
+#that doesnt exist we call the method to add the user
+
 def get_associated_user(current_session, email):
     if not email:
         return

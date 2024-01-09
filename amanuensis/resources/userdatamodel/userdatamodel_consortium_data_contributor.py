@@ -11,6 +11,9 @@ __all__ = [
 ]
 
 
+#TODO
+#get_consortium_by_code has no error catch so errors are raised in the blueprints which creates redundent code
+#clean up imports
 
 def create_consortium(current_session, code, name):
     """
