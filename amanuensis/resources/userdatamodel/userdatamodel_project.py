@@ -167,7 +167,7 @@ def update_associated_users(current_session, project_id, id, email, role):
     # print(email)
     # print(id)
     
-    new_role = get_associated_user_role_by_code(current_session=current_session, code=role)
+    new_role = get_associated_user_role_by_code(current_session=current_session, code=role, throw_error=False)
 
     if user_by_id:
         if role:
@@ -178,7 +178,7 @@ def update_associated_users(current_session, project_id, id, email, role):
     elif user_by_email:
         if role:
             user_by_email.role = new_role
-            user_by_email.acive = True
+            user_by_email.active = True
         else:
             user_by_email.active = False
     else:
