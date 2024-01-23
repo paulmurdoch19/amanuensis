@@ -1,7 +1,6 @@
 import flask
 from wsgiref.util import request_uri
 
-
 from cdislogging import get_logger
 
 from amanuensis.resources.project import create, get_all
@@ -147,10 +146,15 @@ def get_projetcs():
         tmp_project["has_access"] = False
         if "associated_users_roles" in project:
             for associated_user_role in project["associated_users_roles"]:
-                if associated_user_role["role"]["code"] == "DATA_ACCESS":
-                    if logged_user_id == associated_user_role["associated_user"]["user_id"] or logged_user_email == associated_user_role["associated_user"]["email"]:
-                        tmp_project["has_access"] = True
-                        break
+                if "role" in associated_user_role and associated_user_role["role"] and "code" in associated_user_role["role"]: 
+                    if associated_user_role["role"]["code"] == "DATA_ACCESS":
+                        if logged_user_id == associated_user_role["associated_user"]["user_id"] or logged_user_email == associated_user_role["associated_user"]["email"]:
+                            tmp_project["has_access"] = True
+                            break
+                else:
+                    logger.error(
+                        "ERROR: Unable to find associated role. check the project_has_associated_user table in the amanuensis DB"
+                    )
         
         tmp_project["consortia"] = list(consortiums)
         return_projects.append(tmp_project)
