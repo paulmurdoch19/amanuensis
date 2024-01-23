@@ -164,6 +164,8 @@ def create_project():
             "You can't create a Project without specifying the user the project will be assigned to."
         )
 
+    #TODO check if user exists in Fence
+
     associated_users_emails = request.get_json().get("associated_users_emails", None)
     # if not associated_users_emails:
     #     raise UserError("You can't create a Project without specifying the associated_users that will access the data")
