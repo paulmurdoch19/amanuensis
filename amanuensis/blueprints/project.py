@@ -1,7 +1,5 @@
 import flask
 from wsgiref.util import request_uri
-import json
-
 
 from cdislogging import get_logger
 
@@ -148,9 +146,6 @@ def get_projetcs():
         tmp_project["has_access"] = False
         if "associated_users_roles" in project:
             for associated_user_role in project["associated_users_roles"]:
-                print("LUCAAAAAAAAAAAAAAA")
-                print(associated_user_role)
-                print(json.dumps(associated_user_role))
                 if "role" in associated_user_role and associated_user_role["role"] and "code" in associated_user_role["role"]: 
                     if associated_user_role["role"]["code"] == "DATA_ACCESS":
                         if logged_user_id == associated_user_role["associated_user"]["user_id"] or logged_user_email == associated_user_role["associated_user"]["email"]:
