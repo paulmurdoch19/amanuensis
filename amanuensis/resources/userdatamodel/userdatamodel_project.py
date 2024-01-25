@@ -154,9 +154,9 @@ def update_associated_users(current_session, project_id, id, email, role):
     user_by_id = None
     user_by_email = None
 
-    if id:
-        user_by_id = current_session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.user_id == id).first()
-        # q = s.query(Parent).join(Child, Parent.child).filter(Child.value > 20)
+    # if id:
+    #     user_by_id = current_session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.user_id == id).first()
+    #     # q = s.query(Parent).join(Child, Parent.child).filter(Child.value > 20)
 
     if email:
         user_by_email = current_session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.email == email).first()
@@ -170,9 +170,7 @@ def update_associated_users(current_session, project_id, id, email, role):
     # print(user_by_email)
     # print(email)
     # print(id)
-    
     new_role = current_session.query(AssociatedUserRoles).filter(AssociatedUserRoles.code == role).first()
-
     if user_by_id:
         if role:
             user_by_id.role = new_role

@@ -107,6 +107,7 @@ def get_projetcs():
     return_projects = []
 
     for project in projects:
+        print(project)
         tmp_project = {}
         tmp_project["id"] = project["id"]
         tmp_project["name"] = project["name"]

@@ -96,7 +96,6 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
         consortiums.extend(get_consortium_list(path, s.graphql_object, s.ids_list))    
     consortiums = list(set(consortiums))
-
     # Defaulst state is SUBMITTED
     default_state = admin.get_by_code("IN_REVIEW")
 
@@ -119,7 +118,7 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
 
     # Check if associated_users exists in amanuensis
     # 1. get associated_users from amanuensis
-    amanuensis_associated_users = get_all_associated_users(associated_users_emails) 
+    amanuensis_associated_users = get_all_associated_users(associated_users_emails)
 
     # # 1. check if associated_users are already in amanuensis
     # for associated_user in amanuensis_associated_users:
