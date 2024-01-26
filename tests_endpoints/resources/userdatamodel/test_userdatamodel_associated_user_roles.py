@@ -24,3 +24,7 @@ def test_get_associated_user_role_by_code(session, roles):
     #test incorrect data
     with pytest.raises(NotFound) as e:
         get_associated_user_role_by_code(session, code="NOTREALCODE")
+
+    #tests incorrect data with no error
+    data = get_associated_user_role_by_code(session, code="NOTREALCODE", throw_error=False)
+    assert data == None
