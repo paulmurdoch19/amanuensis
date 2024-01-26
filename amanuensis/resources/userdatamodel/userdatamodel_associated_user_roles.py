@@ -22,5 +22,5 @@ def get_associated_user_role_by_code(current_session=None, code="METADATA_ACCESS
         with flask.current_app.db.session as session:
             role = session.query(AssociatedUserRoles).filter(AssociatedUserRoles.code == code).first()
     if not role and throw_error:
-        raise NotFound(f"{code} does not an availible role") 
+        raise NotFound(f"{code} is not an availible role") 
     return role

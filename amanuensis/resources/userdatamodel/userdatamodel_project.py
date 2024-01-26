@@ -16,7 +16,9 @@ from amanuensis.models import (
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests_by_project_id,
 )
-from amanuensis.resources.userdatamodel.userdatamodel_associated_user_roles import get_associated_user_role_by_code
+from amanuensis.resources.userdatamodel.userdatamodel_associated_user_roles import (
+    get_associated_user_role_by_code
+)
 
 logger = get_logger(__name__)
 
