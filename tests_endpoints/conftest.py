@@ -52,6 +52,11 @@ def patch_auth_request(app_instance):
     with patch.object(app_instance.arborist, 'auth_request', return_value=True):
         yield
 
+@pytest.fixture(scope='session', autouse=True)
+def patch_boto(app_instance):
+    with patch.object(app_instance.boto, "presigned_url", return_value="aws_url_to_data"):
+        yield
+
 @pytest.fixture(scope="session", autouse=True)
 def patch_get_jwt_from_header():
     # Mock the get_jwt_from_header function to always return "1.2.3"

@@ -45,7 +45,6 @@ def add_associated_users(users, role=None):
             # FENCE Retrieve the users information from the Fence DB
             fence_user_by_email = None
             fence_user_by_id = None
-            print(fence.fence_get_users)
             if "id" in user:
                 fence_user_by_id = fence.fence_get_users(config, ids=[user["id"]])["users"]
                 fence_user_by_id = fence_user_by_id[0] if len(fence_user_by_id) == 1 else None
