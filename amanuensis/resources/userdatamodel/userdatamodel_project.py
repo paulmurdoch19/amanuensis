@@ -170,9 +170,7 @@ def update_associated_users(current_session, project_id, id, email, role):
     # print(user_by_email)
     # print(email)
     # print(id)
-    
     new_role = current_session.query(AssociatedUserRoles).filter(AssociatedUserRoles.code == role).first()
-
     if user_by_id:
         if role:
             user_by_id.role = new_role

@@ -47,7 +47,6 @@ def download_data(project_id):
             associated_users_ids.append(associated_user_role.associated_user.user_id)
         if associated_user_role.associated_user.email and associated_user_role.role.code == "DATA_ACCESS":
             associated_users_emails.append(associated_user_role.associated_user.email)
-
     if logged_user_id not in associated_users_ids and logged_user_email not in associated_users_emails:
         raise Forbidden("The user is not in the list of associated_users that signed the DUA. Please reach out to pcdc_help@lists.uchicago.edu")
 
