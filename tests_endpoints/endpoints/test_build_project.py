@@ -210,7 +210,7 @@ def test_2_create_project_with_one_request(session, client):
             error_response = client.post('/admin/projects', json=create_project_json)
             assert error_response.status_code == 404
         
-        
+
         
         """
         add user_2 to the project with data access
@@ -359,6 +359,11 @@ def test_2_create_project_with_one_request(session, client):
         assert update_project_response.status_code == 200
 
         """
+        Error test
+        """
+        #assert client.put("/admin/projects", json={}).status_code == 400
+
+        """
         patch project date
         """
         #BUG test current disabled do to bug
@@ -380,6 +385,11 @@ def test_2_create_project_with_one_request(session, client):
         update_project_state_data_available_json = {"project_id": project_id, "state_id": data_available["id"]}
         update_project_state_data_available_response = client.post("/admin/projects/state", json=update_project_state_data_available_json)
         update_project_state_data_available_response.status_code == 200
+
+        """
+        error test
+        """
+        #assert client.post("/admin/projects/state", json={}).status_code == 400
 
     with \
     patch('amanuensis.blueprints.download_urls.current_user', id=102, username="endpoint_user_2@test.com"), \

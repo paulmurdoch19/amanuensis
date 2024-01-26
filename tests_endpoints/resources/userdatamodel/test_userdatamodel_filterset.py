@@ -26,3 +26,4 @@ def test_get_filter_sets_by_ids(session, searches):
         else:
             correct.remove(search.id)
     assert True
+

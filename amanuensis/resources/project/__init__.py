@@ -119,7 +119,6 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
     # Check if associated_users exists in amanuensis
     # 1. get associated_users from amanuensis
     amanuensis_associated_users = get_all_associated_users(associated_users_emails)
-
     # # 1. check if associated_users are already in amanuensis
     # for associated_user in amanuensis_associated_users:
     #     if associated_user.ema
