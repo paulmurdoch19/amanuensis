@@ -40,3 +40,11 @@ source env/bin/activate
 poetry install
 
 alembic revision -m "add_save"
+
+## Run Endpoint tests
+
+in the config fill in ARBORIST with 'http://arborist-service'
+
+activate the virtual env
+
+run pytest tests_endpoints/
