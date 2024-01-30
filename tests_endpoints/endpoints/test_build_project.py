@@ -9,6 +9,77 @@ from amanuensis.blueprints.filterset import UserError
 logger = get_logger(logger_name=__name__)
 
 
+def fence_get_users_mock(config=None, usernames=None, ids=None):
+    '''
+    amanuensis sends a request to fence for a list of user ids 
+    matching the supplied list of user email addresses
+    '''
+    if (ids and usernames):
+        logger.error("fence_get_users: Wrong params, only one among `ids` and `usernames` should be set.")
+        return {}
+
+
+    if usernames:
+        queryBody = {
+            'usernames': usernames
+        }
+    elif ids:
+        queryBody = {
+            'ids': ids
+        }
+    else:
+        logger.error("fence_get_users: Wrong params, at least one among `ids` and `usernames` should be set.")
+        return {}
+    fence_users = [
+        {
+            "first_name": "endpoint_user_1",
+            "id": 101,
+            "institution": "test university",
+            "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
+            "last_name": "endpoint_user_last_1",
+            "name": "endpoint_user_1@test.com",
+            "role": "user"
+        },
+        {
+            "first_name": "endpoint_user_2",
+            "id": 102,
+            "institution": "test university",
+            "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
+            "last_name": "endpoint_user_last",
+            "name": "endpoint_user_2@test.com",
+            "role": "user"
+        },
+        {
+            "first_name": "endpoint_user_3",
+            "id": 103,
+            "institution": "test university",
+            "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
+            "last_name": "endpoint_user_last_3",
+            "name": "endpoint_user_3@test.com",
+            "role": "user"
+        },
+        {
+            "first_name": "admin_first",
+            "id": 200,
+            "institution": "uchicago",
+            "last_auth": "Fri, 20 Jan 2024 20:33:37 GMT",
+            "last_name": "admin_last",
+            "name": "admin@uchicago.edu",
+            "role": "admin"
+        }
+    ]
+    return_users = {"users": []}
+    for user in fence_users:
+        if 'ids' in queryBody:
+            if user['id'] in queryBody['ids']:
+                return_users['users'].append(user)
+        else:
+            if user['name'] in queryBody['usernames']:
+                return_users['users'].append(user)
+    return return_users
+
+
+
 def test_add_consortium(session, client):
     json = {"name": "ENDPOINT_TEST", "code": "ENDPOINT_TEST"}
     response = client.post("/admin/consortiums", json=json)
@@ -24,63 +95,6 @@ def test_add_state(session, client):
     assert session.query(State).filter(State.code == "ENDPOINT_TEST").first().id == response.json["id"]
     session.query(State).filter(State.code == "ENDPOINT_TEST").delete()
     session.commit()
-
-fence_user_1 = {
-        "users": [
-            {
-                "first_name": "endpoint_user_1",
-                "id": 101,
-                "institution": "test university",
-                "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
-                "last_name": "endpoint_user_last_1",
-                "name": "endpoint_user_1@test.com",
-                "role": "user"
-            }
-        ]
-}
-
-fence_user_2 = {
-        "users": [
-            {
-                "first_name": "endpoint_user_2",
-                "id": 102,
-                "institution": "test university",
-                "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
-                "last_name": "endpoint_user_last",
-                "name": "endpoint_user_2@test.com",
-                "role": "user"
-            }
-        ]
-}
-
-fence_user_3 = {
-        "users": [
-            {
-                "first_name": "endpoint_user_3",
-                "id": 103,
-                "institution": "test university",
-                "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
-                "last_name": "endpoint_user_last_3",
-                "name": "endpoint_user_3@test.com",
-                "role": "user"
-            }
-        ]
-}
-
-fence_admin = {
-        "users": [
-            {
-                "first_name": "admin_first",
-                "id": 101,
-                "institution": "uchicago",
-                "last_auth": "Fri, 20 Jan 2024 20:33:37 GMT",
-                "last_name": "admin_last",
-                "name": "admin@uchicago.edu",
-                "role": "admin"
-            }
-        ]
-}
-
 
 
 def test_2_create_project_with_one_request(session, client):
@@ -215,7 +229,7 @@ def test_2_create_project_with_one_request(session, client):
         """
         add user_2 to the project with data access
         """
-        with patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", return_value=fence_user_2):
+        with patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", side_effect=fence_get_users_mock):
             add_user_2_response = client.post("/admin/associated_user", json={"users": [{"project_id": project_id, "email": 'endpoint_user_2@test.com'}], "role": "DATA_ACCESS"})
             add_user_2_response.status_code == 200
         
@@ -223,7 +237,7 @@ def test_2_create_project_with_one_request(session, client):
         add user_3 to the project with metadata access
         """
         
-        with patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", return_value=fence_user_3):
+        with patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", side_effect=fence_get_users_mock):
             add_user_3_response = client.post("/admin/associated_user", json={"users": [{"project_id": project_id, "email": 'endpoint_user_3@test.com'}]})
             add_user_3_response.status_code == 200
         
@@ -246,13 +260,20 @@ def test_2_create_project_with_one_request(session, client):
         }
         user_1_data_acess_response = client.put("/admin/associated_user_role", json=user_1_data_acess_json)
         assert user_1_data_acess_response.status_code == 200
+        
+        user_3_data_acess_json = {
+            "user_id": 103,
+            "email": "endpoint_user_3@test.com",
+            "project_id": project_id,
+            "role": data_access
+        }
+        user_3_data_acess_response = client.put("/admin/associated_user_role", json=user_3_data_acess_json)
+        assert user_3_data_acess_response.status_code == 200
 
 
         """
         remove user_3 from the project
         """
-
-
         user_3_delete_json = {
             "user_id": 103,
             "email": "endpoint_user_3@test.com",
@@ -397,17 +418,57 @@ def test_2_create_project_with_one_request(session, client):
         """
         get download url
         """
-        get_download_url_response = client.get(f"/download-urls/{project_id}")
-        assert get_download_url_response.status_code == 200
+        get_download_url_response_2 = client.get(f"/download-urls/{project_id}")
+        assert get_download_url_response_2.status_code == 200
+    
+    with \
+    patch('amanuensis.blueprints.download_urls.current_user', id=103, username="endpoint_user_3@test.com"):
+        """
+        test user_3 cannot get downloaded url (not active)
+        """
+        get_download_url_response_3 = client.get(f"/download-urls/{project_id}")
+        assert get_download_url_response_3.status_code == 403
+    
+
+
+    # with \
+    # patch('amanuensis.blueprints.download_urls.current_user', id=101, username="endpoint_user_1@test.com"):
+    #     """
+    #     test user_1 cannot get donwloaded url (no user_id)
+    #     """
+    #     get_download_url_response_1 = client.get(f"/download-urls/{project_id}")
+    #     assert get_download_url_response_1.status_code == 403
+
+    with \
+    patch('amanuensis.blueprints.download_urls.current_user', id=200, username="admin@uchicago.edu"):
+        """
+        test user_1 cannot get downloaded url (metadata access)
+        """
+        get_download_url_response_admin = client.get(f"/download-urls/{project_id}")
+        assert get_download_url_response_admin.status_code == 403
 
 
         """
         run all three get project requests
         """
-    # patch('amanuensis.blueprints.download_urls.current_user', id=101, username="endpoint_user_1@test.com")
-    #     get_project_user_1_response = client.get("/projects")
-    #     assert get_project_user_1_response.status_code == 200 
+    with \
+    patch('amanuensis.blueprints.project.current_user', id=101, username="endpoint_user_1@test.com"), \
+    patch('amanuensis.blueprints.project.has_arborist_access', return_value=False), \
+    patch("amanuensis.blueprints.project.fence_get_users", side_effect=fence_get_users_mock):
+        get_project_user_1_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
+        assert get_project_user_1_response.status_code == 200
+        user_1_first_login = session.query(AssociatedUser).filter(AssociatedUser.email == "endpoint_user_1@test.com").first()
+        assert user_1_first_login.user_id == 101
     
+    with \
+    patch('amanuensis.blueprints.project.current_user', id=100, username="FAKEUSER"), \
+    patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
+        """
+        TEST ERROR
+        """
+        assert client.get("/projects", headers={"Authorization": 'bearer 1.2.3'}).status_code == 404
+
+
     with patch('amanuensis.blueprints.filterset.current_user', id=101, username="endpoint_user_1@test.com"):
         """
         user_1 gets the filterset with the filterset id
@@ -421,4 +482,7 @@ def test_2_create_project_with_one_request(session, client):
         """
         delete_filter_set = client.delete(f"filter-sets/{id}?explorerId=1")
         assert delete_filter_set.status_code == 200 
+    
+
+
         

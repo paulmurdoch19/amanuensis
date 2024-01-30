@@ -4,7 +4,7 @@ from wsgiref.util import request_uri
 from cdislogging import get_logger
 
 from amanuensis.resources.project import create, get_all
-from amanuensis.resources.admin import get_by_code
+from amanuensis.resources.admin import get_by_code, update_associated_user_user_id
 from amanuensis.resources.fence import fence_get_users
 from amanuensis.resources.request import get_request_state
 from amanuensis.auth.auth import current_user, has_arborist_access
@@ -91,6 +91,9 @@ def get_projetcs():
         logged_user_email = current_user.username
     except AuthError:
         logger.warning("Unable to load or find the user, check your token")
+
+    #add user_id from fence if this is the users first time logging in
+    update_associated_user_user_id(logged_user_id, logged_user_email)
 
     # special_user = [approver, admin]
     special_user = flask.request.args.get("special_user", None)
