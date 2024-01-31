@@ -2,7 +2,7 @@ from sqlalchemy import func, or_, and_
 import amanuensis
 
 from sqlalchemy.orm import aliased
-
+from amanuensis.config import config
 from cdislogging import get_logger
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
@@ -11,11 +11,13 @@ from amanuensis.models import (
     Search,
     AssociatedUser,
     ProjectAssociatedUser,
-    AssociatedUserRoles,
     RequestState,
 )
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests_by_project_id,
+)
+from amanuensis.resources.userdatamodel.userdatamodel_associated_user_roles import (
+    get_associated_user_role_by_code
 )
 
 logger = get_logger(__name__)
@@ -29,7 +31,6 @@ __all__ = [
     "update_project",
     "update_associated_users",
     "update_project_date",
-    "get_associated_user_roles",
 ]
 
 
@@ -103,10 +104,10 @@ def create_project(current_session, user_id, description, name, institution, sea
     current_session.flush()
     new_project.searches.extend(searches)
     new_project.requests.extend(requests)
-    role_id = current_session.query(AssociatedUserRoles.id).filter(AssociatedUserRoles.code == "METADATA_ACCESS").first()
-    if role_id:
+    role = get_associated_user_role_by_code(config["ASSOCIATED_USER_ROLE_DEFAULT"], current_session, throw_error=False)
+    if role:
         for associated_user in associated_users:
-            new_project.project_has_associated_user.append(ProjectAssociatedUser(associated_user=associated_user, role_id=role_id[0]))
+            new_project.project_has_associated_user.append(ProjectAssociatedUser(associated_user=associated_user, role_id=role.id))
     else:
         logger.error("no roles present for associated users, no assoicated users will be added to project")
     # current_session.flush()
@@ -146,9 +147,6 @@ def update_project(current_session, project_id, approved_url=None, searches=None
         }
 
 
-def get_associated_user_roles(current_session):
-    return current_session.query(AssociatedUserRoles).all()
-
 
 def update_associated_users(current_session, project_id, id, email, role):
     user_by_id = None
@@ -170,7 +168,9 @@ def update_associated_users(current_session, project_id, id, email, role):
     # print(user_by_email)
     # print(email)
     # print(id)
-    new_role = current_session.query(AssociatedUserRoles).filter(AssociatedUserRoles.code == role).first()
+    
+    new_role = get_associated_user_role_by_code(current_session=current_session, code=role, throw_error=False)
+
     if user_by_id:
         if role:
             user_by_id.role = new_role
@@ -180,7 +180,7 @@ def update_associated_users(current_session, project_id, id, email, role):
     elif user_by_email:
         if role:
             user_by_email.role = new_role
-            user_by_email.acive = True
+            user_by_email.active = True
         else:
             user_by_email.active = False
     else:

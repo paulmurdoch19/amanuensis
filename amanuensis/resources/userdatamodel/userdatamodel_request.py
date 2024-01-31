@@ -16,6 +16,13 @@ __all__ = [
     "update_request_state",
 ]
 
+#TODO
+#could be more clear to rename some of these functions
+# get_requests -> get_all_requests_by_user_id
+# get_request_by_consortium -> get_all_requests_by_consortium also remove user_id as a parameter
+# get_requests_by_project_id -> get_all__by_project_id
+# get_request_by_id this could just be current_session.query(Request).filter_by(id=request_id).first() since request_id is the only PK
+# clean up imports 
 
 def get_requests(current_session, user_id):
     return current_session.query(Request).join(Request.project).filter_by(user_id=user_id).all()
@@ -26,8 +33,7 @@ def get_request_by_consortium(current_session, user_id, consortium):
 def get_request_by_id(current_session, user_id, request_id):
     return current_session.query(Request).filter_by(id=request_id).join(Request.project).filter_by(user_id=user_id).first()
 
-
-def get_requests_by_project_id(current_session, project_id):
+def get_requests_by_project_id(current_session, project_id):      
     return current_session.query(Request).filter(Request.project_id == project_id).all()
 
 def update_request_state(
