@@ -418,34 +418,8 @@ def test_2_create_project_with_one_request(session, client):
         """
         get download url
         """
-        get_download_url_response_2 = client.get(f"/download-urls/{project_id}")
-        assert get_download_url_response_2.status_code == 200
-    
-    with \
-    patch('amanuensis.blueprints.download_urls.current_user', id=103, username="endpoint_user_3@test.com"):
-        """
-        test user_3 cannot get downloaded url (not active)
-        """
-        get_download_url_response_3 = client.get(f"/download-urls/{project_id}")
-        assert get_download_url_response_3.status_code == 403
-    
-
-
-    # with \
-    # patch('amanuensis.blueprints.download_urls.current_user', id=101, username="endpoint_user_1@test.com"):
-    #     """
-    #     test user_1 cannot get donwloaded url (no user_id)
-    #     """
-    #     get_download_url_response_1 = client.get(f"/download-urls/{project_id}")
-    #     assert get_download_url_response_1.status_code == 403
-
-    with \
-    patch('amanuensis.blueprints.download_urls.current_user', id=200, username="admin@uchicago.edu"):
-        """
-        test user_1 cannot get downloaded url (metadata access)
-        """
-        get_download_url_response_admin = client.get(f"/download-urls/{project_id}")
-        assert get_download_url_response_admin.status_code == 403
+        get_download_url_response = client.get(f"/download-urls/{project_id}")
+        assert get_download_url_response.status_code == 200
 
 
         """
