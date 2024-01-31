@@ -82,9 +82,9 @@ def add_associated_users(users, role=None):
             
             #get the foreign key for the role
             if not role:
-                role_id = udm.get_associated_user_role_by_code(session).id
+                role_id = udm.get_associated_user_role_by_code(config["ASSOCIATED_USER_ROLE_DEFAULT"], session).id
             else:
-                role_id = udm.get_associated_user_role_by_code(session, code=role).id
+                role_id = udm.get_associated_user_role_by_code(role, session).id
 
             # Check if the user exists in amanuensis, if it does check it is in sync with fence and update if needed, if it doesn't add it using the fence info
             if not associated_user_by_email and not associated_user_by_id:

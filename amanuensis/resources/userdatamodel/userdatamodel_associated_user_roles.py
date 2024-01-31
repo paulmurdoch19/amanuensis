@@ -15,7 +15,7 @@ def get_all_associated_user_roles(current_session):
 
 
 
-def get_associated_user_role_by_code(current_session=None, code="METADATA_ACCESS", throw_error=True):
+def get_associated_user_role_by_code(code, current_session=None, throw_error=True):
     if current_session:
         role = current_session.query(AssociatedUserRoles).filter(AssociatedUserRoles.code == code).first()
     else:

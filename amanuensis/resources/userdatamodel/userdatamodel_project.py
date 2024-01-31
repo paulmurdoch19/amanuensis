@@ -2,7 +2,7 @@ from sqlalchemy import func, or_, and_
 import amanuensis
 
 from sqlalchemy.orm import aliased
-
+from amanuensis.config import config
 from cdislogging import get_logger
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
@@ -104,7 +104,7 @@ def create_project(current_session, user_id, description, name, institution, sea
     current_session.flush()
     new_project.searches.extend(searches)
     new_project.requests.extend(requests)
-    role = get_associated_user_role_by_code(current_session, throw_error=False)
+    role = get_associated_user_role_by_code(config["ASSOCIATED_USER_ROLE_DEFAULT"], current_session, throw_error=False)
     if role:
         for associated_user in associated_users:
             new_project.project_has_associated_user.append(ProjectAssociatedUser(associated_user=associated_user, role_id=role.id))
