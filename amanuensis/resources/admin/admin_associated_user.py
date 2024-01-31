@@ -34,12 +34,10 @@ def update_associated_user_user_id(logged_user_id, logged_user_email):
     with flask.current_app.db.session as session:
         user = udm.associate_user.get_associated_user(session, logged_user_email)
         if not user:
-            raise NotFound("Associated User does not exist") 
-        if not user.user_id:
-            user.user_id = logged_user_id
-            return udm.associate_user.update_associated_user(session, user)
-        else:
-            return "200"
+            return
+        user.user_id = logged_user_id
+        session.flush()
+        return user
 
 def add_associated_users(users, role=None):
    # users variable format: [{project_id: "", id: "", email: ""},{}]

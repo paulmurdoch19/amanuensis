@@ -433,14 +433,6 @@ def test_2_create_project_with_one_request(session, client):
         assert get_project_user_1_response.status_code == 200
         user_1_first_login = session.query(AssociatedUser).filter(AssociatedUser.email == "endpoint_user_1@test.com").first()
         assert user_1_first_login.user_id == 101
-    
-    with \
-    patch('amanuensis.blueprints.project.current_user', id=100, username="FAKEUSER"), \
-    patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
-        """
-        TEST ERROR
-        """
-        assert client.get("/projects", headers={"Authorization": 'bearer 1.2.3'}).status_code == 404
 
 
     with patch('amanuensis.blueprints.filterset.current_user', id=101, username="endpoint_user_1@test.com"):
