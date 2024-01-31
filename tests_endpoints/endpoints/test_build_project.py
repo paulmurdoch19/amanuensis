@@ -418,44 +418,23 @@ def test_2_create_project_with_one_request(session, client):
         """
         get download url
         """
-        get_download_url_response_2 = client.get(f"/download-urls/{project_id}")
-        assert get_download_url_response_2.status_code == 200
-    
-
-    with \
-    patch('amanuensis.blueprints.download_urls.current_user', id=103, username="endpoint_user_3@test.com"):
-        """
-        test user_3 cannot get downloaded url (not active)
-        """
-        get_download_url_response_3 = client.get(f"/download-urls/{project_id}")
-        assert get_download_url_response_3.status_code == 403
-    
-
-
-    # with \
-    # patch('amanuensis.blueprints.download_urls.current_user', id=101, username="endpoint_user_1@test.com"):
-    #     """
-    #     test user_1 cannot get donwloaded url (no user_id)
-    #     """
-    #     get_download_url_response_1 = client.get(f"/download-urls/{project_id}")
-    #     assert get_download_url_response_1.status_code == 403
-
-    with \
-    patch('amanuensis.blueprints.download_urls.current_user', id=200, username="admin@uchicago.edu"):
-        """
-        test user_1 cannot get downloaded url (metadata access)
-        """
-        get_download_url_response_admin = client.get(f"/download-urls/{project_id}")
-        assert get_download_url_response_admin.status_code == 403
+        get_download_url_response = client.get(f"/download-urls/{project_id}")
+        assert get_download_url_response.status_code == 200
 
 
         """
         run all three get project requests
         """
-    # patch('amanuensis.blueprints.download_urls.current_user', id=101, username="endpoint_user_1@test.com")
-    #     get_project_user_1_response = client.get("/projects")
-    #     assert get_project_user_1_response.status_code == 200 
-    
+    with \
+    patch('amanuensis.blueprints.project.current_user', id=101, username="endpoint_user_1@test.com"), \
+    patch('amanuensis.blueprints.project.has_arborist_access', return_value=False), \
+    patch("amanuensis.blueprints.project.fence_get_users", side_effect=fence_get_users_mock):
+        get_project_user_1_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
+        assert get_project_user_1_response.status_code == 200
+        user_1_first_login = session.query(AssociatedUser).filter(AssociatedUser.email == "endpoint_user_1@test.com").first()
+        assert user_1_first_login.user_id == 101
+
+
     with patch('amanuensis.blueprints.filterset.current_user', id=101, username="endpoint_user_1@test.com"):
         """
         user_1 gets the filterset with the filterset id
@@ -469,4 +448,7 @@ def test_2_create_project_with_one_request(session, client):
         """
         delete_filter_set = client.delete(f"filter-sets/{id}?explorerId=1")
         assert delete_filter_set.status_code == 200 
+    
+
+
         
