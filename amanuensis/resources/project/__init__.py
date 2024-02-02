@@ -116,40 +116,15 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         req.states.append(default_state)
         requests.append(req)
 
-    # Check if associated_users exists in amanuensis
-    # 1. get associated_users from amanuensis
-    amanuensis_associated_users = get_all_associated_users(associated_users_emails)
-    # # 1. check if associated_users are already in amanuensis
-    # for associated_user in amanuensis_associated_users:
-    #     if associated_user.ema
-    # registered_stat = 
-    # missing_users_email = 
-
-    # # 2. Check if associated_user exists in fence. If so assign user_id, otherwise use the submitted email.
-    # fence_users = fence_get_users(config=config, usernames=associated_user_emails)
-    # fence_users = fence_users['users'] if 'users' in fence_users else []
-    
-    # 2. Check if any associated_user is not in the DB yet
-    missing_users_email = []
-    if len(associated_users_emails) != len(amanuensis_associated_users):
-        users_email = [user.email for user in amanuensis_associated_users]
-        missing_users_email = [email for email in associated_users_emails if email not in users_email]
-
-    # 3. link the existing statician to the project
-    associated_users = []
-    for user in amanuensis_associated_users:
-        associated_user = user
-        associated_users.append(associated_user)
-
-    # 4 or create them if they have not been previously
-    for user_email in missing_users_email:
-        associated_user = AssociatedUser(email=user_email)
-        associated_users.append(associated_user)
-
 
     with flask.current_app.db.session as session:
         project_schema = ProjectSchema()
-        project = create_project(session, logged_user_id, description, name, institution, filter_sets, requests, associated_users)
+        project = create_project(session, logged_user_id, description, name, institution, filter_sets, requests)
+        associated_users = []
+        for email in associated_users_emails:
+            associated_users.append({"project_id": project.id, "email": email})
+        associated_users.append({"project_id": project.id, "id": logged_user_id})
+        admin.add_associated_users(associated_users)
         project_schema.dump(project)
         return project
 

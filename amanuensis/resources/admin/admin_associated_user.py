@@ -46,7 +46,8 @@ def add_associated_users(users, role=None):
     with flask.current_app.db.session as session:
         associated_user_schema = AssociatedUserSchema(many=True)
         ret = []
-
+        seen_ids = set()
+        seen_emails = set()
         for user in users:
             fence_user = None
             amanuensis_user = None
@@ -54,12 +55,17 @@ def add_associated_users(users, role=None):
             # FENCE Retrieve the users information from the Fence DB
             fence_user_by_email = None
             fence_user_by_id = None
+            
             if "id" in user:
                 fence_user_by_id = fence.fence_get_users(config, ids=[user["id"]])["users"]
                 fence_user_by_id = fence_user_by_id[0] if len(fence_user_by_id) == 1 else None
-            elif "email" in user:
+                if fence_user_by_id and (fence_user_by_id['id'] in seen_ids or fence_user_by_id["name"] in seen_emails):
+                    continue
+            if "email" in user:
                 fence_user_by_email = fence.fence_get_users(config, usernames=[user["email"]])["users"]
-                fence_user_by_email = fence_user_by_email[0] if len(fence_user_by_email) == 1 else None  
+                fence_user_by_email = fence_user_by_email[0] if len(fence_user_by_email) == 1 else None
+                if fence_user_by_email and (fence_user_by_email['id'] in seen_ids or fence_user_by_email["name"] in seen_emails):
+                    continue  
             # Check for discrepancies in case the user submitted both id and email instead of just one of the two
             if fence_user_by_email and fence_user_by_id:
                 if fence_user_by_email["id"] != fence_user_by_id["id"] or fence_user_by_email["name"] != fence_user_by_id["name"]:
@@ -73,7 +79,7 @@ def add_associated_users(users, role=None):
             if "id" in user:
                 associated_user_by_id = udm.associate_user.get_associated_users_by_id(session, [user["id"]])
                 associated_user_by_id = associated_user_by_id[0] if len(associated_user_by_id) == 1 else None
-            elif "email" in user:
+            if "email" in user:
                 associated_user_by_email = udm.associate_user.get_associated_users(session, [user["email"]])
                 associated_user_by_email = associated_user_by_email[0] if len(associated_user_by_email) == 1 else None  
             # Check for discrepancies in case the user submitted both id and email instead of just one of the two
@@ -114,16 +120,17 @@ def add_associated_users(users, role=None):
             else:
                 amanuensis_user = associated_user_by_id if associated_user_by_id else associated_user_by_email
                 updated = False
-                if amanuensis_user.email != fence_user["name"]:
-                    amanuensis_user.email = fence_user["name"]
-                    updated = True
-                if amanuensis_user.user_id != fence_user["id"]:
-                    amanuensis_user.user_id = fence_user["id"]
-                    updated = True
+                if fence_user:
+                    if amanuensis_user.email != fence_user["name"]:
+                        amanuensis_user.email = fence_user["name"]
+                        updated = True
+                    if amanuensis_user.user_id != fence_user["id"]:
+                        amanuensis_user.user_id = fence_user["id"]
+                        updated = True
 
-                if updated:
-                    #Update amanuensis associated_user
-                    udm.associate_user.update_associated_user(session, amanuensis_user)
+                    if updated:
+                        #Update amanuensis associated_user
+                        udm.associate_user.update_associated_user(session, amanuensis_user)
 
                 # add user to project
                 ret.append(
@@ -134,6 +141,8 @@ def add_associated_users(users, role=None):
                         role_id=role_id
                     )
                 )
+            seen_ids.add(user["id"])
+            seen_emails.add(user["email"])
 
         associated_user_schema.dump(ret)
         return ret
