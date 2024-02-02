@@ -88,7 +88,7 @@ def get_project_by_id(current_session, logged_user_id, project_id):
             AssociatedUser, ProjectAssociatedUser.associated_user, isouter=True).first()
 
 
-def create_project(current_session, user_id, description, name, institution, searches, requests, associated_users):
+def create_project(current_session, user_id, description, name, institution, searches, requests):
     """
     Creates a project with an associated auth_id and storage access
     """
@@ -104,12 +104,6 @@ def create_project(current_session, user_id, description, name, institution, sea
     current_session.flush()
     new_project.searches.extend(searches)
     new_project.requests.extend(requests)
-    role = get_associated_user_role_by_code(config["ASSOCIATED_USER_ROLE_DEFAULT"], current_session, throw_error=False)
-    if role:
-        for associated_user in associated_users:
-            new_project.project_has_associated_user.append(ProjectAssociatedUser(associated_user=associated_user, role_id=role.id))
-    else:
-        logger.error("no roles present for associated users, no assoicated users will be added to project")
     # current_session.flush()
     # current_session.add(new_project)
     # current_session.merge(new_project)
