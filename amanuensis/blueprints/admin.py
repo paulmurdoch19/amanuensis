@@ -250,6 +250,8 @@ def delete_user_from_project():
     project_id = request.get_json().get("project_id", None)
     if not project_id:
         raise UserError("A project is nessary for this endpoint")
+    if not project.get_by_id(None, project_id):
+        raise NotFound("the project provided does not exist")
     return jsonify(admin.delete_user_from_project(project_id, associated_user_id, associated_user_email))
 
 
@@ -270,6 +272,8 @@ def update_associated_user_role():
     project_id = request.get_json().get("project_id", None)
     if not project_id:
         raise UserError("A project is nessary for this endpoint")
+    if not project.get_by_id(None, project_id):
+        raise NotFound("the project provided does not exist")
     role = request.get_json().get("role", None)     
     if not role:
         raise UserError("A role is required for this endpoint")

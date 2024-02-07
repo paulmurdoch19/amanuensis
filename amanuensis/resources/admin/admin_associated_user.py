@@ -23,7 +23,7 @@ __all__ = [
 
 def update_role(project_id, user_id, email, role):
     with flask.current_app.db.session as session:
-        user = udm.associate_user.get_project_assoicated_user(session, project_id, user_id, email)
+        user = udm.associate_user.get_project_associated_user(session, project_id, user_id, email)
         if not user:
             raise UserError("No user associated with project {} found.".format(project_id))
         ret = udm.associate_user.update_user_role(session, user, role)
@@ -31,7 +31,7 @@ def update_role(project_id, user_id, email, role):
 
 def delete_user_from_project(project_id, user_id, email):
     with flask.current_app.db.session as session:
-        user = udm.associate_user.get_project_assoicated_user(session, project_id, user_id, email)
+        user = udm.associate_user.get_project_associated_user(session, project_id, user_id, email)
         if not user:
             raise UserError("No user associated with project {} found.".format(project_id))
         ret = udm.associate_user.change_project_user_status(session, user, False)

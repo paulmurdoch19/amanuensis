@@ -14,7 +14,7 @@ __all__ = [
     "update_associated_users",
     "add_associated_user",
     "add_associated_user_to_project",
-    "get_project_assoicated_user",
+    "get_project_associated_user",
     "change_project_user_status",
     "update_user_role"
 ]
@@ -90,7 +90,7 @@ def update_associated_users(current_session, associated_users):
 
     return "200"
 
-def get_project_assoicated_user(current_session, project_id, id=None, email=None):
+def get_project_associated_user(current_session, project_id, id=None, email=None):
     user_by_id = None
     user_by_email = None
 
@@ -161,7 +161,7 @@ def add_associated_user_to_project(current_session, associated_user, project_id,
         raise UserError("Missing user id.")
     
     #check if project_user already exists
-    user = get_project_assoicated_user(current_session, project_id, email=associated_user.email)
+    user = get_project_associated_user(current_session, project_id, email=associated_user.email)
     if user:
         if not user.active:
             change_project_user_status(current_session, user, True)
