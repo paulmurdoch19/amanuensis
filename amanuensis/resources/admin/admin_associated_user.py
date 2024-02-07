@@ -17,12 +17,24 @@ __all__ = [
     "add_associated_users",
     "get_codes_for_roles",
     "update_associated_user_user_id",
+    "delete_user_from_project"
 ]
 
 
 def update_role(project_id, user_id, email, role):
     with flask.current_app.db.session as session:
-        ret = udm.update_associated_users(session, project_id, user_id, email, role)
+        user = udm.associate_user.get_project_associated_user(session, project_id, user_id, email)
+        if not user:
+            raise UserError("No user associated with project {} found.".format(project_id))
+        ret = udm.associate_user.update_user_role(session, user, role)
+        return ret
+
+def delete_user_from_project(project_id, user_id, email):
+    with flask.current_app.db.session as session:
+        user = udm.associate_user.get_project_associated_user(session, project_id, user_id, email)
+        if not user:
+            raise UserError("No user associated with project {} found.".format(project_id))
+        ret = udm.associate_user.change_project_user_status(session, user, False)
         return ret
 
 def get_codes_for_roles():
@@ -46,8 +58,6 @@ def add_associated_users(users, role=None):
     with flask.current_app.db.session as session:
         associated_user_schema = AssociatedUserSchema(many=True)
         ret = []
-        seen_ids = set()
-        seen_emails = set()
         for user in users:
             fence_user = None
             amanuensis_user = None
@@ -59,13 +69,9 @@ def add_associated_users(users, role=None):
             if "id" in user:
                 fence_user_by_id = fence.fence_get_users(config, ids=[user["id"]])["users"]
                 fence_user_by_id = fence_user_by_id[0] if len(fence_user_by_id) == 1 else None
-                if fence_user_by_id and (fence_user_by_id['id'] in seen_ids or fence_user_by_id["name"] in seen_emails):
-                    continue
             if "email" in user:
                 fence_user_by_email = fence.fence_get_users(config, usernames=[user["email"]])["users"]
                 fence_user_by_email = fence_user_by_email[0] if len(fence_user_by_email) == 1 else None
-                if fence_user_by_email and (fence_user_by_email['id'] in seen_ids or fence_user_by_email["name"] in seen_emails):
-                    continue  
             # Check for discrepancies in case the user submitted both id and email instead of just one of the two
             if fence_user_by_email and fence_user_by_id:
                 if fence_user_by_email["id"] != fence_user_by_id["id"] or fence_user_by_email["name"] != fence_user_by_id["name"]:
@@ -141,8 +147,6 @@ def add_associated_users(users, role=None):
                         role_id=role_id
                     )
                 )
-            seen_ids.add(user["id"])
-            seen_emails.add(user["email"])
 
         associated_user_schema.dump(ret)
         return ret

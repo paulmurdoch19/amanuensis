@@ -107,7 +107,9 @@ def test_2_create_project_with_one_request(session, client):
     session.add_all([admin, user_2])
     session.commit()
 
-    with patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", side_effect=fence_get_users_mock):
+    with \
+    patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", side_effect=fence_get_users_mock), \
+    patch("amanuensis.blueprints.project.fence_get_users", side_effect=fence_get_users_mock):
         with patch('amanuensis.blueprints.filterset.current_user', id=101, username="endpoint_user_1@test.com"):
             
             """
@@ -216,6 +218,21 @@ def test_2_create_project_with_one_request(session, client):
             assert create_project_response.status_code == 200
             project_id = create_project_response.json['id']
 
+            user_1 = session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.email == 'endpoint_user_1@test.com').first()
+            assert user_1.associated_user.user_id == 101
+            assert user_1.active == True
+            assert user_1.role.code == "METADATA_ACCESS"
+            
+            user_5 = session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.email == 'endpoint_user_5@test.com').first() 
+            assert user_5.associated_user.user_id == None
+            assert user_5.active == True
+            assert user_5.role.code == "METADATA_ACCESS"
+
+            admin = session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.email == 'admin@uchicago.edu').first()
+            assert admin.associated_user.user_id == 200
+            assert admin.active == True
+            assert admin.role.code == "METADATA_ACCESS"
+
             """
             TEST ERROR
             """
@@ -233,6 +250,10 @@ def test_2_create_project_with_one_request(session, client):
             """
             add_user_2_response = client.post("/admin/associated_user", json={"users": [{"project_id": project_id, "email": 'endpoint_user_2@test.com'}], "role": "DATA_ACCESS"})
             add_user_2_response.status_code == 200
+            user_2 = session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.email == 'endpoint_user_2@test.com').first()
+            assert user_2.associated_user.user_id == 102
+            assert user_2.active == True
+            assert user_2.role.code == "DATA_ACCESS"
             
             """
             add user_3 to the project with metadata access
@@ -240,7 +261,20 @@ def test_2_create_project_with_one_request(session, client):
             
             add_user_3_response = client.post("/admin/associated_user", json={"users": [{"project_id": project_id, "email": 'endpoint_user_3@test.com'}]})
             add_user_3_response.status_code == 200
+            user_3 = session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.email == 'endpoint_user_3@test.com').first()
+            assert user_3.associated_user.user_id == 103
+            assert user_3.active == True
+            assert user_3.role.code == "METADATA_ACCESS"
             
+            """
+            block readding user_1 and user_5
+            """
+            block_add_user_1_response = client.post("/admin/associated_user", json={"users": [{"project_id": project_id, "email": 'endpoint_user_1@test.com'}]})
+            block_add_user_1_response.status_code == 200
+
+            block_add_user_5_response = client.post("/admin/associated_user", json={"users": [{"project_id": project_id, "email": 'endpoint_user_5@test.com'}]})
+            block_add_user_5_response.status_code == 200
+
 
             """
             send a request to reterive all the possible roles
@@ -260,6 +294,9 @@ def test_2_create_project_with_one_request(session, client):
             }
             user_1_data_acess_response = client.put("/admin/associated_user_role", json=user_1_data_acess_json)
             assert user_1_data_acess_response.status_code == 200
+            session.refresh(user_1)
+            assert user_1.role.code == "DATA_ACCESS"
+            
             
             user_3_data_acess_json = {
                 "user_id": 103,
@@ -269,8 +306,8 @@ def test_2_create_project_with_one_request(session, client):
             }
             user_3_data_acess_response = client.put("/admin/associated_user_role", json=user_3_data_acess_json)
             assert user_3_data_acess_response.status_code == 200
-
-
+            session.refresh(user_3)
+            assert user_3.role.code == "DATA_ACCESS"
             """
             remove user_3 from the project
             """
@@ -279,9 +316,11 @@ def test_2_create_project_with_one_request(session, client):
                 "email": "endpoint_user_3@test.com",
                 "project_id": project_id,
             }
-            user_3_delete_response = client.delete("/admin/associated_user_role", json=user_3_delete_json)
+            user_3_delete_response = client.delete("/admin/remove_associated_user_from_project", json=user_3_delete_json)
             assert user_3_delete_response.status_code == 200
-
+            session.refresh(user_3) 
+            assert user_3.active == False
+            assert user_3.role.code == "METADATA_ACCESS"
 
 
             """
@@ -411,7 +450,9 @@ def test_2_create_project_with_one_request(session, client):
             error test
             """
             #assert client.post("/admin/projects/state", json={}).status_code == 400
-
+        """
+        check good user gets data
+        """
         with \
         patch('amanuensis.blueprints.download_urls.current_user', id=102, username="endpoint_user_2@test.com"), \
         patch('amanuensis.blueprints.download_urls.get_s3_key_and_bucket', return_value={"bucket": "test_bucket", "key": "test_key"}):
@@ -420,6 +461,30 @@ def test_2_create_project_with_one_request(session, client):
             """
             get_download_url_response = client.get(f"/download-urls/{project_id}")
             assert get_download_url_response.status_code == 200
+        
+        """
+        check not active user 403's
+        """
+        with \
+        patch('amanuensis.blueprints.download_urls.current_user', id=103, username="endpoint_user_3@test.com"), \
+        patch('amanuensis.blueprints.download_urls.get_s3_key_and_bucket', return_value={"bucket": "test_bucket", "key": "test_key"}):
+            """
+            get download url
+            """
+            get_download_url_response = client.get(f"/download-urls/{project_id}")
+            assert get_download_url_response.status_code == 403
+        
+        """
+        check no data_access 403's
+        """
+        with \
+        patch('amanuensis.blueprints.download_urls.current_user', id=200, username="admin@uchicago.edu"), \
+        patch('amanuensis.blueprints.download_urls.get_s3_key_and_bucket', return_value={"bucket": "test_bucket", "key": "test_key"}):
+            """
+            get download url
+            """
+            get_download_url_response = client.get(f"/download-urls/{project_id}")
+            assert get_download_url_response.status_code == 403
 
 
         """
@@ -441,13 +506,31 @@ def test_2_create_project_with_one_request(session, client):
         }
         with \
         patch('amanuensis.blueprints.project.current_user', id=105, username="endpoint_user_5@test.com"), \
-        patch('amanuensis.blueprints.project.has_arborist_access', return_value=False), \
-        patch("amanuensis.blueprints.project.fence_get_users", return_value=fence_user_5):
-            get_project_user_1_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
-            assert get_project_user_1_response.status_code == 200
-            user_1_first_login = session.query(AssociatedUser).filter(AssociatedUser.email == "endpoint_user_5@test.com").first()
-            assert user_1_first_login.user_id == 105
-
+        patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
+            get_project_user_5_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
+            assert get_project_user_5_response.status_code == 200
+            session.refresh(user_5)
+            assert user_5.associated_user.user_id == 105
+        
+        # """
+        # not active user should not see project
+        # """
+        # with \
+        # patch('amanuensis.blueprints.project.current_user', id=103, username="endpoint_user_3@test.com"), \
+        # patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
+        #     get_project_user_3_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
+        #     assert get_project_user_3_response.status_code == 200
+        #     assert get_project_user_3_response.json == []
+        
+        """
+        readd user_3 to project
+        """
+        with patch('amanuensis.blueprints.admin.current_user', id=103, username="endpoint_user_3@test.com"):
+            add_user_3_response = client.post("/admin/associated_user", json={"users": [{"project_id": project_id, "email": 'endpoint_user_3@test.com'}]})
+            add_user_3_response.status_code == 200
+            session.refresh(user_3)
+            assert user_3.active == True
+            assert user_3.role.code == "METADATA_ACCESS"
 
         with patch('amanuensis.blueprints.filterset.current_user', id=101, username="endpoint_user_1@test.com"):
             """

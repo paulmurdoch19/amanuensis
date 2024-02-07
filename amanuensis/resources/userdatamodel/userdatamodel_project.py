@@ -29,7 +29,6 @@ __all__ = [
     "get_project_by_id",
     "create_project",
     "update_project",
-    "update_associated_users",
     "update_project_date",
 ]
 
@@ -136,53 +135,10 @@ def update_project(current_session, project_id, approved_url=None, searches=None
         return {"code": 200, "updated": int(project_id)}
     else:
         return {
-            "code": 500,
+            "code": 500, 
             "error": "Nothing has been updated, check the logs to see what happened during the transaction.",
         }
 
-
-
-def update_associated_users(current_session, project_id, id, email, role):
-    user_by_id = None
-    user_by_email = None
-
-    if id:
-        user_by_id = current_session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.user_id == id).first()
-        # q = s.query(Parent).join(Child, Parent.child).filter(Child.value > 20)
-
-    if email:
-        user_by_email = current_session.query(ProjectAssociatedUser).filter(ProjectAssociatedUser.project_id == project_id).join(AssociatedUser, ProjectAssociatedUser.associated_user).filter(AssociatedUser.email == email).first()
-        # user_by_email = ccurrent_session.query(AssociatedUser).filter(
-        #     AssociatedUser.id == id
-        # ).join(Project, AssociatedUser.projects).filter(
-        #     Project.id == project_id
-        # ).first()
-
-    # print(user_by_id)
-    # print(user_by_email)
-    # print(email)
-    # print(id)
-    
-    new_role = get_associated_user_role_by_code(current_session=current_session, code=role, throw_error=False)
-
-    if user_by_id:
-        if role:
-            user_by_id.role = new_role
-            user_by_id.active = True
-        else:
-            user_by_id.active = False
-    elif user_by_email:
-        if role:
-            user_by_email.role = new_role
-            user_by_email.active = True
-        else:
-            user_by_email.active = False
-    else:
-        raise NotFound("No user associated with project {} found.".format(project_id))
-
-    #current_session.commit()
-    current_session.flush()
-    return "200"
 
 
 def update_project_date(session, project_id, new_update_date):
