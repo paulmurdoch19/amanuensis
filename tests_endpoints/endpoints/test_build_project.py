@@ -512,16 +512,45 @@ def test_2_create_project_with_one_request(session, client):
             session.refresh(user_5)
             assert user_5.associated_user.user_id == 105
         
-        # """
-        # not active user should not see project
-        # """
-        # with \
-        # patch('amanuensis.blueprints.project.current_user', id=103, username="endpoint_user_3@test.com"), \
-        # patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
-        #     get_project_user_3_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
-        #     assert get_project_user_3_response.status_code == 200
-        #     assert get_project_user_3_response.json == []
+        """
+        not active user should not see project
+        """
+        with \
+        patch('amanuensis.blueprints.project.current_user', id=103, username="endpoint_user_3@test.com"), \
+        patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
+            get_project_user_3_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
+            assert get_project_user_3_response.status_code == 200
+            print(get_project_user_3_response.json)
+            assert get_project_user_3_response.json == []
         
+        """
+        user_1 should see project
+        """
+        with \
+        patch('amanuensis.blueprints.project.current_user', id=101, username="endpoint_user_1@test.com"), \
+        patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
+            get_project_user_1_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
+            assert get_project_user_1_response.status_code == 200
+            assert len(get_project_user_1_response.json) == 1
+            submitted_at = session.query(Request.create_date).filter(Request.project_id == project_id).first()[0]
+            assert [
+                {
+                    'completed_at': None, 
+                    'consortia': ['INSTRUCT'], 
+                    'has_access': True, 
+                    'id': project_id, 
+                    'name': 'Test Project', 
+                    'researcher': {
+                        'first_name': 'endpoint_user_1', 
+                        'id': 101, 
+                        'institution': 'test university', 
+                        'last_name': 'endpoint_user_last_1'
+                    }, 
+                    'status': 'Data Available', 
+                    'submitted_at': submitted_at.strftime('%Y-%m-%dT%H:%M:%S.%f')
+                }
+            ] == get_project_user_1_response.json
+
         """
         readd user_3 to project
         """
