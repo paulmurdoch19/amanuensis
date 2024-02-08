@@ -54,7 +54,8 @@ def get_project_by_user(current_session, logged_user_id, logged_user_email):
     return (
         current_session.query(Project)
         .filter(Project.active == True)
-        .join(Project.associated_users, isouter=True)
+        .join(ProjectAssociatedUser, Project.associated_users_roles, isouter=True)
+        .join(AssociatedUser, ProjectAssociatedUser.associated_user, isouter=True)
         .filter(
             or_(
                 Project.user_id == logged_user_id,
@@ -62,6 +63,7 @@ def get_project_by_user(current_session, logged_user_id, logged_user_email):
                 AssociatedUser.email == logged_user_email,
             )
         )
+        .filter(ProjectAssociatedUser.active == True)
         .all()
     )
 
