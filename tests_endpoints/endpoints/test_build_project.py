@@ -4,6 +4,7 @@ from cdislogging import get_logger
 from amanuensis.models import *
 from amanuensis.schema import *
 from datetime import datetime
+import time
 from amanuensis.blueprints.filterset import UserError
 
 logger = get_logger(logger_name=__name__)
@@ -119,8 +120,8 @@ def test_2_create_project_with_one_request(session, client):
             filter_set_create_json = {
                 "name":"test_filter_set",
                 "description":"",
-                "filters":{"__combineMode":"AND","__type":"STANDARD","value":{"consortium":{"__type":"OPTION","selectedValues":["INSTRuCT"],"isExclusion":False},"sex":{"__type":"OPTION","selectedValues":["Male"],"isExclusion":False}}},
-                "gqlFilter":{"AND":[{"IN":{"consortium":["INSTRuCT"]}},{"IN":{"sex":["Male"]}}]}
+                "filters":{"__combineMode":"AND","__type":"STANDARD","value":{"consortium":{"__type":"OPTION","selectedValues":["INSTRuCT", "INRG"],"isExclusion":False},"sex":{"__type":"OPTION","selectedValues":["Male"],"isExclusion":False}}},
+                "gqlFilter":{"AND":[{"IN":{"consortium":["INSTRuCT", "INRG"]}},{"IN":{"sex":["Male"]}}]}
             }
             filter_set_create_response = client.post(f'/filter-sets?explorerId=1', json=filter_set_create_json)
             assert filter_set_create_response.status_code == 200
@@ -172,8 +173,8 @@ def test_2_create_project_with_one_request(session, client):
                 "description":"",
                 "ids":None,
                 "name":"test_filter_set",
-                "filters":{"__combineMode":"AND","__type":"STANDARD","value":{"consortium":{"__type":"OPTION","isExclusion":False,"selectedValues":["INSTRuCT"]},"sex":{"__type":"OPTION","isExclusion":False,"selectedValues":["Male","Female"]}}},
-                "gqlFilter":{"AND":[{"IN":{"consortium":["INSTRuCT"]}},{"IN":{"sex":["Male","Female"]}}]}
+                "filters":{"__combineMode":"AND","__type":"STANDARD","value":{"consortium":{"__type":"OPTION","isExclusion":False,"selectedValues":["INSTRuCT", "INRG"]},"sex":{"__type":"OPTION","isExclusion":False,"selectedValues":["Male","Female"]}}},
+                "gqlFilter":{"AND":[{"IN":{"consortium":["INSTRuCT", "INRG"]}},{"IN":{"sex":["Male","Female"]}}]}
             }
             filter_set_create_response = client.put(f'/filter-sets/{id}?explorerId=1', json=filter_set_change_json)
             assert filter_set_create_response.status_code == 200
@@ -181,7 +182,7 @@ def test_2_create_project_with_one_request(session, client):
 
         with \
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
-        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRUCT"]):
+        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT", "INRG"]):
 
 
             """
@@ -340,18 +341,52 @@ def test_2_create_project_with_one_request(session, client):
                 elif state["code"] == "DATA_AVAILABLE":
                     data_available = state 
 
+            """
+            EC commite for INRG approves, Instruct should stay at in review
+            """
+            update_project_state_INRG_approved_json = {"project_id": project_id, "state_id": approved_state["id"], "consortiums": "INRG"}
+            update_project_state_INRG_approved_response = client.post("/admin/projects/state", json=update_project_state_INRG_approved_json)
+            update_project_state_INRG_approved_response.status_code == 200
 
+            INRG = (
+                    session
+                    .query(Request)
+                    .filter(Request.project_id == project_id)
+                    .join(ConsortiumDataContributor, Request.consortium_data_contributor)
+                    .filter(ConsortiumDataContributor.code == "INRG").first()
+            )
+            INSTRUCT = (
+                    session
+                    .query(Request)
+                    .filter(Request.project_id == project_id)
+                    .join(ConsortiumDataContributor, Request.consortium_data_contributor)
+                    .filter(ConsortiumDataContributor.code == "INSTRUCT").first()
+            )
+            request_schema = RequestSchema()
 
+            request_INRG = request_schema.dump(INRG)
+            request_INSTRUCT = request_schema.dump(INSTRUCT)
+            
+            assert len(request_INSTRUCT["states"]) == 1
+            assert len(request_INRG["states"]) == 2
+            assert any(state["code"] == 'APPROVED' for state in request_INRG["states"])
 
             """
             the EC committe requires the users to change their filter set, move state to revision
             """
 
-            update_project_state_revison_json = {"project_id": project_id, "state_id": revision_state["id"]}
+            update_project_state_revison_json = {"project_id": project_id, "state_id": revision_state["id"], "consortiums": "INSTRUCT"}
             update_project_state_revison_response = client.post("/admin/projects/state", json=update_project_state_revison_json)
             update_project_state_revison_response.status_code == 200
 
+            session.refresh(INRG)
+            session.refresh(INSTRUCT)
+            request_INRG = request_schema.dump(INRG)
+            request_INSTRUCT = request_schema.dump(INSTRUCT)
 
+            assert len(request_INRG["states"]) == 2
+            assert len(request_INSTRUCT["states"]) == 2
+            assert any(state["code"] == 'REVISION' for state in request_INSTRUCT["states"])
 
             """
             admin creates a filter_set with the corrections
@@ -360,7 +395,7 @@ def test_2_create_project_with_one_request(session, client):
                 "user_id": 200,
                 "name":"test_filter_set_correction",
                 "description":"",
-                "filters":{"AND":[{"IN":{"consortium":["INSTRuCT"]}}]}
+                "filters":{"AND":[{"IN":{"consortium":["INSTRuCT", "INRG"]}}]}
             }
             admin_create_filter_set_response = client.post("/admin/filter-sets", json=admin_create_filter_set_json)
             assert admin_create_filter_set_response.status_code == 200
@@ -404,9 +439,18 @@ def test_2_create_project_with_one_request(session, client):
             move project state to approved
             """
 
-            update_project_state_approved_json = {"project_id": project_id, "state_id": approved_state["id"]}
+            update_project_state_approved_json = {"project_id": project_id, "state_id": approved_state["id"], 'consortiums': 'INSTRUCT'}
             update_project_state_approved_response = client.post("/admin/projects/state", json=update_project_state_approved_json)
             assert update_project_state_approved_response.status_code == 200
+
+            session.refresh(INRG)
+            session.refresh(INSTRUCT)
+            request_INRG = request_schema.dump(INRG)
+            request_INSTRUCT = request_schema.dump(INSTRUCT)
+
+            assert len(request_INRG["states"]) == 2
+            assert len(request_INSTRUCT["states"]) == 3
+            assert any(state["code"]  == 'APPROVED' for state in request_INSTRUCT["states"])
 
             """
             add approved_url to project
@@ -446,10 +490,21 @@ def test_2_create_project_with_one_request(session, client):
             update_project_state_data_available_response = client.post("/admin/projects/state", json=update_project_state_data_available_json)
             update_project_state_data_available_response.status_code == 200
 
+            session.refresh(INRG)
+            session.refresh(INSTRUCT)
+            request_INRG = request_schema.dump(INRG)
+            request_INSTRUCT = request_schema.dump(INSTRUCT)
+
+            assert len(request_INRG["states"]) == 3
+            assert len(request_INSTRUCT["states"]) == 4
+            assert any(state["code"] == 'DATA_AVAILABLE' for state in request_INSTRUCT["states"])
+            assert any(state["code"]  == 'DATA_AVAILABLE' for state in request_INRG["states"])
+
             """
             error test
             """
             #assert client.post("/admin/projects/state", json={}).status_code == 400
+        #time.sleep(3)
         """
         check good user gets data
         """
@@ -507,9 +562,11 @@ def test_2_create_project_with_one_request(session, client):
         with \
         patch('amanuensis.blueprints.project.current_user', id=105, username="endpoint_user_5@test.com"), \
         patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
+            assert user_5.associated_user.user_id == None
             get_project_user_5_response = client.get("/projects", headers={"Authorization": 'bearer 1.2.3'})
             assert get_project_user_5_response.status_code == 200
-            session.refresh(user_5)
+            #session.expire(user_5)
+            session.refresh(user_5.associated_user)
             assert user_5.associated_user.user_id == 105
         
         """
@@ -533,23 +590,25 @@ def test_2_create_project_with_one_request(session, client):
             assert get_project_user_1_response.status_code == 200
             assert len(get_project_user_1_response.json) == 1
             submitted_at = session.query(Request.create_date).filter(Request.project_id == project_id).first()[0]
+            expected = get_project_user_1_response.json
+            expected[0]['consortia'] = set(expected[0]['consortia'])
             assert [
                 {
                     'completed_at': None, 
-                    'consortia': ['INSTRUCT'], 
+                    'consortia': set(['INSTRUCT', 'INRG']), 
                     'has_access': True, 
                     'id': project_id, 
-                    'name': 'Test Project', 
+                    'name': 'Test Project',  
                     'researcher': {
                         'first_name': 'endpoint_user_1', 
                         'id': 101, 
                         'institution': 'test university', 
                         'last_name': 'endpoint_user_last_1'
                     }, 
-                    'status': 'Data Available', 
+                    'status': 'Data Downloaded', 
                     'submitted_at': submitted_at.strftime('%Y-%m-%dT%H:%M:%S.%f')
                 }
-            ] == get_project_user_1_response.json
+            ] == expected
 
         """
         readd user_3 to project

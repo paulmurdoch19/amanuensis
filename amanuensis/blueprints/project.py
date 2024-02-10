@@ -119,6 +119,7 @@ def get_projetcs():
         statuses_by_consortium = set()
         consortiums = set()
         for request in project["requests"]:
+            #TODO this isnt always ordering them correctly
             statuses_by_consortium.add(request['states'][-1]["code"])
             consortiums.add(request['consortium_data_contributor']['code'])
 
