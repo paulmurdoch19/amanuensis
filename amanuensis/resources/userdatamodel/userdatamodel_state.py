@@ -114,7 +114,7 @@ def update_project_state(
                 state
             )
 
-    if state.code == config["NOTIFY_STATE"] and updated:
+    if state.code in config["NOTIFY_STATE"] and updated:
         notify_user_project_status_update(
             current_session,
             project_id,
