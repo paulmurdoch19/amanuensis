@@ -226,13 +226,17 @@ def update_project_state():
     """
     project_id = request.get_json().get("project_id", None)
     state_id = request.get_json().get("state_id", None)
+    consortiums = request.get_json().get("consortiums", None)
+
+    if consortiums and not isinstance(consortiums, list):
+        consortiums = [consortiums]
 
     if not state_id or not project_id:
         return UserError("There are missing params.")
 
     request_schema = RequestSchema(many=True)
     return jsonify(
-        request_schema.dump(admin.update_project_state(project_id, state_id))
+        request_schema.dump(admin.update_project_state(project_id, state_id, consortiums))
     )
 
 @blueprint.route("/all_associated_user_roles", methods=["GET"])

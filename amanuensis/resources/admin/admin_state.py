@@ -46,24 +46,27 @@ def get_by_code(code, session=None):
             return udm.get_state_by_code(session, code)
 
 
-def update_project_state(project_id, state_id):
+def update_project_state(project_id, state_id, consortium_list=None):
     with flask.current_app.db.session as session:
-        requests = udm.get_requests_by_project_id(session, project_id)
+        if consortium_list:
+            requests = udm.get_requests_by_project_id_consortium(session, project_id, consortium_list)
+        else:
+            requests = udm.get_requests_by_project_id(session, project_id)
         if not requests:
             raise NotFound(
                 "There are no requests associated to this project or there is no project. id: {}".format(
                     project_id
                 )
             )
-
+        
         state = udm.get_state_by_id(session, state_id)
         if not state:
             raise NotFound("The state with id {} has not been found".format(state_id))
 
         request_schema = RequestSchema(many=True)
-        consortium_statuses = config["CONSORTIUM_STATUS"]
+        
         requests = udm.update_project_state(
-            session, requests, state, consortium_statuses, project_id
+            session, requests, state, project_id 
         )
         request_schema.dump(requests)
         return requests

@@ -1,11 +1,12 @@
-from sqlalchemy import func
+from sqlalchemy import func, and_
 
 
 from amanuensis.errors import NotFound, UserError
 from amanuensis.models import (
     Request,
     Project,
-    RequestState
+    RequestState,
+    ConsortiumDataContributor
 )
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "get_request_by_consortium",
     "get_requests_by_project_id",
     "update_request_state",
+    "get_requests_by_project_id_consortium",
 ]
 
 #TODO
@@ -35,6 +37,14 @@ def get_request_by_id(current_session, user_id, request_id):
 
 def get_requests_by_project_id(current_session, project_id):      
     return current_session.query(Request).filter(Request.project_id == project_id).all()
+
+def get_requests_by_project_id_consortium(current_session, project_id, consortium_list):
+    return (
+        current_session.query(Request)
+                       .filter(Request.project_id == project_id)
+                       .join(ConsortiumDataContributor, Request.consortium_data_contributor)
+                       .filter(ConsortiumDataContributor.code.in_(consortium_list)).all()
+    )
 
 def update_request_state(
     current_session, request, state

@@ -4,8 +4,10 @@ from cdislogging import get_logger
 
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError, UserError, NotFound, InternalError, Forbidden
-from amanuensis.resources.project import get_by_id, update_project_request_states
+from amanuensis.resources.project import get_by_id
+from amanuensis.resources.admin import update_project_state, get_by_code
 from pcdc_aws_client.utils import get_s3_key_and_bucket
+
 
 from amanuensis.config import config
 
@@ -61,13 +63,19 @@ def download_data(project_id):
     # project_id in the API call could assign data download rights to the wrong user
 
 
+    
+    data_downloaded_state = get_by_code("DATA_DOWNLOADED")
+    if not data_downloaded_state:
+        raise NotFound("Data download state does not exist. Please reach out to pcdc_help@lists.uchicago.edu")
+    else:
+        update_project_state(project_id, data_downloaded_state.id)
+
     # Create pre-signed URL for downalod
     s3_info = get_s3_key_and_bucket(storage_url)
     if s3_info is None:
         raise NotFound("The S3 bucket and key information cannot be extracted from the URL {}".format(storage_url))
 
     result = flask.current_app.boto.presigned_url(s3_info["bucket"], s3_info["key"], "1800", {}, "get_object")
-    update_project_request_states(project.requests, "DATA_DOWNLOADED")
     return flask.jsonify({"download_url": result})
 
 

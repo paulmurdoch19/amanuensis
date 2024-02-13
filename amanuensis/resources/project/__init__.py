@@ -140,14 +140,6 @@ def update(project_id, approved_url, filter_set_ids):
         return update_project(session, project_id, approved_url)
 
 
-def update_project_request_states(requests, state_code):
-    with flask.current_app.db.session as session:
-        state = get_state_by_code(session, state_code)
-        for request in requests:
-            update_request_state(session, request, state)
-
-
-
 def update_project_searches(logged_user_id, project_id, filter_sets_id):
     project_schema = ProjectSchema()
     with flask.current_app.db.session as session:
