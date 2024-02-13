@@ -11,6 +11,7 @@ from amanuensis.auth.auth import current_user, has_arborist_access
 from amanuensis.errors import AuthError, InternalError
 from amanuensis.schema import ProjectSchema
 from amanuensis.config import config
+from datetime import datetime
 from userportaldatamodel.models import State, Transition
 #TODO: userportaldatamodel.models needs to be updated to include transition
 #from userportaldatamodel.transition import Transition
@@ -118,9 +119,16 @@ def get_projetcs():
         project_status = None
         statuses_by_consortium = set()
         consortiums = set()
-        for request in project["requests"]:
-            #TODO this isnt always ordering them correctly
-            statuses_by_consortium.add(request['states'][-1]["code"])
+        for request in project['requests']:
+            current_state = None
+            for request_state in request['request_has_state']:
+                code = request_state['state']['code']
+                time = datetime.fromisoformat(request_state['create_date'])
+                if not current_state:
+                    current_state = (code, time)
+                elif time > current_state[1]:
+                    current_state = (code, time)
+            statuses_by_consortium.add(current_state[0])
             consortiums.add(request['consortium_data_contributor']['code'])
 
             if not submitted_at:
