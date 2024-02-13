@@ -49,7 +49,6 @@ def get_by_code(code, session=None):
 def update_project_state(project_id, state_id, consortium_list=None):
     with flask.current_app.db.session as session:
         if consortium_list:
-            print(consortium_list)
             requests = udm.get_requests_by_project_id_consortium(session, project_id, consortium_list)
         else:
             requests = udm.get_requests_by_project_id(session, project_id)
