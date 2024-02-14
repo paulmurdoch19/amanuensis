@@ -212,7 +212,7 @@ def test_2_create_project_with_one_request(session, client):
                 "description": "This is an endpoint test project",
                 "institution": "test university",
                 "filter_set_ids": [admin_get_filter_sets.json["filter_sets"][0]['id']],
-                "associated_users_emails": ["endpoint_user_1@test.com", "admin@uchicago.edu", "endpoint_user_5@test.com"]
+                "associated_users_emails": ["endpoint_user_1@test.com", "admin@uchicago.edu", "endpoint_user_5@test.com", "endpoint_user_4@test.com"]
 
             }
             create_project_response = client.post('/admin/projects', json=create_project_json)
@@ -545,20 +545,43 @@ def test_2_create_project_with_one_request(session, client):
         """
         run all three get project requests
         """
-        #user 5 logs in for first time user_id should be updated in associated_user table
-        fence_user_5 = {
+        #user 4 logs in for first time user_id should be updated in associated_user table
+        fence_user_4 = {
             "users": [
                 {
-                    "first_name": "endpoint_5_first",
-                    "id": 105,
+                    "first_name": "endpoint_4_first",
+                    "id": 104,
                     "institution": "uchicago",
                     "last_auth": "Fri, 20 Jan 2024 20:33:37 GMT",
-                    "last_name": "endpoint_5_last",
-                    "name": "endpoint_user_5@test.com",
+                    "last_name": "endpoint_4_last",
+                    "name": "endpoint_user_4@test.com",
                     "role": "user"
                 }
             ]
         }
+        #test user_4 was added to fence but its user_id has not been added to amanuensis db 
+        #search for fence user and use the fence user instead of the input 
+        with \
+        patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
+        patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", return_value=fence_user_4), \
+        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT", "INRG"]):
+            create_project_duplicate_json = {
+                "user_id": 104,
+                "name": "Test no duplicate row",
+                "description": "This is an endpoint test project to test not adding the bunch of duplicate data",
+                "institution": "test university",
+                "filter_set_ids": [admin_get_filter_sets.json["filter_sets"][0]['id']],
+                "associated_users_emails": []
+
+            }
+            create_project_duplicate_json_response = client.post('/admin/projects', json=create_project_duplicate_json)
+            assert create_project_duplicate_json_response.status_code == 200
+            assert len(session.query(AssociatedUser).filter(AssociatedUser.email == "endpoint_user_4@test.com").all()) == 1
+
+
+
+
+
         with \
         patch('amanuensis.blueprints.project.current_user', id=105, username="endpoint_user_5@test.com"), \
         patch('amanuensis.blueprints.project.has_arborist_access', return_value=False):
