@@ -14,17 +14,17 @@ def test_get_all_associated_user_roles(session):
 
 def test_get_associated_user_role_by_code(session, roles):
     #test correct data
-    data = get_associated_user_role_by_code(session)
+    data = get_associated_user_role_by_code("METADATA_ACCESS", current_session=session)
     assert data.code == "METADATA_ACCESS"
     #test no data
-    data = get_associated_user_role_by_code()
+    data = get_associated_user_role_by_code("METADATA_ACCESS")
     assert data.code == "METADATA_ACCESS"
-    data = get_associated_user_role_by_code(session, roles[0].code)
+    data = get_associated_user_role_by_code(roles[0].code, current_session=session)
     assert data.id == roles[0].id
     #test incorrect data
     with pytest.raises(NotFound) as e:
-        get_associated_user_role_by_code(session, code="NOTREALCODE")
+        get_associated_user_role_by_code("NOTREALCODE", current_session=session)
 
     #tests incorrect data with no error
-    data = get_associated_user_role_by_code(session, code="NOTREALCODE", throw_error=False)
+    data = get_associated_user_role_by_code("NOTREALCODE", current_session=session, throw_error=False)
     assert data == None
