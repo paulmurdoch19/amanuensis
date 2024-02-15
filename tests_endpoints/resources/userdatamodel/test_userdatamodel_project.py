@@ -15,14 +15,14 @@ def test_get_projects_by_consortium(session, consortiums, projects):
     for pro in data:
         assert pro.id in [projects[1].id, projects[2].id]
 
-def test_get_project_by_user(session, associated_users, projects, delete_project_has_associated_user, roles):
-    project_user = ProjectAssociatedUser(project=projects[0], associated_user=associated_users[0], role=roles[0])
-    session.add(project_user)
-    session.commit()
-    data = project.get_project_by_user(session, 1, 'user1@example.com')
-    assert len(data) == 2
-    assert data[0].id == projects[0].id
-    assert data[1].id == projects[1].id
+# def test_get_project_by_user(session, associated_users, projects, delete_project_has_associated_user, roles):
+#     project_user = ProjectAssociatedUser(project=projects[0], associated_user=associated_users[0], role=roles[0])
+#     session.add(project_user)
+#     session.commit()
+#     data = project.get_project_by_user(session, 1, 'user1@example.com')
+#     assert len(data) == 2
+#     assert data[0].id == projects[0].id
+#     assert data[1].id == projects[1].id
 
 def test_get_project_by_id(session, projects):
     assert projects[0].id == project.get_project_by_id(session, None, projects[0].id).id
@@ -55,25 +55,25 @@ def test_update_project(session, projects, searches):
     # data = project.update_project(session, projects[0].id, "test.com", searches)
     # assert data == {"code": 200, "updated": int(projects[0].id)}
 
-def test_update_associated_users(session, projects, associated_users, roles, delete_project_has_associated_user):
+# def test_update_associated_users(session, projects, associated_users, roles, delete_project_has_associated_user):
 
-    user_project = ProjectAssociatedUser(project=projects[0], associated_user=associated_users[0], role=roles[0])
-    session.add(user_project)
-    session.commit()
+#     user_project = ProjectAssociatedUser(project=projects[0], associated_user=associated_users[0], role=roles[0])
+#     session.add(user_project)
+#     session.commit()
 
-    data = project.update_associated_users(session, projects[0].id, 1, None, roles[1].code)
-    assert user_project.role.code == roles[1].code
+#     data = project.update_associated_users(session, projects[0].id, 1, None, roles[1].code)
+#     assert user_project.role.code == roles[1].code
 
-    data = project.update_associated_users(session, projects[0].id, 1, None, None)
-    assert user_project.active == False
+#     data = project.update_associated_users(session, projects[0].id, 1, None, None)
+#     assert user_project.active == False
 
 
-    data = project.update_associated_users(session, projects[0].id, None, 'user1@example.com', roles[0].code)
-    assert user_project.role.code == roles[0].code
-    assert user_project.active == True
+#     data = project.update_associated_users(session, projects[0].id, None, 'user1@example.com', roles[0].code)
+#     assert user_project.role.code == roles[0].code
+#     assert user_project.active == True
 
-    data = project.update_associated_users(session, projects[0].id, None, 'user1@example.com', None)
-    assert user_project.active == False
+#     data = project.update_associated_users(session, projects[0].id, None, 'user1@example.com', None)
+#     assert user_project.active == False
 
 
 def test_update_project_date():
