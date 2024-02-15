@@ -145,7 +145,7 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
                 "description": "This is an endpoint test project",
                 "institution": "test university",
                 "filter_set_ids": [admin_get_filter_sets.json["filter_sets"][0]['id']],
-                "associated_users_emails": ["endpoint_user_1@test.com", "admin@uchicago.edu", "endpoint_user_5@test.com"]
+                "associated_users_emails": ["endpoint_user_1@test.com", "admin@uchicago.edu", "endpoint_user_5@test.com", "endpoint_user_4@test.com"]
 
             }
             create_project_response = client.post('/admin/projects', json=create_project_json, headers={"Authorization": 'bearer 200'})
@@ -480,9 +480,6 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
         """
         run all three get project requests
         """
-        
-        #test user_4 was added to fence but its user_id has not been added to amanuensis db 
-        #search for fence user and use the fence user instead of the input 
         with \
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"):
             #user 4 logs in for first time user_id should be updated in associated_user table

@@ -78,6 +78,15 @@ def add_associated_users(users, role=None):
                     raise UserError(
                         "Invalid input - The ID and the email has to be for the same user. Only one is required. {} and {} don't match the same person in Fence.".format(user["id"], user["email"])
                     )
+            # Check if the user exists in fence, if it doesn't send email to the user letting him/her know they need to register in the portal to be able to download the data once they are ready.
+            if not fence_user_by_email and not fence_user_by_id:
+                #TODO send notification to the user about registering in the portal to see the data / and potentially create the user in fence programmatically
+                logger.info("The user {} has not created an account in the commons yet".format(user["id"] if "id" in user else user["email"]))
+            else:
+                fence_user = fence_user_by_id if fence_user_by_id else fence_user_by_email
+                user["email"] = fence_user["name"]
+                user["id"] = fence_user["id"]
+
 
             # AMANUENSIS Retrieve the users from the Amanuensis DB
             associated_user_by_email = None
@@ -90,17 +99,11 @@ def add_associated_users(users, role=None):
                 associated_user_by_email = associated_user_by_email[0] if len(associated_user_by_email) == 1 else None  
             # Check for discrepancies in case the user submitted both id and email instead of just one of the two
             if associated_user_by_email and associated_user_by_id:
-                if associated_user_by_email["user_id"] != associated_user_by_id["user_id"] or associated_user_by_email["email"] != associated_user_by_id["email"]:
+                if associated_user_by_email.user_id != associated_user_by_id.user_id or associated_user_by_email.email != associated_user_by_id.email:
                     raise UserError(
                         "Invalid input - The ID and the email has to be for the same user. Only one is required. {} and {} don't match the same person in Amanuensis".format(user["id"], user["email"])
                     )
 
-            # Check if the user exists in fence, if it doesn't send email to the user letting him/her know they need to register in the portal to be able to download the data once they are ready.
-            if not fence_user_by_email and not fence_user_by_id:
-                #TODO send notification to the user about registering in the portal to see the data / and potentially create the user in fence programmatically
-                logger.info("The user {} has not created an account in the commons yet".format(user["id"] if "id" in user else user["email"]))
-            fence_user = fence_user_by_id if fence_user_by_id else fence_user_by_email
-            
             #get the foreign key for the role
             if not role:
                 role_id = udm.get_associated_user_role_by_code(config["ASSOCIATED_USER_ROLE_DEFAULT"], session).id
@@ -110,9 +113,6 @@ def add_associated_users(users, role=None):
             # Check if the user exists in amanuensis, if it does check it is in sync with fence and update if needed, if it doesn't add it using the fence info
             if not associated_user_by_email and not associated_user_by_id:
                 # Create the user in amanuensis
-                if fence_user:
-                    user["email"] = fence_user["name"]
-                    user["id"] = fence_user["id"]
                 logger.info("Creting new Associated user")
                 ret.append(
                     udm.associate_user.add_associated_user(
