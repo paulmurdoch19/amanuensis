@@ -379,6 +379,8 @@ def copy_search_to_project():
     filterset_id = request.get_json().get("filtersetId", None)
     project_id = request.get_json().get("projectId", None)
 
+    if not filterset_id:
+        raise UserError("a filter-set id is required for this endpoint")
 
     project_schema = ProjectSchema()
     return jsonify(project_schema.dump(project.update_project_searches(logged_user_id, project_id, filterset_id)))

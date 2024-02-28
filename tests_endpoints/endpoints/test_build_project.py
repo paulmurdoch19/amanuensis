@@ -371,7 +371,25 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
             admin_copy_search_to_project_response = client.post("admin/copy-search-to-project", json=admin_copy_search_to_project_json, headers={"Authorization": 'bearer 200'})
             assert admin_copy_search_to_project_response.status_code == 200
 
+            """
+            test error is thrown if filter-set-ids is empty or dont point to real filter-sets
+            """
+            admin_copy_search_to_project_no_filter_set_json = {
+                "projectId": project_id,
+                "filtersetId": None
+            }
+            admin_copy_search_to_project_no_filter_set_response = client.post("admin/copy-search-to-project", json=admin_copy_search_to_project_no_filter_set_json, headers={"Authorization": 'bearer 200'})
+            assert admin_copy_search_to_project_no_filter_set_response.status_code == 400
 
+            admin_copy_search_to_project_non_exist_filter_set_json = {
+                "projectId": project_id,
+                "filtersetId": -1
+            }
+            admin_copy_search_to_project_non_exist_filter_set_response = client.post("admin/copy-search-to-project", json=admin_copy_search_to_project_non_exist_filter_set_json, headers={"Authorization": 'bearer 200'})
+            assert admin_copy_search_to_project_non_exist_filter_set_response.status_code == 404
+
+            requests = session.query(Request).filter(Request.project_id == project_id).all()
+            assert len(requests) == 2
 
             """
             move project state to approved
@@ -485,12 +503,12 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
             #user 4 logs in for first time user_id should be updated in associated_user table
             fence_users.append(
                 {
-                    "first_name": "endpoint_5_first",
-                    "id": 105,
+                    "first_name": "endpoint_4_first",
+                    "id": 104,
                     "institution": "uchicago",
                     "last_auth": "Fri, 20 Jan 2024 20:33:37 GMT",
-                    "last_name": "endpoint_5_last",
-                    "name": "endpoint_user_5@test.com",
+                    "last_name": "endpoint_4_last",
+                    "name": "endpoint_user_4@test.com",
                     "role": "user"
                 }
             )
@@ -511,12 +529,6 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
 
         with \
         patch('amanuensis.blueprints.project.current_user', id=105, username="endpoint_user_5@test.com"):
-            assert user_5.associated_user.user_id == None
-            get_project_user_5_response = client.get("/projects", headers={"Authorization": 'bearer 105'})
-            assert get_project_user_5_response.status_code == 200
-            #session.expire(user_5)
-            session.refresh(user_5.associated_user)
-            assert user_5.associated_user.user_id == 105
             fence_users.append(
                 {
                     "first_name": "endpoint_5_first",
@@ -528,6 +540,13 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
                     "role": "user"
                 }
             )
+            assert user_5.associated_user.user_id == None
+            get_project_user_5_response = client.get("/projects", headers={"Authorization": 'bearer 105'})
+            assert get_project_user_5_response.status_code == 200
+            #session.expire(user_5)
+            session.refresh(user_5.associated_user)
+            assert user_5.associated_user.user_id == 105
+            
 
         """
         not active user should not see project
