@@ -10,8 +10,6 @@ __all__ = [
     "get_consotium_by_code",
 ]
 
-
-
 def create_consortium(current_session, code, name):
     """
     Creates a consortium

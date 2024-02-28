@@ -96,7 +96,6 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
         consortiums.extend(get_consortium_list(path, s.graphql_object, s.ids_list))    
     consortiums = list(set(consortiums))
-
     # Defaulst state is SUBMITTED
     default_state = admin.get_by_code("IN_REVIEW")
 
@@ -117,41 +116,15 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
         req.states.append(default_state)
         requests.append(req)
 
-    # Check if associated_users exists in amanuensis
-    # 1. get associated_users from amanuensis
-    amanuensis_associated_users = get_all_associated_users(associated_users_emails) 
-
-    # # 1. check if associated_users are already in amanuensis
-    # for associated_user in amanuensis_associated_users:
-    #     if associated_user.ema
-    # registered_stat = 
-    # missing_users_email = 
-
-    # # 2. Check if associated_user exists in fence. If so assign user_id, otherwise use the submitted email.
-    # fence_users = fence_get_users(config=config, usernames=associated_user_emails)
-    # fence_users = fence_users['users'] if 'users' in fence_users else []
-    
-    # 2. Check if any associated_user is not in the DB yet
-    missing_users_email = []
-    if len(associated_users_emails) != len(amanuensis_associated_users):
-        users_email = [user.email for user in amanuensis_associated_users]
-        missing_users_email = [email for email in associated_users_emails if email not in users_email]
-
-    # 3. link the existing statician to the project
-    associated_users = []
-    for user in amanuensis_associated_users:
-        associated_user = user
-        associated_users.append(associated_user)
-
-    # 4 or create them if they have not been previously
-    for user_email in missing_users_email:
-        associated_user = AssociatedUser(email=user_email)
-        associated_users.append(associated_user)
-
 
     with flask.current_app.db.session as session:
         project_schema = ProjectSchema()
-        project = create_project(session, logged_user_id, description, name, institution, filter_sets, requests, associated_users)
+        project = create_project(session, logged_user_id, description, name, institution, filter_sets, requests)
+        associated_users = []
+        for email in associated_users_emails:
+            associated_users.append({"project_id": project.id, "email": email})
+        associated_users.append({"project_id": project.id, "id": logged_user_id})
+        admin.add_associated_users(associated_users)
         project_schema.dump(project)
         return project
 
@@ -167,14 +140,6 @@ def update(project_id, approved_url, filter_set_ids):
         return update_project(session, project_id, approved_url)
 
 
-def update_project_request_states(requests, state_code):
-    with flask.current_app.db.session as session:
-        state = get_state_by_code(session, state_code)
-        for request in requests:
-            update_request_state(session, request, state)
-
-
-
 def update_project_searches(logged_user_id, project_id, filter_sets_id):
     project_schema = ProjectSchema()
     with flask.current_app.db.session as session:
@@ -184,7 +149,13 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
             raise NotFound("The project with id {} has not been found".format(project_id))
 
         # Retrieve all the filter_sets
-        filter_sets = filterset.get_filter_sets_by_ids_f(filter_sets_id) 
+        filter_sets = filterset.get_filter_sets_by_ids_f(filter_sets_id) # list of search objects
+        filter_sets_id = [filter_sets_id] if not isinstance(filter_sets_id, list) else filter_sets_id #list of ints
+        found_filter_sets_ids = [filter_set.id for filter_set in filter_sets] #list of ids from search objects
+        #originals - found = ones that dont exist
+        non_found_filter_set_ids = list(set(filter_sets_id) - set(found_filter_sets_ids))
+        if non_found_filter_set_ids:
+            raise NotFound(f"filter-set-id(s), {non_found_filter_set_ids} do not exist")
 
         # TODO make this a config variable in amanuensis-config.yaml
         path = 'http://pcdcanalysistools-service/tools/stats/consortiums'

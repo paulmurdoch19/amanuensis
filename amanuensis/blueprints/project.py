@@ -4,13 +4,14 @@ from wsgiref.util import request_uri
 from cdislogging import get_logger
 
 from amanuensis.resources.project import create, get_all
-from amanuensis.resources.admin import get_by_code
+from amanuensis.resources.admin import get_by_code, update_associated_user_user_id
 from amanuensis.resources.fence import fence_get_users
 from amanuensis.resources.request import get_request_state
 from amanuensis.auth.auth import current_user, has_arborist_access
 from amanuensis.errors import AuthError, InternalError
 from amanuensis.schema import ProjectSchema
 from amanuensis.config import config
+from datetime import datetime
 from userportaldatamodel.models import State, Transition
 #TODO: userportaldatamodel.models needs to be updated to include transition
 #from userportaldatamodel.transition import Transition
@@ -92,6 +93,9 @@ def get_projetcs():
     except AuthError:
         logger.warning("Unable to load or find the user, check your token")
 
+    #add user_id from fence if this is the users first time logging in
+    update_associated_user_user_id(logged_user_id, logged_user_email)
+
     # special_user = [approver, admin]
     special_user = flask.request.args.get("special_user", None)
     # special_user = flask.request.get_json().get("special_user", None)
@@ -115,8 +119,16 @@ def get_projetcs():
         project_status = None
         statuses_by_consortium = set()
         consortiums = set()
-        for request in project["requests"]:
-            statuses_by_consortium.add(request['states'][-1]["code"])
+        for request in project['requests']:
+            current_state = None
+            for request_state in request['request_has_state']:
+                code = request_state['state']['code']
+                time = datetime.fromisoformat(request_state['create_date'])
+                if not current_state:
+                    current_state = (code, time)
+                elif time > current_state[1]:
+                    current_state = (code, time)
+            statuses_by_consortium.add(current_state[0])
             consortiums.add(request['consortium_data_contributor']['code'])
 
             if not submitted_at:

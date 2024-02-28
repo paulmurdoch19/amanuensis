@@ -226,13 +226,17 @@ def update_project_state():
     """
     project_id = request.get_json().get("project_id", None)
     state_id = request.get_json().get("state_id", None)
+    consortiums = request.get_json().get("consortiums", None)
+
+    if consortiums and not isinstance(consortiums, list):
+        consortiums = [consortiums]
 
     if not state_id or not project_id:
         return UserError("There are missing params.")
 
     request_schema = RequestSchema(many=True)
     return jsonify(
-        request_schema.dump(admin.update_project_state(project_id, state_id))
+        request_schema.dump(admin.update_project_state(project_id, state_id, consortiums))
     )
 
 @blueprint.route("/all_associated_user_roles", methods=["GET"])
@@ -240,7 +244,22 @@ def update_project_state():
 def get_all_associated_user_roles():
     return jsonify(admin.get_codes_for_roles())
 
-@blueprint.route("/associated_user_role", methods=["PUT", "DELETE"])
+@blueprint.route("/remove_associated_user_from_project", methods=["DELETE"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+def delete_user_from_project():
+    associated_user_id = request.get_json().get("user_id", None)
+    associated_user_email = request.get_json().get("email", None)
+    if not associated_user_id and not associated_user_email:
+        raise UserError("A user_id and or an associated_user_email is required for this endpoint.")
+    project_id = request.get_json().get("project_id", None)
+    if not project_id:
+        raise UserError("A project is nessary for this endpoint")
+    if not project.get_by_id(None, project_id):
+        raise NotFound("the project provided does not exist")
+    return jsonify(admin.delete_user_from_project(project_id, associated_user_id, associated_user_email))
+
+
+@blueprint.route("/associated_user_role", methods=["PUT"])
 @check_arborist_auth(resource="/services/amanuensis", method="*")
 # @debug_log
 def update_associated_user_role():
@@ -255,13 +274,15 @@ def update_associated_user_role():
         raise UserError("A user_id and or an associated_user_email is required for this endpoint.")
 
     project_id = request.get_json().get("project_id", None)
-    role = request.get_json().get("role", None)
-    if request.method == "PUT":     
-        if not role:
-            raise UserError("A role is required for this endpoint")
-        if role not in admin.get_codes_for_roles():
-            raise NotFound("The role {} is not in the allowed list, reach out to pcdc_help@lists.uchicago.edu".format(role))
-    
+    if not project_id:
+        raise UserError("A project is nessary for this endpoint")
+    if not project.get_by_id(None, project_id):
+        raise NotFound("the project provided does not exist")
+    role = request.get_json().get("role", None)     
+    if not role:
+        raise UserError("A role is required for this endpoint")
+    if role not in admin.get_codes_for_roles():
+        raise NotFound("The role {} is not in the allowed list, reach out to pcdc_help@lists.uchicago.edu".format(role))
     return jsonify(admin.update_role(project_id, associated_user_id, associated_user_email, role))
 
 
@@ -358,6 +379,8 @@ def copy_search_to_project():
     filterset_id = request.get_json().get("filtersetId", None)
     project_id = request.get_json().get("projectId", None)
 
+    if not filterset_id:
+        raise UserError("a filter-set id is required for this endpoint")
 
     project_schema = ProjectSchema()
     return jsonify(project_schema.dump(project.update_project_searches(logged_user_id, project_id, filterset_id)))
