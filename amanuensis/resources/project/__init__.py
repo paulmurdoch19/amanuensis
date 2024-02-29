@@ -178,7 +178,7 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
 
         if add_consortiums and len(add_consortiums) > 0:
             # Defaulst state is SUBMITTED
-            default_state = admin.get_by_code("IN_REVIEW")
+            default_state = admin.get_by_code("IN_REVIEW", session)
             if not default_state:
                 raise NotFound("The state with id {} has not been found".format(default_state))
 
