@@ -21,6 +21,7 @@ from amanuensis.resources.request import get_request_state
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests_by_project_id,
 )
+from amanuensis.resources.userdatamodel.userdatamodel_state import get_latest_request_state_by_id
 
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
@@ -184,6 +185,8 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
 
                 if consortium.code in old_consortiums:
                     req = old_consortiums[consortium.code]
+                    if get_latest_request_state_by_id(session, req.id).state.code == "IN_REVIEW":
+                        continue
                 else:
                     req = Request()
                     req.consortium_data_contributor = consortium
