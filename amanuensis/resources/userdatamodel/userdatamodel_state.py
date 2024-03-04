@@ -3,6 +3,7 @@ from sqlalchemy import func, desc
 from sqlalchemy.orm import aliased
 from amanuensis.resources.message import send_admin_message
 from amanuensis.resources.userdatamodel.userdatamodel_project import get_project_by_id
+from amanuensis.resources.userdatamodel.userdatamodel_request import update_request_state
 from amanuensis.errors import NotFound, UserError
 from amanuensis.config import config
 from amanuensis.models import (
@@ -110,9 +111,7 @@ def update_project_state(
                 )
             )
         else:
-            request.states.append(
-                state
-            )
+            update_request_state(current_session, request, state)
 
     if state.code in config["NOTIFY_STATE"] and updated:
         notify_user_project_status_update(
