@@ -20,6 +20,8 @@ __all__ = [
     "update_project_state",
     "get_state_by_id",
     "get_state_by_code",
+    "get_final_states",
+    "get_transition_graph"
 ]
 
 logger = getLogger(__name__)
@@ -62,9 +64,60 @@ def notify_user_project_status_update(current_session, project_id, consortiums):
     return send_admin_message(project, consortiums, email_subject, email_body)
 
 
-def get_latest_request_state_by_id(current_session, request_id):
-    return current_session.query(RequestState).filter(RequestState.request_id == request_id).order_by(desc(RequestState.create_date)).first()
+def get_latest_request_state_by_id(current_session, requests=None, request_ids=[]):
+    #filter out any request whos state is depreicated
+    #requests are request objects
+    #request_ids are ints
+    if requests and request_ids:
+        logger.error("both request and request_ids were passed to get_latest_request_state_by_id returning []")
+        return []
+    elif request_ids:
+        request_ids = [request_ids] if not isinstance(request_ids, list) else request_ids
+    elif requests:
+        requests = [requests] if not isinstance(requests, list) else requests
+        request_ids = [request.id for request in requests]
+    else:
+        logger.error("No requests were passed to get_latest_request_state_by_id returning []")
+        return []
 
+    subquery = (
+        current_session.query(
+            RequestState.request_id,
+            func.max(RequestState.create_date).label("max_create_date")
+        )
+        .filter(RequestState.request_id.in_(request_ids))
+        .group_by(RequestState.request_id)
+        .subquery()
+    )
+
+    sq = aliased(subquery)
+    rs = aliased(RequestState)
+
+    result = (
+        current_session.query(rs)
+        .join(State, rs.state)
+        .filter(rs.request_id == sq.c.request_id, rs.create_date == sq.c.max_create_date)
+        .filter(State.code != "DEPRECATED")
+        .all()
+    )
+    return result
+
+def get_transition_graph(current_session):
+    src_state_alias = aliased(State)
+    dst_state_alias = aliased(State)
+
+    result = (
+        current_session.query(src_state_alias.code, dst_state_alias.code)
+                       .join(Transition, Transition.state_src_id == src_state_alias.id)
+                       .join(dst_state_alias, Transition.state_dst_id == dst_state_alias.id)
+                       .all()
+    )
+
+    transition_graph = {}
+    for src_state, dst_state in result:
+        transition_graph[src_state] = transition_graph.get(src_state, []).append(dst_state)
+    
+    return transition_graph
 
 def get_final_states(current_session):
     src_state_alias = aliased(State)
@@ -90,36 +143,33 @@ def update_project_state(
     """
     Updates the state for a project, including all requests in the project. Notifies users when the state changes to DATA_DELIVERED.
     """
-    updated = False
-    consortiums = []
     final_states = get_final_states(current_session)
-    for request in requests:
-        consortium = request.consortium_data_contributor.code
-        consortiums.append(consortium)
-        state_code = get_latest_request_state_by_id(current_session, request.id)
-
-        if state_code == state.code:
+    current_request_states = get_latest_request_state_by_id(current_session, requests)
+    updated_requests = []
+    for request_state in current_request_states:
+        if request_state.state.code == state.code:
             logger.info(
                 "Request {} is already in state {}. No need to change.".format(
-                    request.id, state.code
+                    request_state.request.id, state.code
                 )
             )
-        elif state_code in final_states:
+        elif request_state.state.code in final_states:
             raise UserError(
                 "Cannot change state of request {} from {} because it's a final state".format(
-                    request.id, state.code
+                    request_state.request.id, state.code
                 )
             )
         else:
-            update_request_state(current_session, request, state)
+            update_request_state(current_session, request_state.request, state)
+            updated_requests.append(request_state.request)
 
-    if state.code in config["NOTIFY_STATE"] and updated:
+    if state.code in config["NOTIFY_STATE"] and updated_requests:
         notify_user_project_status_update(
             current_session,
             project_id,
-            consortiums
+            [updated_request.consortium_data_contributor.code for updated_request in updated_requests]
         )
 
     current_session.flush()
-    return requests
+    return updated_requests
 #END TODO

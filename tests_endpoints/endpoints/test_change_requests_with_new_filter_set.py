@@ -9,46 +9,55 @@ from sqlalchemy.orm import aliased
 from amanuensis.blueprints.filterset import UserError
 from amanuensis.resources.userdatamodel import get_project_by_id
 from amanuensis.resources.userdatamodel.userdatamodel_state import get_latest_request_state_by_id
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, and_
 logger = get_logger(logger_name=__name__)
 
 
 def test_change_requests_with_new_filter_set(app_instance, session, client, fence_get_users_mock, fence_users):
-    #start with two consortiums
-    #move to approved
-    #change to 3 which should move all three to in review
-    #move to approved
-    #change back to 2 removing INTERACT
-    #INTERACT should go to withdrawl
-    #should the other two go back to in_review or stay what they are
+    
+    request_schema = RequestSchema()
+    def get_latest_state(req):
+        session.refresh(req)
+        request = request_schema.dump(req)
+        current_state = None
+        for request_state in request['request_has_state']:
+            code = request_state['state']['code']
+            time = datetime.fromisoformat(request_state['create_date'])
+            if not current_state:
+                current_state = (code, time)
+            elif time > current_state[1]:
+                current_state = (code, time)
+
+        return current_state[0]
+    
     with \
     patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", side_effect=fence_get_users_mock), \
     patch("amanuensis.blueprints.project.fence_get_users", side_effect=fence_get_users_mock), \
     patch('amanuensis.blueprints.download_urls.get_s3_key_and_bucket', return_value={"bucket": "test_bucket", "key": "test_key"}):
-        #create a filter-set with  consortiums
+        #create a filter-set with 1 consortium
         with \
-        patch('amanuensis.blueprints.filterset.current_user', id=102, username="endpoint_user_2@test.com"):
+        patch('amanuensis.blueprints.filterset.current_user', id=106, username="endpoint_user_6@test.com"):
             filter_set_create_json = {
                 "name":f"{__name__}_2_requests",
                 "description":"",
                 "filters":{"__combineMode":"AND","__type":"STANDARD","value":{"consortium":{"__type":"OPTION","selectedValues":["INSTRuCT"],"isExclusion":False},"sex":{"__type":"OPTION","selectedValues":["Male"],"isExclusion":False}}},
                 "gqlFilter":{"AND":[{"IN":{"consortium":["INSTRuCT"]}},{"IN":{"sex":["Male"]}}]}
             }
-            filter_set_create_response = client.post(f'/filter-sets?explorerId=1', json=filter_set_create_json, headers={"Authorization": 'bearer 102'})
+            filter_set_create_response = client.post(f'/filter-sets?explorerId=1', json=filter_set_create_json, headers={"Authorization": 'bearer 106'})
             assert filter_set_create_response.status_code == 200
 
-            id_2_requests = filter_set_create_response.json["id"]
+            id_1_requests = filter_set_create_response.json["id"]
 
 
         with \
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
         patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT"]):
             create_project_json = {
-                "user_id": 102,
+                "user_id": 106,
                 "name": f"{__name__}",
                 "description": f"this is the project for {__name__}",
                 "institution": "test university",
-                "filter_set_ids": [id_2_requests],
+                "filter_set_ids": [id_1_requests],
                 "associated_users_emails": []
 
             }
@@ -68,14 +77,14 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
             update_project_state_approved_state_response.status_code == 200
 
         with \
-        patch('amanuensis.blueprints.filterset.current_user', id=102, username="endpoint_user_2@test.com"):
+        patch('amanuensis.blueprints.filterset.current_user', id=106, username="endpoint_user_6@test.com"):
             filter_set_create_json = {
                 "name":f"{__name__}_3_requests",
                 "description":"",
                 "filters":{"__combineMode":"AND","__type":"STANDARD","value":{"consortium":{"__type":"OPTION","selectedValues":["INSTRuCT", "INRG", "INTERACT"],"isExclusion":False},"sex":{"__type":"OPTION","selectedValues":["Male"],"isExclusion":False}}},
                 "gqlFilter":{"AND":[{"IN":{"consortium":["INSTRuCT", "INRG", "INTERACT"]}},{"IN":{"sex":["Male"]}}]}
             }
-            filter_set_create_response = client.post(f'/filter-sets?explorerId=1', json=filter_set_create_json, headers={"Authorization": 'bearer 102'})
+            filter_set_create_response = client.post(f'/filter-sets?explorerId=1', json=filter_set_create_json, headers={"Authorization": 'bearer 106'})
             assert filter_set_create_response.status_code == 200
 
             id_3_requests = filter_set_create_response.json["id"]
@@ -90,12 +99,6 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
             }
             admin_copy_search_to_project_response = client.post("admin/copy-search-to-project", json=admin_copy_search_to_project_json, headers={"Authorization": 'bearer 200'})
             assert admin_copy_search_to_project_response.status_code == 200
-
-            # INSTRUCT_id = session.query(Request.id).filter(Request.project_id == project_id and Request.consortium_data_contributor.code == 'INSTRUCT').first()
-
-            # INSTRUCT_curr_state = session.query(RequestState).filter(RequestState.request_id == INSTRUCT_id).order_by(RequestState.create_date.desc()).first()
-
-            # IN_REVIEW = session.query(State).filter(State.id == )
             
             INRG = (
                     session
@@ -121,9 +124,9 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
             )
 
 
-            assert get_latest_request_state_by_id(session, INRG.id).state.code == "IN_REVIEW"
-            assert get_latest_request_state_by_id(session, INSTRUCT.id).state.code == "IN_REVIEW"
-            assert get_latest_request_state_by_id(session, INTERACT.id).state.code == "IN_REVIEW"
+            assert get_latest_state(INSTRUCT) == "IN_REVIEW"
+            assert get_latest_state(INTERACT) == "IN_REVIEW"
+            assert get_latest_state(INRG) == "IN_REVIEW"
 
 
             update_project_state_approved_state_json = {"project_id": project_id, "state_id": approved_state["id"]}
@@ -134,30 +137,66 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
         patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT"]):
             admin_copy_search_to_project_json = {
-                "filtersetId": id_2_requests,
+                "filtersetId": id_1_requests,
                 "projectId": project_id
             }
             admin_copy_search_to_project_response = client.post("admin/copy-search-to-project", json=admin_copy_search_to_project_json, headers={"Authorization": 'bearer 200'})
             assert admin_copy_search_to_project_response.status_code == 200
-
-            request_schema = RequestSchema()
-            def get_latest_state(req):
-                session.refresh(req)
-                request = request_schema.dump(req)
-                print(request['id'])
-                current_state = None
-                for request_state in request['request_has_state']:
-                    code = request_state['state']['code']
-                    time = datetime.fromisoformat(request_state['create_date'])
-                    if not current_state:
-                        current_state = (code, time)
-                    elif time > current_state[1]:
-                        current_state = (code, time)
-
-                return current_state[0]
             
 
             assert get_latest_state(INSTRUCT) == "IN_REVIEW"
-            assert get_latest_state(INTERACT) == "WITHDRAWAL"
-            assert get_latest_state(INRG) == "WITHDRAWAL"
+            assert get_latest_state(INTERACT) == "DEPRECATED"
+            assert get_latest_state(INRG) == "DEPRECATED"
+
+            update_project_state_approved_state_json = {"project_id": project_id, "state_id": approved_state["id"]}
+            update_project_state_approved_state_response = client.post("/admin/projects/state", json=update_project_state_approved_state_json, headers={"Authorization": 'bearer 200'})
+            assert update_project_state_approved_state_response.status_code == 200
+
+            assert get_latest_state(INSTRUCT) == "APPROVED"
+            assert get_latest_state(INTERACT) == "DEPRECATED"
+            assert get_latest_state(INRG) == "DEPRECATED"
+
+            request_ids = [INSTRUCT.id, INTERACT.id, INRG.id]
+        with \
+        patch('amanuensis.blueprints.project.current_user', id=106, username="endpoint_user_6@test.com"), \
+        patch('amanuensis.blueprints.project.has_arborist_access', return_value=True):
         
+            get_project = client.get("/projects", headers={"Authorization": 'bearer 106'})
+            assert get_project.json[0]["status"] == "Approved"
+            assert get_project.json[0]["consortia"] == ["INSTRUCT"]
+        
+        with \
+        patch('amanuensis.blueprints.filterset.current_user', id=106, username="endpoint_user_6@test.com"):
+            filter_set_create_json = {
+                "name":f"{__name__}_2_requests",
+                "description":"",
+                "filters":{"__combineMode":"AND","__type":"STANDARD","value":{"consortium":{"__type":"OPTION","selectedValues":["INSTRuCT", "INRG"],"isExclusion":False},"sex":{"__type":"OPTION","selectedValues":["Male"],"isExclusion":False}}},
+                "gqlFilter":{"AND":[{"IN":{"consortium":["INSTRuCT", "INRG"]}},{"IN":{"sex":["Male"]}}]}
+            }
+            filter_set_create_response = client.post(f'/filter-sets?explorerId=1', json=filter_set_create_json, headers={"Authorization": 'bearer 106'})
+            assert filter_set_create_response.status_code == 200
+
+            id_2_requests = filter_set_create_response.json["id"]
+        
+
+        with \
+        patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
+        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT", "INRG"]):
+            admin_copy_search_to_project_json = {
+                "filtersetId": id_3_requests,
+                "projectId": project_id
+            }
+            admin_copy_search_to_project_response = client.post("admin/copy-search-to-project", json=admin_copy_search_to_project_json, headers={"Authorization": 'bearer 200'})
+            assert admin_copy_search_to_project_response.status_code == 200
+        
+            assert get_latest_state(INSTRUCT) == "IN_REVIEW"
+            assert get_latest_state(INTERACT) == "DEPRECATED"
+            assert get_latest_state(INRG) == "IN_REVIEW"
+        
+        with \
+        patch('amanuensis.blueprints.project.current_user', id=106, username="endpoint_user_6@test.com"), \
+        patch('amanuensis.blueprints.project.has_arborist_access', return_value=True):
+        
+            get_project = client.get("/projects", headers={"Authorization": 'bearer 106'})
+            assert get_project.json[0]["status"] == "In Review"
+            assert get_project.json[0]["consortia"] == ["INSTRUCT", "INRG"]

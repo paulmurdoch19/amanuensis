@@ -6,13 +6,14 @@ from cdislogging import get_logger
 from amanuensis.resources.project import create, get_all
 from amanuensis.resources.admin import get_by_code, update_associated_user_user_id
 from amanuensis.resources.fence import fence_get_users
-from amanuensis.resources.request import get_request_state
+from amanuensis.resources.request import get_latest_request_state
 from amanuensis.auth.auth import current_user, has_arborist_access
 from amanuensis.errors import AuthError, InternalError
 from amanuensis.schema import ProjectSchema
 from amanuensis.config import config
 from datetime import datetime
 from userportaldatamodel.models import State, Transition
+from amanuensis.resources.userdatamodel.userdatamodel_state import get_final_states, get_transition_graph
 #TODO: userportaldatamodel.models needs to be updated to include transition
 #from userportaldatamodel.transition import Transition
 
@@ -26,10 +27,25 @@ blueprint = flask.Blueprint("projects", __name__)
 
 logger = get_logger(__name__)
 
+# def determine_status_code(project_request_states):
+#     with flask.current_app.db.session as session:
+#         transition_table = get_transition_graph(session)
+#         final_states = get_final_states(session)
+
+#         def overall_status_code(states, visited):
+#             overall_project_state = None
+#             while states:
+#                 current_state = states[-1]
+
+#         return overall_status_code(final_states, {})
+
+
+
+       
+
+
 
 # cache = SimpleCache()
-
-
 def determine_status_code(this_project_requests_states):
     """
     Takes status codes from all the requests within a project and returns the project status based on their precedence.
@@ -82,7 +98,7 @@ def determine_status_code(this_project_requests_states):
         #  logger.error(
         #     "Unable to load or find the consortium status"
         #  )
-         raise InternalError("Unable to load or find the consortium status")
+        raise InternalError("Unable to load or find the consortium status")
 
 
 @blueprint.route("/", methods=["GET"])
@@ -118,21 +134,15 @@ def get_projetcs():
         completed_at = None
         project_status = None
         statuses_by_consortium = set()
-        consortiums = set()
-        for request in project['requests']:
-            current_state = None
-            for request_state in request['request_has_state']:
-                code = request_state['state']['code']
-                time = datetime.fromisoformat(request_state['create_date'])
-                if not current_state:
-                    current_state = (code, time)
-                elif time > current_state[1]:
-                    current_state = (code, time)
-            statuses_by_consortium.add(current_state[0])
-            consortiums.add(request['consortium_data_contributor']['code'])
+        request_ids = [request['id'] for request in project['requests']]
+    
 
-            if not submitted_at:
-                submitted_at = request["create_date"]
+        current_request_states = get_latest_request_state(request_ids=request_ids)
+        consortiums = [request_state["request"]["consortium_data_contributor"]["code"] for request_state in current_request_states]
+        statuses_by_consortium.update(request_state["state"]["code"] for request_state in current_request_states)
+        
+        if not submitted_at:
+            submitted_at = project['requests'][-1]["create_date"] if project['requests'] else None
 
         project_status = determine_status_code(
             statuses_by_consortium
