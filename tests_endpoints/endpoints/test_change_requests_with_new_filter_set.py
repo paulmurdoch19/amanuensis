@@ -199,4 +199,5 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
         
             get_project = client.get("/projects", headers={"Authorization": 'bearer 106'})
             assert get_project.json[0]["status"] == "In Review"
-            assert get_project.json[0]["consortia"] == ["INSTRUCT", "INRG"]
+            assert len(get_project.json[0]["consortia"]) == 2
+            assert set(get_project.json[0]["consortia"]) == set(["INSTRUCT", "INRG"])

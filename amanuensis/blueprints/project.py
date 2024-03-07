@@ -27,24 +27,6 @@ blueprint = flask.Blueprint("projects", __name__)
 
 logger = get_logger(__name__)
 
-# def determine_status_code(project_request_states):
-#     with flask.current_app.db.session as session:
-#         transition_table = get_transition_graph(session)
-#         final_states = get_final_states(session)
-
-#         def overall_status_code(states, visited):
-#             overall_project_state = None
-#             while states:
-#                 current_state = states[-1]
-
-#         return overall_status_code(final_states, {})
-
-
-
-       
-
-
-
 # cache = SimpleCache()
 def determine_status_code(this_project_requests_states):
     """
