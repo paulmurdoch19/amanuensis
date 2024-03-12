@@ -102,7 +102,9 @@ def get_latest_request_state_by_id(current_session, requests=None, request_ids=[
     )
     return result
 
-def get_transition_graph(current_session):
+def get_transition_graph(current_session, reverse=False):
+    #if reverse is true it will return the directed graph with every edge reversed
+
     src_state_alias = aliased(State)
     dst_state_alias = aliased(State)
 
@@ -114,8 +116,14 @@ def get_transition_graph(current_session):
     )
 
     transition_graph = {}
-    for src_state, dst_state in result:
-        transition_graph[src_state] = transition_graph.get(src_state, []).append(dst_state)
+    if reverse:
+        for src_state, dst_state in result:
+            transition_graph[dst_state] = transition_graph.get(dst_state, [])
+            transition_graph[dst_state].append(src_state)
+    else:
+        for src_state, dst_state in result:
+            transition_graph[src_state] = transition_graph.get(src_state, [])
+            transition_graph[src_state].append(dst_state)
     
     return transition_graph
 
