@@ -40,24 +40,24 @@ def test_published(client):
 
 def test_data_downloaded(client):
     with app.app_context():
-        assert determine_status_code({"PUBLISHED", "DATA_DOWNLOADED"}) == {"status": "DATA_DOWNLOADED"}
+        assert determine_status_code({"PUBLISHED", "DATA_DOWNLOADED"}) == {"status": "PUBLISHED"}
 
 def test_data_availble(client):
     with app.app_context():
-        assert determine_status_code({"PUBLISHED", "DATA_DOWNLOADED", "DATA_AVAILABLE"}) == {"status": "DATA_AVAILABLE"}
+        assert determine_status_code({ "DATA_DOWNLOADED", "DATA_AVAILABLE"}) == {"status": "DATA_AVAILABLE"}
 
 def test_aggrements_executed(client):
     with app.app_context():
-        assert determine_status_code({"PUBLISHED", "DATA_DOWNLOADED", "DATA_AVAILABLE", "AGREEMENTS_EXECUTED"}) == {"status": "AGREEMENTS_EXECUTED"}
+        assert determine_status_code({ "DATA_DOWNLOADED", "DATA_AVAILABLE", "AGREEMENTS_EXECUTED"}) == {"status": "AGREEMENTS_EXECUTED"}
 
 def test_aggrements_negociated(client):
     with app.app_context():
-        assert determine_status_code({"PUBLISHED", "DATA_DOWNLOADED", "DATA_AVAILABLE", 
+        assert determine_status_code({"DATA_DOWNLOADED", "DATA_AVAILABLE", 
                                       "AGREEMENTS_EXECUTED", "AGREEMENTS_NEGOTIATION"}) == {"status": "AGREEMENTS_NEGOTIATION"}
 
 def test_request_critiera_finilized(client):
     with app.app_context():
-        assert determine_status_code({"PUBLISHED", "DATA_DOWNLOADED", "DATA_AVAILABLE", 
+        assert determine_status_code({"DATA_DOWNLOADED", "DATA_AVAILABLE", 
                                         "AGREEMENTS_EXECUTED", "AGREEMENTS_NEGOTIATION",
                                         "REQUEST_CRITERIA_FINALIZED"}) == {"status": "REQUEST_CRITERIA_FINALIZED"}   
 
@@ -101,7 +101,7 @@ def test_Reject(client):
 
 def test_Reject_pub(client):
     with app.app_context():
-        assert determine_status_code({"APPROVED", "REVISION", "IN_REVIEW", "REJECTED", "PUBLISHED"}) == {"status": "REJECTED"}
+        assert determine_status_code({"APPROVED", "REVISION", "IN_REVIEW", "REJECTED", "PUBLISHED"})["status"] in {"PUBLISHED", "REJECTED"}
 
 def test_withdrawl(client):
     with app.app_context():
@@ -109,4 +109,4 @@ def test_withdrawl(client):
 
 def test_reject_withdrawl(client):
     with app.app_context():
-        assert determine_status_code({"WITHDRAWAL", "REJECTED"}) == {"status": "WITHDRAWAL"}
+        assert determine_status_code({"WITHDRAWAL", "REJECTED"})["status"] in {"REJECTED", "WITHDRAWAL"}

@@ -56,6 +56,15 @@ def fence_users():
             "last_name": "admin_last",
             "name": "admin@uchicago.edu",
             "role": "admin"
+        },
+        {
+            "first_name": "endpoint_user_6",
+            "id": 106,
+            "institution": "test university",
+            "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
+            "last_name": "endpoint_user_last_6",
+            "name": "endpoint_user_6@test.com",
+            "role": "user"
         }
     ]
 

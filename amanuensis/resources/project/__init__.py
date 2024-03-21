@@ -17,7 +17,6 @@ from amanuensis.resources.userdatamodel import (
     get_state_by_code
 )
 from amanuensis.resources import filterset, consortium_data_contributor, admin
-from amanuensis.resources.request import get_request_state
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests_by_project_id,
 )
@@ -185,7 +184,8 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
 
                 if consortium.code in old_consortiums:
                     req = old_consortiums[consortium.code]
-                    if get_latest_request_state_by_id(session, req.id).state.code == "IN_REVIEW":
+                    req_state = get_latest_request_state_by_id(session, request_ids=req.id)
+                    if req_state and req_state[0].state.code == "IN_REVIEW":
                         continue
                 else:
                     req = Request()
@@ -193,13 +193,14 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                     project.requests.append(req)
                 update_request_state(session, request=req, state=IN_REVIEW)
         if remove_consortiums:
-            WITHDRAWAL = admin.get_by_code("WITHDRAWAL", session)
-            if not WITHDRAWAL:
-                raise NotFound("The state with code WITHDRAWAL has not been found")
+            DEPRECATED = admin.get_by_code("DEPRECATED", session)
+            if not DEPRECATED:
+                raise NotFound("The state with code DEPRECATED has not been found")
 
             for remove_consortium_code in remove_consortiums:
                 req = old_consortiums[remove_consortium_code]
-                update_request_state(session, request=req, state=WITHDRAWAL)
+                if get_latest_request_state_by_id(session, request_ids=req.id):
+                    update_request_state(session, request=req, state=DEPRECATED)
 
 
         # Update he filterset
