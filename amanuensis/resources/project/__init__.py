@@ -155,7 +155,15 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
         not_found_filter_set_ids = set(filter_sets_id) - set(filter_set.id for filter_set in filter_sets)
         if not_found_filter_set_ids:
             raise NotFound(f"filter-set-id(s), {not_found_filter_set_ids} do not exist")
+        
 
+        #remove any filter-sets currently part of proejects
+        current_filter_sets = {search.id for search in project.searches}
+        filter_sets = [search for search in filter_sets if search.id not in current_filter_sets]
+        if not filter_sets:
+            project_schema.dump(project)
+            return project
+        
         # TODO make this a config variable in amanuensis-config.yaml
         path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
         new_consortiums = set()

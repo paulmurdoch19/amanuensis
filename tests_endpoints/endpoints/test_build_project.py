@@ -26,6 +26,9 @@ def test_add_state(session, client):
     session.query(State).filter(State.code == "ENDPOINT_TEST").delete()
     session.commit()
 
+def test_get_states(client):
+    response = client.get("/admin/states", headers={"Authorization": 'bearer 200'})
+    assert 'DEPRECATED' not in [state['code'] for state in response.json]
 
 def test_2_create_project_with_one_request(session, client, fence_get_users_mock, fence_users):
     """
@@ -220,6 +223,19 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
             block_add_user_5_response = client.post("/admin/associated_user", json={"users": [{"project_id": project_id, "email": 'endpoint_user_5@test.com'}]}, headers={"Authorization": 'bearer 200'})
             block_add_user_5_response.status_code == 200
 
+            """
+            block removing project owner
+            """
+            user_1_delete_json = {
+                "user_id": 101,
+                "email": "endpoint_user_1@test.com",
+                "project_id": project_id,
+            }
+            user_1_delete_response = client.delete("/admin/remove_associated_user_from_project", json=user_1_delete_json, headers={"Authorization": 'bearer 200'})
+            assert user_1_delete_response.status_code == 400
+            session.refresh(user_1) 
+            assert user_1.active == True
+            assert user_1.role.code == "METADATA_ACCESS"
 
             
             """

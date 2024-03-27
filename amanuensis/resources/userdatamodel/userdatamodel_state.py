@@ -49,7 +49,7 @@ def get_state_by_code(current_session, code):
 
 
 def get_all_states(current_session):
-    return current_session.query(State).all()
+    return current_session.query(State).filter(State.code != 'DEPRECATED').all()
 
 
 # TODO move these 2 functions in the resources, there is logic here, the userdatamodel folder should contain mostly DB operation
