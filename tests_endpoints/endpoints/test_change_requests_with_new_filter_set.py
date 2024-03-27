@@ -143,6 +143,9 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
             admin_copy_search_to_project_response = client.post("admin/copy-search-to-project", json=admin_copy_search_to_project_json, headers={"Authorization": 'bearer 200'})
             assert admin_copy_search_to_project_response.status_code == 200
             
+            #TEST sending same request returns 200
+            admin_copy_search_to_project_response = client.post("admin/copy-search-to-project", json=admin_copy_search_to_project_json, headers={"Authorization": 'bearer 200'})
+            assert admin_copy_search_to_project_response.status_code == 200
 
             assert get_latest_state(INSTRUCT) == "IN_REVIEW"
             assert get_latest_state(INTERACT) == "DEPRECATED"
