@@ -124,7 +124,10 @@ def update_user_role(current_session, project_associated_user, code):
     return f"{project_associated_user.associated_user.email} now has {code}"
 
 def change_project_user_status(current_session, project_associated_user, status):
+    
     if not status:
+        if project_associated_user.project.user_id == project_associated_user.associated_user.user_id:
+            raise UserError("You cannot remove the owner of the project")
         update_user_role(current_session, project_associated_user, config["ASSOCIATED_USER_ROLE_DEFAULT"])
     project_associated_user.active = status
     current_session.flush()
