@@ -86,7 +86,11 @@ def get_all_associated_users(emails):
 
 def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_ids, explorer_id, institution, associated_users_emails):
     # retrieve all the filter_sets associated with this project
-    filter_sets = filterset.get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
+    if is_amanuensis_admin:
+        filter_sets = filterset.get_filter_sets_by_ids_f(filter_set_ids) 
+    else:
+        filter_sets = filterset.get_by_ids(logged_user_id, is_amanuensis_admin, filter_set_ids, explorer_id)
+    
     # example filter_sets - [{"id": 4, "user_id": 1, "name": "INRG_1", "description": "", "filter_object": {"race": {"selectedValues": ["Black or African American"]}, "consortium": {"selectedValues": ["INRG"]}, "data_contributor_id": {"selectedValues": ["COG"]}}}]
 
     path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
