@@ -145,6 +145,22 @@ def update(project_id, approved_url, filter_set_ids):
         return update_project(session, project_id, approved_url)
 
 
+def upload_file(bucket, key, project_id, expires=None):
+    try:
+        presigned_url = flask.current_app.boto.presigned_url(bucket, key, expires, {}, method="put_object")
+
+    except Exception as e:
+        logger.error(f"Failed to generate presigned url: {e}")
+        raise InternalError("Failed to generate presigned url")
+    
+    update(project_id, f"https://{bucket}.s3.amazonaws.com/{key}", None)
+
+    return presigned_url
+
+
+
+
+
 def update_project_searches(logged_user_id, project_id, filter_sets_id):
     project_schema = ProjectSchema()
     with flask.current_app.db.session as session:

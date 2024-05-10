@@ -9,8 +9,10 @@ logger = get_logger(logger_name=__name__)
 
 @pytest.fixture(scope='session', autouse=True)
 def patch_boto(app_instance):
-    with patch.object(app_instance.boto, "presigned_url", return_value="aws_url_to_data"):
-        yield
+    if not app_instance.boto:
+        with patch.object(app_instance.boto, "presigned_url", return_value="aws_url_to_data"):
+            yield
+    yield
 
 # @pytest.fixture(scope="session", autouse=True)
 # def patch_get_jwt_from_header():
@@ -64,6 +66,15 @@ def fence_users():
             "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
             "last_name": "endpoint_user_last_6",
             "name": "endpoint_user_6@test.com",
+            "role": "user"
+        },
+        {
+            "first_name": "endpoint_user_7",
+            "id": 107,
+            "institution": "test university",
+            "last_auth": "Fri, 19 Jan 2024 20:33:37 GMT",
+            "last_name": "endpoint_user_last_7",
+            "name": "endpoint_user_7@test.com",
             "role": "user"
         }
     ]
