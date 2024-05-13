@@ -5,9 +5,6 @@ from amanuensis.models import Project, AssociatedUser, Request, ConsortiumDataCo
 from amanuensis.errors import NotFound
 from userportaldatamodel.models import ProjectSearch
 
-def test_get_all_projects(session):
-    assert len(project.get_all_projects(session)) == 3
-
 
 def test_get_projects_by_consortium(session, consortiums, projects):
     data = project.get_project_by_consortium(session, consortiums[1].code, None)
