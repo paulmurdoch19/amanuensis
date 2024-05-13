@@ -7,12 +7,10 @@ logger = get_logger(logger_name=__name__)
 
 
 
-@pytest.fixture(scope='session', autouse=True)
+@pytest.fixture(scope='function')
 def patch_boto(app_instance):
-    if not app_instance.boto:
-        with patch.object(app_instance.boto, "presigned_url", return_value="aws_url_to_data"):
-            yield
-    yield
+    with patch.object(app_instance.boto, "presigned_url", return_value="aws_url_to_data"):
+        yield
 
 # @pytest.fixture(scope="session", autouse=True)
 # def patch_get_jwt_from_header():
