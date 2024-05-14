@@ -78,7 +78,7 @@ def set_up_project(client, fence_get_users_mock):
 
         with \
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
-        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT"]):
+        patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', return_value=["INSTRuCT"]):
             create_project_json = {
                 "user_id": 107,
                 "name": f"{__name__}",

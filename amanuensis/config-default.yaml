@@ -119,6 +119,8 @@ ENABLE_DB_MIGRATION: true
 # this is also why our BASE_URL default ends in /user
 APPLICATION_ROOT: '/amanuensis'
 
+GET_CONSORTIUMS_URL: 'http://pcdcanalysistools-service/tools/stats/consortiums'
+
 
 
 ########################################################################################

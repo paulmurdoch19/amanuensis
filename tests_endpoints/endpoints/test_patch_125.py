@@ -25,7 +25,7 @@ def test_admin_creates_project_with_filter_set_project_owner_dont_match(session,
         filter_set_id = filter_set_create_response.json["id"]
 
         with \
-        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT"]):
+        patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', return_value=["INSTRuCT"]):
             create_project_json = {
                 "user_id": 106,
                 "name": f"{__name__}",

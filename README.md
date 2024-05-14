@@ -66,7 +66,7 @@ alembic revision -m "add_save"
 
         make sure to use the path where the object is called not definied
 
-        example: patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT", "INRG"]) 
+        example: patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', ["INRG"]) 
 
 2)  Fence
     in tests_endpoints/endpoints.conftest there are two pytest fixtures that simulate calls to fence
