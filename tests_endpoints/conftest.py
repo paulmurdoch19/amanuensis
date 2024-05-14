@@ -38,6 +38,7 @@ def session(app_instance):
         session.query(ConsortiumDataContributor).filter(ConsortiumDataContributor.code == "TEST3").delete()
         session.query(ConsortiumDataContributor).filter(ConsortiumDataContributor.code == "FAKE_CONSORTIUM_1").delete()
         session.query(ConsortiumDataContributor).filter(ConsortiumDataContributor.code == "FAKE_CONSORTIUM_2").delete()
+        session.query(ConsortiumDataContributor).filter(ConsortiumDataContributor.code == "BAD").delete()
         session.query(State).filter(State.code == "STATE1").delete()
         session.query(State).filter(State.code == "STATE2").delete()
         session.query(AssociatedUserRoles).filter(AssociatedUserRoles.code == "TEST").delete()
