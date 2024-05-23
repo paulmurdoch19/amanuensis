@@ -29,7 +29,6 @@ __all__ = [
     "get_project_by_id",
     "create_project",
     "update_project",
-    "update_project_date",
 ]
 
 
@@ -140,33 +139,6 @@ def update_project(current_session, project_id, approved_url=None, searches=None
             "code": 500, 
             "error": "Nothing has been updated, check the logs to see what happened during the transaction.",
         }
-
-
-
-def update_project_date(session, project_id, new_update_date):
-    requests = get_requests_by_project_id(session, project_id)
-    if not requests:
-        raise NotFound(
-            "There are no requests associated to this project or there is no project. id: {}".format(
-                project_id
-            )
-        )
-
-    for request in requests:
-        create_date = request.request_has_state[-1].create_date
-        if create_date <= new_update_date:
-            request.update_date = new_update_date
-            request_state = request.request_has_state[-1]
-            session.query(RequestState).filter(
-                RequestState.request_id == request_state.request_id,
-                RequestState.create_date == create_date,
-                RequestState.state_id == request_state.state_id,
-            ).update({"update_date": new_update_date})
-            session.flush()
-        else:
-            raise UserError("The new update_date must be later than the create date.")
-    return requests
-
 
 
 
