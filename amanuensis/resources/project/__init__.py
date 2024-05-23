@@ -21,10 +21,9 @@ from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests_by_project_id,
 )
 from amanuensis.resources.userdatamodel.userdatamodel_state import get_latest_request_state_by_id
-
+from amanuensis.resources.consortium_data_contributor import get_consortiums_from_fitersets
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
-from amanuensis.utils import get_consortium_list
 from amanuensis.resources.fence import fence_get_users
 
 from amanuensis.models import (
@@ -93,31 +92,16 @@ def create(logged_user_id, is_amanuensis_admin, name, description, filter_set_id
     
     # example filter_sets - [{"id": 4, "user_id": 1, "name": "INRG_1", "description": "", "filter_object": {"race": {"selectedValues": ["Black or African American"]}, "consortium": {"selectedValues": ["INRG"]}, "data_contributor_id": {"selectedValues": ["COG"]}}}]
 
-    path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
-    consortiums = []
-    for s in filter_sets:
-        # Get a list of consortiums the cohort of data is from
-        # example or retuned values - consoritums = ['INRG']
-        # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
-        consortiums.extend(get_consortium_list(path, s.graphql_object, s.ids_list))    
-    consortiums = list(set(consortiums))
+    consortiums = get_consortiums_from_fitersets(filter_sets)
+
     # Defaulst state is SUBMITTED
     default_state = admin.get_by_code("IN_REVIEW")
 
-    #TODO make sure to populate the consortium table
-    # insert into consortium_data_contributor ("code", "name") values ('INRG','INRG'), ('INSTRUCT', 'INSTRuCT');
+
     requests = []
-    for consortia in consortiums:
-        # get consortium's ID
-        consortium = consortium_data_contributor.get(code=consortia.upper())
-        if consortium is None:
-            raise NotFound(
-                "Consortium with code {} not found.".format(
-                    consortia
-                )
-            )
+    for consortia in consortiums.values():
         req = Request()
-        req.consortium_data_contributor = consortium
+        req.consortium_data_contributor = consortia
         req.states.append(default_state)
         requests.append(req)
 
@@ -181,20 +165,15 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
         current_filter_sets = {search.id for search in project.searches}
         filter_sets = [search for search in filter_sets if search.id not in current_filter_sets]
         if not filter_sets:
+            logger.info("You must choose a filter-set that is not already part of the project")
             project_schema.dump(project)
             return project
-        
-        # TODO make this a config variable in amanuensis-config.yaml
-        path = 'http://pcdcanalysistools-service/tools/stats/consortiums'
-        new_consortiums = set()
-        for s in filter_sets:
-            # s.filter_object - you can use getattr to get the value or implement __getitem__ - https://stackoverflow.com/questions/11469025/how-to-implement-a-subscriptable-class-in-python-subscriptable-class-not-subsc
-            new_consortiums.update(consortium.upper() for consortium in get_consortium_list(path, s.graphql_object, s.ids_list))  
-            
+
+        new_consortiums = get_consortiums_from_fitersets(filter_sets)
         # Get all the consortium involved in the existing requests
         old_consortiums = {request.consortium_data_contributor.code: request for request in project.requests}
         # Check if the consortium list is changed after changing the associated search
-        remove_consortiums = old_consortiums.keys() - new_consortiums
+        remove_consortiums = old_consortiums.keys() - new_consortiums.keys()
         # Defaulst state is SUBMITTED 
         if new_consortiums:
             IN_REVIEW = admin.get_by_code("IN_REVIEW", session)
@@ -202,22 +181,14 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
                 raise NotFound("The state with code IN_REVIEW has not been found")
             
             for new_consortium_code in new_consortiums:
-                consortium = consortium_data_contributor.get(code=new_consortium_code, session=session)
-                if consortium is None:
-                    raise NotFound(
-                        "Consortium with code {} not found.".format(
-                            consortium
-                        )
-                    )
-
-                if consortium.code in old_consortiums:
-                    req = old_consortiums[consortium.code]
+                if new_consortium_code in old_consortiums:
+                    req = old_consortiums[new_consortium_code]
                     req_state = get_latest_request_state_by_id(session, request_ids=req.id)
                     if req_state and req_state[0].state.code == "IN_REVIEW":
                         continue
                 else:
                     req = Request()
-                    req.consortium_data_contributor = consortium
+                    req.consortium_data_contributor = new_consortiums[new_consortium_code]
                     project.requests.append(req)
                 update_request_state(session, request=req, state=IN_REVIEW)
         if remove_consortiums:

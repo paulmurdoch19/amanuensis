@@ -51,7 +51,7 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
 
         with \
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
-        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT"]):
+        patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', return_value=["INSTRuCT"]):
             create_project_json = {
                 "user_id": 106,
                 "name": f"{__name__}",
@@ -92,7 +92,7 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
 
         with \
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
-        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT", "INRG", "INTERACT"]):
+        patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', return_value=["INSTRuCT", "INRG", "INTERACT"]):
             admin_copy_search_to_project_json = {
                 "filtersetId": id_3_requests,
                 "projectId": project_id
@@ -135,7 +135,7 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
 
         with \
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
-        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT"]):
+        patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', return_value=["INSTRuCT"]):
             admin_copy_search_to_project_json = {
                 "filtersetId": id_1_requests,
                 "projectId": project_id
@@ -184,7 +184,7 @@ def test_change_requests_with_new_filter_set(app_instance, session, client, fenc
 
         with \
         patch('amanuensis.blueprints.admin.current_user', id=200, username="admin@uchicago.edu"), \
-        patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT", "INRG"]):
+        patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', return_value=["INSTRuCT", "INRG"]):
             admin_copy_search_to_project_json = {
                 "filtersetId": id_3_requests,
                 "projectId": project_id

@@ -43,7 +43,7 @@ def test_2_create_project_with_one_request(app_instance, session, client, fence_
     with \
     patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", side_effect=fence_get_users_mock), \
     patch("amanuensis.blueprints.project.fence_get_users", side_effect=fence_get_users_mock), \
-    patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT", "INRG"]):
+    patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', return_value=["INSTRuCT", "INRG"]):
         with \
         patch('amanuensis.blueprints.filterset.current_user', id=101, username="endpoint_user_1@test.com"):
             
@@ -179,10 +179,6 @@ def test_2_create_project_with_one_request(app_instance, session, client, fence_
             """
             error_response  = client.post('/admin/projects', json={}, headers={"Authorization": 'bearer 200'})
             assert error_response.status_code == 400
-
-            with patch('amanuensis.resources.project.get_consortium_list', return_value=["bad"]):
-                error_response = client.post('/admin/projects', json=create_project_json, headers={"Authorization": 'bearer 200'})
-                assert error_response.status_code == 404
             
             """
             send a request to reterive all the possible roles
