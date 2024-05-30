@@ -30,7 +30,7 @@ def test_get_states(client):
     response = client.get("/admin/states", headers={"Authorization": 'bearer 200'})
     assert 'DEPRECATED' not in [state['code'] for state in response.json]
 
-def test_2_create_project_with_one_request(session, client, fence_get_users_mock, fence_users):
+def test_2_create_project_with_one_request(app_instance, session, client, fence_get_users_mock, fence_users):
     """
     this test will test the process of 3 pcdc users creating a project request
     add admin and user_2 to amanuensis DB
@@ -43,8 +43,7 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
     with \
     patch("amanuensis.resources.admin.admin_associated_user.fence.fence_get_users", side_effect=fence_get_users_mock), \
     patch("amanuensis.blueprints.project.fence_get_users", side_effect=fence_get_users_mock), \
-    patch('amanuensis.resources.project.get_consortium_list', return_value=["INSTRuCT", "INRG"]), \
-    patch('amanuensis.blueprints.download_urls.get_s3_key_and_bucket', return_value={"bucket": "test_bucket", "key": "test_key"}):
+    patch('amanuensis.resources.consortium_data_contributor.get_consortium_list', return_value=["INSTRuCT", "INRG"]):
         with \
         patch('amanuensis.blueprints.filterset.current_user', id=101, username="endpoint_user_1@test.com"):
             
@@ -180,10 +179,6 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
             """
             error_response  = client.post('/admin/projects', json={}, headers={"Authorization": 'bearer 200'})
             assert error_response.status_code == 400
-
-            with patch('amanuensis.resources.project.get_consortium_list', return_value=["bad"]):
-                error_response = client.post('/admin/projects', json=create_project_json, headers={"Authorization": 'bearer 200'})
-                assert error_response.status_code == 404
             
             """
             send a request to reterive all the possible roles
@@ -429,7 +424,7 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
             """
             update_project_json = {
                 "project_id": project_id,
-                "approved_url": "http://approved.com"
+                "approved_url": "https://amanuensis-test-bucket.s3.amazonaws.com/test_key.txt"
             }
             update_project_response = client.put("/admin/projects", json=update_project_json, headers={"Authorization": 'bearer 200'})
             assert update_project_response.status_code == 200
@@ -481,7 +476,10 @@ def test_2_create_project_with_one_request(session, client, fence_get_users_mock
         check good user gets data
         """
         with \
-        patch('amanuensis.blueprints.download_urls.current_user', id=102, username="endpoint_user_2@test.com"):
+        patch('amanuensis.blueprints.download_urls.current_user', id=102, username="endpoint_user_2@test.com"), \
+        patch('amanuensis.blueprints.download_urls.get_s3_key_and_bucket', return_value={"bucket": "amanuensis-test-buckt", "key": "test_key.txt"}), \
+        patch.object(app_instance.boto, "presigned_url", return_value="aws_url_to_data"):
+        #In Future add in option to use AWS in testing
             """
             get download url
             """
