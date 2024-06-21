@@ -4,6 +4,7 @@ from amanuensis.resources.userdatamodel import (
     update_institution,
     add_institution,
 )
+from amanuensis.config import config
 import urllib.request, json
 def api_request():
     """
@@ -11,8 +12,10 @@ def api_request():
     can be accessed by info_dict["results"], which is a list of dictionaries containing information about the legality
     of interacting with the returned companies.
     """
-    #name = config.institution_name
-    name = "material"
+    name = config["INSTITUTION_NAME"]
+    if(name == ""):
+        print("No institution name entered in config file! Returning empty dictionary")
+        return {}
     try:
         url = f"https://data.trade.gov/consolidated_screening_list/v1/search?name={name}"
 
