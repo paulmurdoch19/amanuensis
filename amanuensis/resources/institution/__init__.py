@@ -4,33 +4,25 @@ from amanuensis.resources.userdatamodel import (
     update_institution,
     add_institution,
 )
-from amanuensis.config import config
-import urllib.request, json
-def api_request():
+import requests, json
+def api_request(name):
     """
     Makes a call to the Consolidated Screening List api of developer.trade.gov. Information returned in the dictionary
     can be accessed by info_dict["results"], which is a list of dictionaries containing information about the legality
     of interacting with the returned companies.
     """
-    name = config["INSTITUTION_NAME"]
-    if(name == ""):
-        print("No institution name entered in config file! Returning empty dictionary")
-        return {}
     try:
         url = f"https://data.trade.gov/consolidated_screening_list/v1/search?name={name}"
-
         hdr ={
         # Request headers
         'Cache-Control': 'no-cache',
         'subscription-key': 'a7c2cd5a313d430c9df8bc7918f2e14b',
         }
 
-        req = urllib.request.Request(url, headers=hdr)
+        response = requests.get(url, headers=hdr)
 
-        req.get_method = lambda: 'GET'
-        response = urllib.request.urlopen(req)
-        code = response.getcode()
-        r = response.read()
+        code = response.status_code
+        r = response.text
         info_dict = {}
         if(code == 200):
             info_dict = json.loads(r)
