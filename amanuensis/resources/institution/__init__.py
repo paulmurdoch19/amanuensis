@@ -1,12 +1,13 @@
+import requests, json
+from amanuensis.config import config
 from amanuensis.resources.userdatamodel import (
     get_institution,
 	get_all_institutions,
     update_institution,
     add_institution,
 )
-import requests, json
-from amanuensis.config import config
-def api_request(name):
+
+def get_background(name):
     """
     Makes a call to the Consolidated Screening List api of developer.trade.gov. Information returned in the dictionary
     can be accessed by info_dict["results"], which is a list of dictionaries containing information about the legality

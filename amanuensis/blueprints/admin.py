@@ -13,7 +13,7 @@ from cdislogging import get_logger
 from amanuensis.auth.auth import check_arborist_auth, current_user
 from amanuensis.config import config
 from amanuensis.errors import UserError, NotFound, AuthError
-from amanuensis.resources.institution import api_request
+from amanuensis.resources.institution import get_background
 from amanuensis.resources import filterset
 from amanuensis.resources import project
 from amanuensis.resources import admin
@@ -176,10 +176,10 @@ def get_search_by_user_id():
 @blueprint.route("/screen-institution", methods=["GET"])
 @check_arborist_auth(resource="/services/amanuensis", method = "*")
 def screen_institution():
-    name = request.args.get('name', default = "")
-    if(name == ""):
+    name = request.args.get('name', default = None)
+    if(name == None):
         raise UserError("Name of institution is needed in the name argument in the url")
-    res = api_request(name)
+    res = get_background(name)
     total = -1
     try:
         total = int(res["total"])
