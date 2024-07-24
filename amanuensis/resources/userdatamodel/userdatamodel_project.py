@@ -35,7 +35,6 @@ __all__ = [
 def get_all_projects(current_session):
     return (
         current_session.query(Project)
-        .filter(Project.active == True)
         .all()
     )
 
@@ -45,7 +44,6 @@ def get_project_by_consortium(current_session, consortium, logged_user_id):
         current_session.query(Project)
         .join(Project.requests)
         .join(Request.consortium_data_contributor)
-        .filter(Project.active == True)
         .filter_by(code=consortium)
         .all()
     )
@@ -132,7 +130,7 @@ def update_project(current_session, project_id, approved_url=None, searches=None
 
     # TODO check that at least one has changed
     num_updated = (
-        current_session.query(Project).filter(Project.id == project_id).filter(Project.active == True).update(data)
+        current_session.query(Project).filter(Project.id == project_id).update(data)
     )
     if num_updated > 0:
         return {"code": 200, "updated": int(project_id)}
