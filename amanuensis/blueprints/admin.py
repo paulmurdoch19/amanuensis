@@ -49,6 +49,14 @@ def debug_log(function):
 
     return write_log
 
+@blueprint.route("/delete-project", methods=["DELETE"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+def delete_project():
+    project_id = request.get_json().get("project_id", None)
+    if not project_id:
+        raise UserError("A project_id is required for this endpoint.")
+    return jsonify(project.delete_project(project_id))
+
 
 @blueprint.route("/upload-file", methods=["POST"])
 @check_arborist_auth(resource="/services/amanuensis", method="*")
