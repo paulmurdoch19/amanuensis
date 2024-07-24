@@ -49,6 +49,26 @@ def debug_log(function):
 
     return write_log
 
+@blueprint.route("/project/force-state-change", methods=["POST"])
+@check_arborist_auth(resource="/services/amanuensis", method="*")
+def force_state_change():
+    """
+    used to undo errors, hide from UI
+    """
+    project_id = request.get_json().get("project_id", None)
+    state_id = request.get_json().get("state_id", None)
+    consortiums = request.get_json().get("consortiums", None)
+
+    if consortiums and not isinstance(consortiums, list):
+        consortiums = [consortiums]
+
+    if not state_id or not project_id:
+        return UserError("There are missing params.")
+
+    request_schema = RequestSchema(many=True)
+    return jsonify(
+        request_schema.dump(admin.update_project_state(project_id, state_id, consortiums, force=True))
+    )
 
 @blueprint.route("/upload-file", methods=["POST"])
 @check_arborist_auth(resource="/services/amanuensis", method="*")
