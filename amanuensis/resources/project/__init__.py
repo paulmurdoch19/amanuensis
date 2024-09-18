@@ -39,6 +39,17 @@ from amanuensis.schema import ProjectSchema
 
 logger = get_logger(__name__)
 
+def delete_project(project_id):
+    project_schema = ProjectSchema()
+    project = get_by_id(None, project_id)
+    if not project:
+        raise NotFound("the project provided does not exist")
+    with flask.current_app.db.session as session:
+        project.active = False
+        session.add(project)
+        session.commit()
+        return project_schema.dump(project)
+
 
 def get_all(logged_user_id, logged_user_email, special_user):
     project_schema = ProjectSchema(many=True)
