@@ -1,5 +1,7 @@
 import requests, json
 from amanuensis.config import config
+
+
 def get_background(name):
     """
     Makes a call to the Consolidated Screening List api of developer.trade.gov. Information returned in the dictionary
