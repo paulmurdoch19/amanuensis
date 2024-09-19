@@ -57,7 +57,7 @@ Flask-WTF = "^1.0.0"
 
 html2text = "^2020.1.16"
 
-
+# pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.4.0"}
 pcdcutils = {git = "https://github.com/chicagopcdc/pcdcutils.git", rev = "0.1.3"}
 # hubspotclient = {git = "https://github.com/chicagopcdc/hubspotclient.git", rev = "0.1.0"}
 # userportaldatamodel = {git = "https://github.com/chicagopcdc/userPortalDataModel.git", rev = "pcdc_dev"}
