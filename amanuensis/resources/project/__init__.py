@@ -20,7 +20,11 @@ from amanuensis.resources import filterset, consortium_data_contributor, admin
 from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests_by_project_id,
 )
-from amanuensis.resources.userdatamodel.userdatamodel_state import get_latest_request_state_by_id
+from amanuensis.resources.userdatamodel.userdatamodel_state import (
+    get_latest_request_state_by_id, 
+    get_final_states, 
+    get_transition_graph
+)
 from amanuensis.resources.consortium_data_contributor import get_consortiums_from_fitersets
 from amanuensis.config import config
 from amanuensis.errors import NotFound, Unauthorized, UserError, InternalError, Forbidden
@@ -223,5 +227,52 @@ def update_project_searches(logged_user_id, project_id, filter_sets_id):
         return project
 
     
+def get_overall_project_state(this_project_requests_states):
+    """
+    Takes status codes from all the requests within a project and returns the project status based on their precedence.
+    Example: if all request status are "APPROVED", then the status code will be "APPROVED".
+    However, if one of the request status is "PENDING", and "PENDING" has higher precedence
+    then the status code will be "PENDING".
+    """
+    #run BFS on state flow chart
+    with flask.current_app.db.session as session:
+        final_states = get_final_states(session)
+        transition_graph = get_transition_graph(session, reverse=True)
+    try: 
+        
+        for final_state in final_states:
+            if final_state in this_project_requests_states:
+                return {"status": final_state}   
+             
+        overall_state = None
+        seen_codes = set()
+        states_queue = ["DATA_DOWNLOADED"]
+        while states_queue and this_project_requests_states:
+            current_state = states_queue.pop(0)
+            if current_state not in seen_codes:
+
+                seen_codes.add(current_state)
+
+                states_queue.extend(transition_graph[current_state] if current_state in transition_graph else [])
+                
+                if current_state in this_project_requests_states:
+
+                    this_project_requests_states.remove(current_state)
+
+                    if ((current_state == "APPROVED" and overall_state == "APPROVED_WITH_FEEDBACK")    
+                        or (current_state == "REVISION" and overall_state == "SUBMITTED")):
+                            continue
+                    else:
+                        overall_state = current_state
+                        
+        if this_project_requests_states:
+            logger.error(f"{this_project_requests_states} dont exist in transition table")
+            raise InternalError("")
+        
+        return {"status": overall_state}
+
+    except Exception:
+        raise InternalError("Unable to load or find the consortium status")
+
 
 
