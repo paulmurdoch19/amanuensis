@@ -3,7 +3,7 @@ from wsgiref.util import request_uri
 
 from cdislogging import get_logger
 
-from amanuensis.resources.project import create, get_all
+from amanuensis.resources.project import create, get_all, get_overall_project_state
 from amanuensis.resources.admin import get_by_code, update_associated_user_user_id
 from amanuensis.resources.fence import fence_get_users
 from amanuensis.resources.request import get_latest_request_state
@@ -13,7 +13,7 @@ from amanuensis.schema import ProjectSchema
 from amanuensis.config import config
 from datetime import datetime
 from userportaldatamodel.models import State, Transition
-from amanuensis.resources.userdatamodel.userdatamodel_state import get_final_states, get_transition_graph
+
 #TODO: userportaldatamodel.models needs to be updated to include transition
 #from userportaldatamodel.transition import Transition
 
@@ -30,52 +30,7 @@ logger = get_logger(__name__)
 
 
 # cache = SimpleCache()
-def determine_status_code(this_project_requests_states):
-    """
-    Takes status codes from all the requests within a project and returns the project status based on their precedence.
-    Example: if all request status are "APPROVED", then the status code will be "APPROVED".
-    However, if one of the request status is "PENDING", and "PENDING" has higher precedence
-    then the status code will be "PENDING".
-    """
-    #run BFS on state flow chart
-    with flask.current_app.db.session as session:
-        final_states = get_final_states(session)
-        transition_graph = get_transition_graph(session, reverse=True)
-    try: 
-        
-        for final_state in final_states:
-            if final_state in this_project_requests_states:
-                return {"status": final_state}   
-             
-        overall_state = None
-        seen_codes = set()
-        states_queue = ["DATA_DOWNLOADED"]
-        while states_queue and this_project_requests_states:
-            current_state = states_queue.pop(0)
-            if current_state not in seen_codes:
 
-                seen_codes.add(current_state)
-
-                states_queue.extend(transition_graph[current_state] if current_state in transition_graph else [])
-                
-                if current_state in this_project_requests_states:
-
-                    this_project_requests_states.remove(current_state)
-
-                    if ((current_state == "APPROVED" and overall_state == "APPROVED_WITH_FEEDBACK")    
-                        or (current_state == "REVISION" and overall_state == "SUBMITTED")):
-                            continue
-                    else:
-                        overall_state = current_state
-                        
-        if this_project_requests_states:
-            logger.error(f"{this_project_requests_states} dont exist in transition table")
-            raise InternalError("")
-        
-        return {"status": overall_state}
-
-    except Exception:
-        raise InternalError("Unable to load or find the consortium status")
 
 
 @blueprint.route("/", methods=["GET"])
@@ -121,7 +76,7 @@ def get_projetcs():
         if not submitted_at:
             submitted_at = project['requests'][-1]["create_date"] if project['requests'] else None
 
-        project_status = determine_status_code(
+        project_status = get_overall_project_state(
             statuses_by_consortium
         )
 
