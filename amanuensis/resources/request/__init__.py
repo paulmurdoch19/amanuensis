@@ -24,7 +24,8 @@ from amanuensis.resources.userdatamodel.userdatamodel_request import (
     get_requests,
 )
 from amanuensis.resources.userdatamodel.userdatamodel_state import (
-    get_latest_request_state_by_id
+    get_latest_request_state_by_id,
+    get_final_states,
 )
 from amanuensis.schema import RequestSchema, RequestStateSchema
 
@@ -76,4 +77,6 @@ def get_latest_request_state(requests=None, request_ids=None):
         latest_states = get_latest_request_state_by_id(session, requests=requests, request_ids=request_ids)
         return request_state_schema.dump(latest_states)
 
-        
+def get_final_states_codes():
+    with flask.current_app.db.session as session:
+        return get_final_states(session)

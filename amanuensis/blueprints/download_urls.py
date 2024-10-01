@@ -4,7 +4,9 @@ from cdislogging import get_logger
 
 from amanuensis.auth.auth import current_user
 from amanuensis.errors import AuthError, UserError, NotFound, InternalError, Forbidden
-from amanuensis.resources.project import get_by_id
+from amanuensis.resources.project import get_by_id, get_overall_project_state
+from amanuensis.resources.request import get_latest_request_state, get_final_states_codes
+from amanuensis.resources.userdatamodel import get_final_states
 from amanuensis.resources.admin import update_project_state, get_by_code
 from pcdc_aws_client.utils import get_s3_key_and_bucket
 
@@ -63,12 +65,22 @@ def download_data(project_id):
     # project_id in the API call could assign data download rights to the wrong user
 
 
-    
+    #check if project is in fianl state or in Data Download state before attempting to change state
     data_downloaded_state = get_by_code("DATA_DOWNLOADED")
+    
     if not data_downloaded_state:
         raise NotFound("Data download state does not exist. Please reach out to pcdc_help@lists.uchicago.edu")
-    else:
+    
+    statuses_by_consortium = set()
+    request_states = get_latest_request_state(project.requests)
+    statuses_by_consortium.update(request_state["state"]["code"] for request_state in request_states)
+    project_status = get_overall_project_state(statuses_by_consortium)["status"]
+    if not project_status:
+        raise InternalError("Project status could not be determined. Please reach out to pcdc_help@lists.uchicago.edu")
+    
+    if project_status not in get_final_states_codes() and project_status != data_downloaded_state.code:
         update_project_state(project_id, data_downloaded_state.id)
+        
 
     # Create pre-signed URL for downalod
     s3_info = get_s3_key_and_bucket(storage_url)

@@ -484,6 +484,9 @@ def test_2_create_project_with_one_request(app_instance, session, client, fence_
             """
             get_download_url_response = client.get(f"/download-urls/{project_id}", headers={"Authorization": 'bearer 102'})
             assert get_download_url_response.status_code == 200
+
+            get_download_url_response_2 = client.get(f"/download-urls/{project_id}", headers={"Authorization": 'bearer 102'})
+            assert get_download_url_response_2.status_code == 200
         
         """
         check not active user 403's
