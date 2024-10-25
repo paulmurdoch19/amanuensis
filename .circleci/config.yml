@@ -16,9 +16,9 @@ jobs:
     - run:
       name: install deps
       command: |
-      python3 -m venv env
-      . venv/bin/activate
-      pip install -r requirements.txt
+        python3 -m venv env
+        . venv/bin/activate
+        pip install -r requirements.txt
       
 
 
