@@ -5,15 +5,20 @@ jobs:
   build:
     docker:
       - image: circleci/python:3.9
-    working_directory: ~/amanuensis
+    working_directory: ~/repo
     steps:
       - checkout
       - run:
-          name: install deps
+          name: install poetry
           command: |
             python3 -m venv env
             . env/bin/activate
-            pip install -r requirements.txt
+            pip install poetry
+      - run:
+          name: install dependencies
+          command: |
+            . env/bin/activate
+            poetry install
 
 workflows:
   version: 2
