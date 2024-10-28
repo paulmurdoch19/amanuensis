@@ -21,6 +21,15 @@ jobs:
           name: Copy Repository to Deployment Directory
           command: |
             cp -r ./amanuensis/* "$DEPLOY_DIR/"
+      - run:
+          name: Upgrade Pip
+          command: |
+            python -m pip install --upgrade pip
+
+      - run:
+          name: Upgrade Poetry
+          command: |
+            pip install --upgrade poetry
 
       - run:
           name: Create Virtual Environment and Install Dependencies
