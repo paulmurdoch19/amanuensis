@@ -28,10 +28,12 @@ jobs:
             cd "$DEPLOY_DIR"
             rm -rf env
             python3 -m venv env  # Create a virtual environment
-            . env/bin/activate    # Activate the virtual environment 
+            . env/bin/activate    # Activate the virtual environment
+            pip install -U pip    # Update pip to the latest version for compatibility
             pip install poetry    # Install Poetry
             poetry lock
             poetry install        # Install dependencies defined in pyproject.toml
+            deactivate
     
       - run:
           name: Install AWS CLI
