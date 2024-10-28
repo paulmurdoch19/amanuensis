@@ -25,18 +25,17 @@ jobs:
             pip install poetry      # Install Poetry
             poetry install          # Install dependencies defined in pyproject.toml
     
-     - run:
-        name: Install AWS CLI
-        command: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+      - run:
+          name: Install AWS CLI
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y awscli
 
       - run:
           name: Deploy to S3
           command: |
             DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
             aws s3 cp $DEPLOY_DIR s3://devops-amanuensis-deploy/$DEPLOY_DIR --recursive
-     
 
 workflows:
   version: 2
@@ -46,4 +45,3 @@ workflows:
           filters:
             branches:
               only: master
-
