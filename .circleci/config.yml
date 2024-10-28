@@ -39,7 +39,10 @@ jobs:
       - run:
           name: Test project
           command: |
-            pytest tests_endpoints/endpoints/test_overall_project_status.py
+            DEPLOY_DIR="DEPLOY-$(date +%Y-%m-%d)"
+            cd "$DEPLOY_DIR"
+            . env/bin/activate
+            pytest tests_project/test_overall_project_state.py
     
       - run:
           name: Install AWS CLI
