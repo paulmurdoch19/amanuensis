@@ -7,33 +7,32 @@ jobs:
     docker:
       - image: circleci/python:3.9
     environment:
-      DEPLOY_DIR: "DEPLOY-$(date +%Y-%m-%d)"   # Define DEPLOY_DIR once here
+      DEPLOY_DIR: "DEPLOY-$(date +%Y-%m-%d)"
     steps:
       - checkout
 
       - run:
           name: Create Deployment Directory
           command: |
-          
             mkdir -p "$DEPLOY_DIR"
       
       - run:
           name: Copy Repository to Deployment Directory
           command: |
-            cp -r ./amanuensis/* "$DEPLOY_DIR/"
-      
+            cp -r ./* "$DEPLOY_DIR/"
+
       - run:
           name: Upgrade Pip
           command: |
             python -m pip install --upgrade pip
 
       - run:
-          name: Create Virtual Environment and Install Poetry
+          name: Create Virtual Environment and Upgrade Poetry
           command: |
             cd "$DEPLOY_DIR"
             python3 -m venv env  # Create a virtual environment
             . env/bin/activate    # Activate the virtual environment
-            pip install poetry==1.1.11  # Install a stable version of Poetry
+            pip install poetry    # Upgrade to the latest version of Poetry
 
       - run:
           name: Install Project Dependencies with Poetry
