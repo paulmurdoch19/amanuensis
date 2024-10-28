@@ -27,6 +27,7 @@ jobs:
           command: |
             DEPLOY_DIR="DEPLOY-$(date +%Y-%m-%d)"
             cd "$DEPLOY_DIR"
+            ls -l
             rm -rf env
             python3 -m venv env  # Create a virtual environment
             . env/bin/activate    # Activate the virtual environment 
