@@ -235,9 +235,17 @@ def get_overall_project_state(this_project_requests_states):
     then the status code will be "PENDING".
     """
     #run BFS on state flow chart
-    with flask.current_app.db.session as session:
-        final_states = get_final_states(session)
-        transition_graph = get_transition_graph(session, reverse=True)
+    final_states = {"PUBLISHED", "REJECTED", "WITHDRAWL"}
+    transition_graph = {
+        "DRAFT": ["SUBMITTED", "WITHDRAWAL"],
+        "SUBMITTED": ["IN_REVIEW", "WITHDRAWAL"],
+        "IN_REVIEW": ["APPROVED", "APPROVED_WITH_FEEDBACK", "REVISION", "WITHDRAWAL", "REJECTED"],
+        "REVISION": ["IN_REVIEW", "WITHDRAWAL"],
+        "APPROVED": ["REQUEST_CRITERIA_FINALIZED"],
+        "APPROVED_WITH_FEEDBACK": ["REQUEST_CRITERIA_FINALIZED"],
+        "AGREEMENTS_NEGOTIATION": ["AGREEMENTS_EXECUTED"],
+        "AGREEMENTS_EXECUTED": ["DATA_AVAILABLE", "DATA_DOWNLOADED", "PUBLISHED"]
+    }
     try: 
         
         for final_state in final_states:
