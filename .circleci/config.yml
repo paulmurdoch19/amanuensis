@@ -6,14 +6,13 @@ jobs:
   build-and-deploy:
     docker:
       - image: circleci/python:3.9
-    environment:
-      DEPLOY_DIR: "DEPLOY-$(date +%Y-%m-%d)"
     steps:
       - checkout
 
       - run:
           name: Create Deployment Directory
           command: |
+            DEPLOY_DIR="DEPLOY-$(date +%Y-%m-%d)"
             rm -rf "$DEPLOY_DIR"
             mkdir -p "$DEPLOY_DIR"
       
@@ -34,6 +33,11 @@ jobs:
             export PATH="$HOME/.local/bin:$PATH"  # Ensure Poetry is in PATH
             poetry lock
             poetry install        # Install dependencies defined in pyproject.toml
+
+      - run:
+          name: Test project
+          command: |
+            pytest tests_endpoints/endpoints/test_overall_project_status.py
     
       - run:
           name: Install AWS CLI
