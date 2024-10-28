@@ -14,6 +14,12 @@ jobs:
           command: |
             export DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
             mkdir -p $DEPLOY_DIR
+      
+      - run:
+          name: Copy Repository to Deployment Directory
+          command: |
+            DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
+            cp -R ./* $DEPLOY_DIR/
 
       - run:
           name: Create Virtual Environment and Install Dependencies
