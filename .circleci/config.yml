@@ -34,6 +34,7 @@ jobs:
             cd "$DEPLOY_DIR"
             python3 -m venv env  # Create a virtual environment
             . env/bin/activate    # Activate the virtual environment
+            ls
             pip install -r requirementes.txt
     
       - run:
