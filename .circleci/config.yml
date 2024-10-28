@@ -12,7 +12,7 @@ jobs:
       - run:
           name: Create Deployment Directory
           command: |
-            DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
+            export DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
             mkdir -p $DEPLOY_DIR
 
       - run:
