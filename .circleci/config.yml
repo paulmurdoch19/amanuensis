@@ -20,7 +20,7 @@ jobs:
       - run:
           name: Copy Repository to Deployment Directory
           command: |
-            cp -R ./* "$DEPLOY_DIR/"
+            rsync -av --exclude="$DEPLOY_DIR" ./ "$DEPLOY_DIR/"
 
       - run:
           name: Create Virtual Environment and Install Dependencies
