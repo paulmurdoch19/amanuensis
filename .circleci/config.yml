@@ -14,6 +14,7 @@ jobs:
       - run:
           name: Create Deployment Directory
           command: |
+            rm -rf "$DEPLOY_DIR"
             mkdir -p "$DEPLOY_DIR"
       
       - run:
@@ -25,6 +26,7 @@ jobs:
           name: Create Virtual Environment and Install Dependencies
           command: |
             cd "$DEPLOY_DIR"
+            rm -rf env
             python3 -m venv env  # Create a virtual environment
             . env/bin/activate    # Activate the virtual environment 
             pip install poetry    # Install Poetry
