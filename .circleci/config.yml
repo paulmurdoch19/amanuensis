@@ -32,7 +32,7 @@ jobs:
             cd "$DEPLOY_DIR"
             python3 -m venv env  # Create a virtual environment
             . env/bin/activate    # Activate the virtual environment
-            pip install poetry    # Upgrade to the latest version of Poetry
+            pip install poetry==1.8.3    # Upgrade to the latest version of Poetry
 
       - run:
           name: Install Project Dependencies with Poetry
