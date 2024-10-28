@@ -21,23 +21,26 @@ jobs:
           name: Copy Repository to Deployment Directory
           command: |
             cp -r ./amanuensis/* "$DEPLOY_DIR/"
+      
       - run:
           name: Upgrade Pip
           command: |
             python -m pip install --upgrade pip
 
       - run:
-          name: Upgrade Poetry
-          command: |
-            pip install --upgrade poetry
-
-      - run:
-          name: Create Virtual Environment and Install Dependencies
+          name: Create Virtual Environment and Install Poetry
           command: |
             cd "$DEPLOY_DIR"
             python3 -m venv env  # Create a virtual environment
-            . env/bin/activate     # Activate the virtual environment
-            poetry install          # Install dependencies defined in pyproject.toml
+            . env/bin/activate    # Activate the virtual environment
+            pip install poetry==1.1.11  # Install a stable version of Poetry
+
+      - run:
+          name: Install Project Dependencies with Poetry
+          command: |
+            cd "$DEPLOY_DIR"
+            . env/bin/activate    # Activate the virtual environment
+            poetry install        # Install dependencies defined in pyproject.toml
     
       - run:
           name: Install AWS CLI
