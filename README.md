@@ -6,7 +6,7 @@ To speed up the local development workflow for amanuensis, alongside the gen3 st
 ```
 docker build -f Dockerfile.dev -t amanuensis:test .
 ```
-
+update
 2) In the docker-compose.yml file inside the compose-services repo:
 
     1) Make sure amanuensis-service is using the amanuensis:test image.
