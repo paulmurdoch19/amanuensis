@@ -8,6 +8,8 @@ jobs:
       - image: circleci/python:3.9
     environment:
       DEPLOY_DIR: "DEPLOY-$(date +%Y-%m-%d)"
+
+    working_directory: ~/amanuensis
     steps:
       - checkout
 
