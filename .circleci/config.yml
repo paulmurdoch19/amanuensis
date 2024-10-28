@@ -6,26 +6,26 @@ jobs:
   build-and-deploy:
     docker:
       - image: circleci/python:3.9
+    environment:
+      DEPLOY_DIR: "DEPLOY-$(date +%Y-%m-%d)"   # Define DEPLOY_DIR once here
     steps:
       - checkout
 
       - run:
           name: Create Deployment Directory
           command: |
-            export DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
-            mkdir -p $DEPLOY_DIR
+          
+            mkdir -p "$DEPLOY_DIR"
       
       - run:
           name: Copy Repository to Deployment Directory
           command: |
-            DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
-            cp -R ./* $DEPLOY_DIR/
+            cp -R ./* "$DEPLOY_DIR/"
 
       - run:
           name: Create Virtual Environment and Install Dependencies
           command: |
-            DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
-            cd $DEPLOY_DIR
+            cd "$DEPLOY_DIR"
             python3 -m venv env  # Create a virtual environment
             . env/bin/activate     # Activate the virtual environment
             pip install poetry      # Install Poetry
@@ -40,8 +40,7 @@ jobs:
       - run:
           name: Deploy to S3
           command: |
-            DEPLOY_DIR=DEPLOY-$(date +%Y-%m-%d)
-            aws s3 cp $DEPLOY_DIR s3://devops-amanuensis-deploy/$DEPLOY_DIR --recursive
+            aws s3 cp "$DEPLOY_DIR" s3://devops-amanuensis-deploy/"$DEPLOY_DIR" --recursive
 
 workflows:
   version: 2
