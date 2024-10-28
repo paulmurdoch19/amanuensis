@@ -19,11 +19,13 @@ jobs:
       - run:
           name: Copy Repository to Deployment Directory
           command: |
+            DEPLOY_DIR="DEPLOY-$(date +%Y-%m-%d)"
             cp -r ./amanuensis/* "$DEPLOY_DIR/"
 
       - run:
           name: Create Virtual Environment and Install Dependencies
           command: |
+            DEPLOY_DIR="DEPLOY-$(date +%Y-%m-%d)"
             cd "$DEPLOY_DIR"
             rm -rf env
             python3 -m venv env  # Create a virtual environment
@@ -48,6 +50,7 @@ jobs:
       - run:
           name: Deploy to S3
           command: |
+            DEPLOY_DIR="DEPLOY-$(date +%Y-%m-%d)"
             aws s3 cp "$DEPLOY_DIR" s3://devops-amanuensis-deploy/"$DEPLOY_DIR" --recursive
 
 workflows:
