@@ -8,8 +8,6 @@ jobs:
       - image: circleci/python:3.9
     environment:
       DEPLOY_DIR: "DEPLOY-$(date +%Y-%m-%d)"
-
-    working_directory: ~/amanuensis
     steps:
       - checkout
 
@@ -24,18 +22,13 @@ jobs:
             cp -r ./amanuensis/* "$DEPLOY_DIR/"
 
       - run:
-          name: Upgrade Pip
+          name: Create Virtual Environment and Install Dependencies
           command: |
-            python -m pip install --upgrade pip
-
-      - run:
-          name: Create Virtual Environment and Upgrade Poetry
-          command: |
-            cd "$DEPLOY_DIR"
+            cd $DEPLOY_DIR
             python3 -m venv env  # Create a virtual environment
             . env/bin/activate    # Activate the virtual environment
-            ls
-            pip install -r ../requirementes.txt
+            pip install poetry    # Install Poetry
+            poetry install        # Install dependencies defined in pyproject.toml
     
       - run:
           name: Install AWS CLI
