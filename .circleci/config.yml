@@ -21,6 +21,7 @@ jobs:
           command: |
             DEPLOY_DIR="DEPLOY-$(date +%Y-%m-%d)"
             cp -r ./amanuensis/* "$DEPLOY_DIR/"
+            cp -r ./tests_project/* "$DEPLOY_DIR/"
 
       - run:
           name: Create Virtual Environment and Install Dependencies
@@ -43,7 +44,7 @@ jobs:
             DEPLOY_DIR="DEPLOY-$(date +%Y-%m-%d)"
             cd "$DEPLOY_DIR"
             . env/bin/activate
-            pytest tests_project/test_overall_project_state.py
+            pytest test_overall_project_state.py
     
       - run:
           name: Install AWS CLI
